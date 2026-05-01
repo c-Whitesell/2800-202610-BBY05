@@ -7,6 +7,7 @@ ShadyTrails helps people explore Vancouver’s outdoor spaces by recommending tr
 ## About Us
 
 Team Name: BBY-05
+
 Team Members:
 
 - Harshpal Singh
