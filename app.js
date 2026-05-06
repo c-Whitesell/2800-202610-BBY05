@@ -13,7 +13,10 @@ app.get('/', (req, res) => {
 });
 
 app.get('/map', (req, res) => {
-  res.render('map');
+  res.render('map', {
+    pageScript: 'map',
+    pageScripts: ['https://unpkg.com/maplibre-gl@5.23.0/dist/maplibre-gl.js'],
+  });
 });
 
 app.listen(PORT, () => {
