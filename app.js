@@ -55,7 +55,7 @@ const isNotAuthenticated = (req, res, next) => {
   if (!req.session.authenticated) {
     return next();
   }
-  res.redirect('/members');
+  res.redirect('/map');
 };
 
 app.get('/', (req, res) => {
