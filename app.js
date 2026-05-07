@@ -9,7 +9,18 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'public', 'views'));
 
 app.get('/', (req, res) => {
-  res.send('Hello World!');
+  res.render('index', {
+    pageScript: null,
+    pageScripts: [],
+  });
+});
+
+app.get('/signup', (req, res) => {
+  res.render('signup', { error: null, pageScripts: [], pageScript: null });
+});
+
+app.get('/login', (req, res) => {
+  res.render('login', { error: null, pageScripts: [], pageScript: null });
 });
 
 app.get('/map', (req, res) => {
