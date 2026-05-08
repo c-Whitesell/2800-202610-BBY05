@@ -216,6 +216,13 @@ app.get('/settings', (req, res) => {
   });
 });
 
+app.get('/weather', (req, res) => {
+  res.render('weather', {
+    pageScript: null,
+    pageScripts: [],
+  });
+});
+
 // log out route
 app.get('/logout', (req, res) => {
   req.session.destroy();
