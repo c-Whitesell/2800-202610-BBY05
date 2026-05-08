@@ -236,7 +236,7 @@
 
   <div id="weather-error">
     <i class="ti ti-alert-circle" style="font-size:2rem;"></i>
-    <p class="mt-2">Could not load weather data. Please try again.</p>
+    <p class="mt-2" id="weather-error-msg">Could not load weather data. Please try again.</p>
     <button class="btn btn-sm btn-outline-secondary mt-2" onclick="fetchWeather()">Retry</button>
   </div>
 
@@ -432,24 +432,36 @@
     }
   }
 
+  function showError(message) {
+    document.getElementById('weather-loading').style.display  = 'none';
+    document.getElementById('weather-content').style.display  = 'none';
+    document.getElementById('weather-error').style.display    = 'block';
+    document.getElementById('weather-error-msg').textContent  = message;
+  }
+
   async function fetchWeather() {
     document.getElementById('weather-loading').style.display = 'block';
     document.getElementById('weather-error').style.display   = 'none';
     document.getElementById('weather-content').style.display = 'none';
 
+    // Geolocation
     let lat, lon;
+    let usingFallback = false;
     try {
       const pos = await new Promise((res, rej) =>
         navigator.geolocation.getCurrentPosition(res, rej, { timeout: 8000 })
       );
       lat = pos.coords.latitude;
       lon = pos.coords.longitude;
-    } catch {
-      // Default: Surrey, BC
+    } catch (geoErr) {
+      console.warn('Geolocation unavailable, using default location:', geoErr.message);
       lat = 49.19;
       lon = -122.85;
+      usingFallback = true;
     }
 
+    // Open-Meteo fetch
+    let data;
     try {
       const url =
         `https://api.open-meteo.com/v1/forecast` +
@@ -460,17 +472,36 @@
         `&daily=temperature_2m_max,temperature_2m_min` +
         `&timezone=auto&forecast_days=1`;
 
-      const res  = await fetch(url);
-      const data = await res.json();
-      renderWeather(data, lat, lon);
-    } catch (err) {
-      console.error(err);
-      document.getElementById('weather-loading').style.display = 'none';
-      document.getElementById('weather-error').style.display   = 'block';
+      const res = await fetch(url);
+
+      if (!res.ok) {
+        throw new Error(`Weather service returned ${res.status} ${res.statusText}`);
+      }
+
+      data = await res.json();
+    } catch (fetchErr) {
+      console.error('Weather API error:', fetchErr);
+      showError('Could not load weather data. Check your connection and try again.');
+      return;
+    }
+
+    // Validate expected fields exist
+    if (!data.current || !data.hourly || !data.daily) {
+      console.error('Unexpected API response shape:', data);
+      showError('Received unexpected data from the weather service. Please try again.');
+      return;
+    }
+
+    // Render
+    try {
+      await renderWeather(data, lat, lon, usingFallback);
+    } catch (renderErr) {
+      console.error('Render error:', renderErr);
+      showError('Something went wrong displaying the weather. Please try again.');
     }
   }
 
-  async function renderWeather(data, lat, lon) {
+  async function renderWeather(data, lat, lon, usingFallback) {
     const cur  = data.current;
     const hrly = data.hourly;
     const dly  = data.daily;
@@ -478,8 +509,9 @@
 
     const locationName = await reverseGeocode(lat, lon);
     document.getElementById('location-name').textContent = locationName;
-    document.getElementById('location-sub').textContent  =
-      `Updated ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    document.getElementById('location-sub').textContent  = usingFallback
+      ? 'Location unavailable – showing Surrey, BC'
+      : `Updated ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
     document.getElementById('location-date').textContent =
       now.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
 

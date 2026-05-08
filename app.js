@@ -1,34 +1,39 @@
-require('dotenv').config();
+require("dotenv").config();
 
-const express = require('express');
-const session = require('express-session');
-const MongoStore = require('connect-mongo').default;
-const bcrypt = require('bcrypt');
-const Joi = require('joi');
-const { MongoClient } = require('mongodb');
-const path = require('path');
+// ── Dependencies ──────────────────────────────────────────
+const express = require("express");
+const session = require("express-session");
+const MongoStore = require("connect-mongo").default;
+const bcrypt = require("bcrypt");
+const Joi = require("joi");
+const { MongoClient } = require("mongodb");
+const path = require("path");
 
+// ── App Setup ─────────────────────────────────────────────
 const app = express();
 const PORT = process.env.PORT || 3000;
-
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'public')));
 
-const expireTime = 60 * 60 * 1000;
+app.use(express.json());
+
+app.use(express.static(path.join(__dirname, 'public')));
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'public', 'views'));
 
+// ── Database ──────────────────────────────────────────────
 const client = new MongoClient(process.env.MONGO_URI);
 let users;
 
 async function connectDB() {
   await client.connect();
   const db = client.db();
-  users = db.collection('users');
-  console.log('Connected to MongoDB');
+  users = db.collection("users");
+  console.log("Connected to MongoDB");
 }
 connectDB();
 
+// ── Sessions ──────────────────────────────────────────────
+const expireTime = 60 * 60 * 1000;
 app.use(
   session({
     secret: process.env.NODE_SESSION_SECRET,
@@ -44,39 +49,68 @@ app.use(
   }),
 );
 
+// ── Global Template Variables ─────────────────────────────
+app.use((req, res, next) => {
+  res.locals.isAuthenticated = req.session.authenticated || false;
+  next();
+});
+
+// ── Auth Middleware ───────────────────────────────────────
 const isAuthenticated = (req, res, next) => {
   if (req.session.authenticated) {
     return next();
   }
-  res.redirect('/login');
+  res.redirect("/login");
 };
 
 const isNotAuthenticated = (req, res, next) => {
   if (!req.session.authenticated) {
     return next();
   }
-  res.redirect('/members');
+  res.redirect('/map');
 };
 
-app.get('/', (req, res) => {
+// Makes isAuthenticated available in all EJS templates
+app.use((req, res, next) => {
+  res.locals.isAuthenticated = req.session.authenticated || false;
+  next();
+});
+
+// ── Routes ────────────────────────────────────────────────
+app.get('/', async (req, res) => {
+  let tutorialMode = true; // default for new users
+
+  if (req.session.authenticated) {
+    const user = await users.findOne({ email: req.session.email });
+    if (user) {
+      tutorialMode = user.tutorialMode !== false;
+    }
+  }
   res.render('index', {
-    pageScript: null,
+    pageScript: 'tutorial-home',
     pageScripts: [],
+    tutorialMode: tutorialMode,
+    isAuthenticated: req.session.authenticated || false,
   });
 });
 
 app.get('/signup', isNotAuthenticated, (req, res) => {
-  res.render('signup', { error: null, pageScripts: [], pageScript: null });
+  res.render('signup', {
+    error: null,
+    pageScripts: [],
+    pageScript: 'tutorial-auth',
+    tutorialMode: true,
+  });
 });
 
-app.post('/signup', isNotAuthenticated, async (req, res) => {
+app.post("/signup", isNotAuthenticated, async (req, res) => {
   const { name, email, password, confirmPassword } = req.body;
 
   const schema = Joi.object({
     name: Joi.string().max(50).required(),
     email: Joi.string().email().required(),
     password: Joi.string().min(6).max(50).required(),
-    confirmPassword: Joi.string().valid(Joi.ref('password')).required(),
+    confirmPassword: Joi.string().valid(Joi.ref("password")).required(),
   });
 
   const validation = schema.validate({
@@ -86,17 +120,18 @@ app.post('/signup', isNotAuthenticated, async (req, res) => {
     confirmPassword,
   });
   if (validation.error) {
-    return res.render('signup', {
+    return res.render("signup", {
       error: validation.error.details[0].message,
       pageScripts: [],
       pageScript: null,
+      tutorialMode: tutorialMode,
     });
   }
 
   const existingUser = await users.findOne({ email });
   if (existingUser) {
-    return res.render('signup', {
-      error: 'Email already in use',
+    return res.render("signup", {
+      error: "Email already in use",
       pageScripts: [],
       pageScript: null,
     });
@@ -109,14 +144,19 @@ app.post('/signup', isNotAuthenticated, async (req, res) => {
   req.session.name = name;
   req.session.email = email;
 
-  res.redirect('/map');
+  res.redirect("/map");
 });
 
 app.get('/login', isNotAuthenticated, (req, res) => {
-  res.render('login', { error: null, pageScripts: [], pageScript: null });
+  res.render('login', {
+    error: null,
+    pageScripts: [],
+    pageScript: 'tutorial-auth',
+    tutorialMode: true,
+  });
 });
 
-app.post('/login', isNotAuthenticated, async (req, res) => {
+app.post("/login", isNotAuthenticated, async (req, res) => {
   const { email, password } = req.body;
 
   const schema = Joi.object({
@@ -126,28 +166,26 @@ app.post('/login', isNotAuthenticated, async (req, res) => {
 
   const validation = schema.validate({ email, password });
   if (validation.error) {
-    return res.render('login', {
-      error: 'Invalid email or password',
+    return res.render("login", {
+      error: "Invalid email or password",
       pageScripts: [],
       pageScript: null,
     });
   }
 
   const user = await users.findOne({ email });
-
   if (!user) {
-    return res.render('login', {
-      error: 'User not found',
+    return res.render("login", {
+      error: "User not found",
       pageScripts: [],
       pageScript: null,
     });
   }
 
   const valid = await bcrypt.compare(password, user.password);
-
   if (!valid) {
-    return res.render('login', {
-      error: 'Invalid password',
+    return res.render("login", {
+      error: "Invalid password",
       pageScripts: [],
       pageScript: null,
     });
@@ -157,13 +195,24 @@ app.post('/login', isNotAuthenticated, async (req, res) => {
   req.session.name = user.name;
   req.session.email = email;
 
-  res.redirect('/map');
+  res.redirect("/map");
 });
 
-app.get('/map', (req, res) => {
-  res.render('map', {
-    pageScript: 'map',
-    pageScripts: ['https://unpkg.com/maplibre-gl@5.23.0/dist/maplibre-gl.js'],
+app.get("/bookmarks", (req, res) => {
+  res.render("bookmarks", { error: null, pageScripts: [], pageScript: null });
+});
+
+app.get("/map", (req, res) => {
+  res.render("map", {
+    pageScript: "map",
+    pageScripts: ["https://unpkg.com/maplibre-gl@5.23.0/dist/maplibre-gl.js"],
+  });
+});
+
+app.get('/settings', (req, res) => {
+  res.render('settings', {
+    pageScript: null,
+    pageScripts: [],
   });
 });
 
@@ -174,9 +223,25 @@ app.get('/weather', (req, res) => {
   });
 });
 
-app.use((req, res) => {
-  res.status(404).render('404', { pageScripts: [], pageScript: null });
+app.get('/weather', (req, res) => {
+  res.render('weather', {
+    pageScript: null,
+    pageScripts: [],
+  });
 });
+
+// log out route
+app.get("/logout", (req, res) => {
+  req.session.destroy();
+  res.redirect("/");
+});
+
+// ── 404 Handler (must be last) ────────────────────────────
+app.use((req, res) => {
+  res.status(404).render("404", { pageScripts: [], pageScript: null });
+});
+
+// ── Start Server ──────────────────────────────────────────
 
 app.listen(PORT, () => {
   console.log(`Server is running at port ${PORT}`);

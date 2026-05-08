@@ -1,15 +1,90 @@
-<%- include('components/header') %>
-<div class="landing-container">
-  <div class="landing-card">
-    <div class="landing-header">
-      <h1>Welcome</h1>
-      <p>Get started with your account</p>
-    </div>
+<%- include('components/header', { activePage: 'home', bodyClass: 'home-page' }) %>
 
-    <div class="button-group">
-      <a href="/login" class="btn btn-primary">Login</a>
-      <a href="/signup" class="btn btn-secondary">Sign Up</a>
+<% if (typeof tutorialMode !== 'undefined' && tutorialMode) { %>
+  <div id="tutorial-hint" class="tutorial-hint">
+    <div class="tutorial-hint-content">
+      <p>👋 New here? Learn how to use ShadyTrails</p>
+      <button class="btn-hint-primary" onclick="tutorialSystemHome.startTutorial()">Take Tour</button>
+      <button class="btn-hint-close" onclick="tutorialSystemHome.closeTutorialHint()">Skip</button>
     </div>
   </div>
-</div>
+<% } %>
+<!-- ===== HERO ===== -->
+<section class="st-hero">
+  <div class="st-hero__bg"></div>
+  <div class="st-hero__overlay"></div>
+  <div class="st-hero__overlay-top"></div>
+
+  <div class="st-hero__content">
+    <div class="st-hero__eyebrow">Discover Your Next Trail</div>
+    <h1 class="st-hero__title">
+      Find trails hidden in<br><em>quiet shade</em>
+    </h1>
+    <p class="st-hero__subtitle">
+      Explore hand-curated shaded routes, check conditions in real-time, and plan unforgettable hikes — all in one place.
+    </p>
+    <div class="st-hero__cta">
+      <a href="/map" class="st-btn st-btn--primary">Explore Trails →</a>
+      <a href="/signup" class="st-btn st-btn--ghost">Create Free Account</a>
+    </div>
+  </div>
+
+  <div class="st-hero__scroll">Scroll</div>
+</section>
+
+<!-- ===== FEATURES ===== -->
+<section class="st-features">
+  <div class="st-section">
+    <div class="st-section__label">Why ShadyTrails</div>
+    <h2 class="st-section__title">Everything you need for the perfect hike</h2>
+    <p class="st-section__desc">
+      From sun exposure forecasts to live trail conditions — we've built the tools serious hikers actually want.
+    </p>
+
+    <div class="st-features__grid">
+      <div class="st-feature-card">
+        <div class="st-feature-card__icon">🗺️</div>
+        <div class="st-feature-card__title">Interactive Trail Map</div>
+        <div class="st-feature-card__desc">Explore thousands of trails on a live map with shade coverage overlays, elevation profiles, and difficulty filters.</div>
+      </div>
+      <div class="st-feature-card">
+        <div class="st-feature-card__icon">🌡️</div>
+        <div class="st-feature-card__title">Real-time Conditions</div>
+        <div class="st-feature-card__desc">Get up-to-the-hour weather, UV index, and canopy shade ratings so you know what to expect before you lace up.</div>
+      </div>
+      <div class="st-feature-card">
+        <div class="st-feature-card__icon">📍</div>
+        <div class="st-feature-card__title">Near You</div>
+        <div class="st-feature-card__desc">Instantly find shaded trails within your preferred distance. Filter by length, difficulty, and terrain type.</div>
+      </div>
+      <div class="st-feature-card">
+        <div class="st-feature-card__icon">🏆</div>
+        <div class="st-feature-card__title">Trail Badges</div>
+        <div class="st-feature-card__desc">Log your hikes, earn badges, and track your personal stats. Challenge friends on the same routes.</div>
+      </div>
+      <div class="st-feature-card">
+        <div class="st-feature-card__icon">💬</div>
+        <div class="st-feature-card__title">Community Reports</div>
+        <div class="st-feature-card__desc">Read recent hiker reports on trail conditions, wildlife sightings, and route tips from people who hiked today.</div>
+      </div>
+      <div class="st-feature-card">
+        <div class="st-feature-card__icon">📥</div>
+        <div class="st-feature-card__title">Offline Maps</div>
+        <div class="st-feature-card__desc">Download trail maps for offline use. Never lose your route deep in a canyon without cell service again.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== CTA BANNER ===== -->
+<section class="st-cta-banner">
+  <div class="st-cta-banner__inner">
+    <h2 class="st-cta-banner__title">Ready to hit the trail?</h2>
+    <p class="st-cta-banner__desc">
+      Join thousands of hikers already discovering shaded trails near them. Free to get started.
+    </p>
+    <a href="/signup" class="st-btn st-btn--primary">Start Exploring — It's Free</a>
+  </div>
+</section>
+
 <%- include('components/footer') %>

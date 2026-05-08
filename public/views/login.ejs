@@ -1,10 +1,26 @@
+<%- include('components/header') %>
+
+<% if (typeof tutorialMode !== 'undefined' && tutorialMode) { %>
+  <div id="tutorial-hint" class="tutorial-hint">
+    <div class="tutorial-hint-content">
+      <p>👋 New to ShadyTrails?</p>
+      <button class="btn-hint-primary" onclick="tutorialSystemAuth.startTutorial()">Learn More</button>
+      <button class="btn-hint-close" onclick="tutorialSystemAuth.closeTutorialHint()">Skip</button>
+    </div>
+  </div>
+<% } %>
+
 <div class="auth-container">
   <div class="auth-card">
     <div class="auth-header">
       <h1>Welcome Back</h1>
       <p>Sign in to your account</p>
     </div>
-
+    <% if (error) { %>
+      <div class="auth-error">
+        <span>⚠️</span> <%= error %>
+      </div>
+    <% } %>
     <form action="/login" method="POST" class="auth-form">
       <div class="form-group">
         <label for="email">Email Address</label>
@@ -16,7 +32,6 @@
           required
         />
       </div>
-
       <div class="form-group">
         <label for="password">Password</label>
         <input
@@ -27,8 +42,8 @@
           required
         />
       </div>
-
       <button type="submit" class="btn-primary">Sign In</button>
     </form>
   </div>
 </div>
+<%- include('components/footer') %>

@@ -25,21 +25,53 @@ if (container && !container._map) {
 
   container._map = map;
 
-  map.on("load", function () {
+  const marker = new maplibregl.Marker()
+    .setLngLat([-123.1207, 49.2827])
+    .setPopup(popup)
+    .addTo(map);
+
+  map.on('load', function () {
     // Add GeoJSON Source
-    map.addSource("vancouver-parks", {
+    map.addSource('vancouver-parks', {
+      type: 'geojson',
+      data: './data/parks-polygon-representation.geojson',
+    });
+
+    // Add GeoJSON Source
+    map.addSource("vancouver-trails", {
       type: "geojson",
-      data: "./data/parks-polygon-representation.geojson",
+      data: "./data/overpass-turbo-vancouver-park-trails.geojson",
     });
 
     // Add Layer to visualize polygons
     map.addLayer({
-      id: "parks-layer",
-      type: "fill",
-      source: "vancouver-parks",
+      id: 'parks-layer',
+      type: 'fill',
+      source: 'vancouver-parks',
       paint: {
-        "fill-color": "#008000",
-        "fill-opacity": 0.5,
+        'fill-color': '#008000',
+        'fill-opacity': 0.5,
+      },
+    });
+
+    // Add Layer to visualize polygons
+    map.addLayer({
+      id: "trails-layer",
+      type: "line",
+      source: "vancouver-trails",
+      paint: {
+        "line-color": "#ad7c10",
+        "line-opacity": 0.7,
+        // Set line width to 5 pixels
+        "line-width": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          10,
+          1, // At zoom 10 (or less), width is 1px
+          15,
+          5, // At zoom 15 (or more), width is 5px
+        ],
       },
     });
   });
