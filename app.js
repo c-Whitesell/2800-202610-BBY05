@@ -169,6 +169,10 @@ app.post('/login', isNotAuthenticated, async (req, res) => {
   res.redirect('/map');
 });
 
+app.get('/bookmarks', (req, res) => {
+  res.render('bookmarks', { error: null, pageScripts: [], pageScript: null });
+});
+
 app.get('/map', (req, res) => {
   res.render('map', {
     pageScript: 'map',
@@ -176,6 +180,7 @@ app.get('/map', (req, res) => {
   });
 });
 
+<<<<<<< harshpal-feature
 app.get('/settings', (req, res) => {
   res.render('settings', {
     pageScript: null,
@@ -190,11 +195,22 @@ app.get('/logout', (req, res) => {
 });
 
 // ── 404 Handler (must be last) ────────────────────────────
+=======
+
+
+
+
+>>>>>>> dev
 app.use((req, res) => {
   res.status(404).render('404', { pageScripts: [], pageScript: null });
 });
 
+<<<<<<< harshpal-feature
 // ── Start Server ──────────────────────────────────────────
+=======
+
+
+>>>>>>> dev
 app.listen(PORT, () => {
   console.log(`Server is running at port ${PORT}`);
 });
