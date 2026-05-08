@@ -1,0 +1,37 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  font-family: sans-serif;
+}
+
+.navbar {
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+#map {
+  z-index: 1;
+}
+
+footer {
+  flex-shrink: 0;
+  z-index: 10;
+  background: white;
+}
+
+.container {
+  margin: 0;
+  max-width: 100%;
+}
+
+#map {
+  height: calc(100vh - 68px);
+}

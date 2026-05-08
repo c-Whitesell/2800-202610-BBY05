@@ -1,0 +1,48 @@
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ShadyTrails</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="/css/style.css" />
+  <%- typeof styles !=='undefined' ? styles : '' %>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css">
+
+  <script>
+   window.TUTORIAL_MODE = <%= typeof tutorialMode !== 'undefined' ? tutorialMode : true %>;
+  </script>
+</head>
+
+<body class="<%= typeof bodyClass !== 'undefined' ? bodyClass : '' %>">
+  <nav class="st-navbar" id="st-navbar">
+    <a class="st-navbar__brand" href="/">
+      <div class="st-navbar__brand-icon">🌲</div>
+      ShadyTrails
+    </a>
+    <ul class="st-navbar__links">
+      <li><a href="/" class="<%= typeof activePage !== 'undefined' && activePage === 'home' ? 'active' : '' %>">Home</a>
+      </li>
+      <li><a href="/map"
+          class="<%= typeof activePage !== 'undefined' && activePage === 'map' ? 'active' : '' %>">Explore</a></li>
+      <li><a href="/settings"
+          class="<%= typeof activePage !== 'undefined' && activePage === 'settings' ? 'active' : '' %>">Settings</a>
+      </li>
+    </ul>
+    <div class="st-navbar__actions">
+      <% if (isAuthenticated) { %>
+        <a href="/" class="st-btn st-btn--primary st-btn--sm">Home</a>
+        <% } else { %>
+          <a href="/login" class="st-btn st-btn--ghost st-btn--sm">Sign In</a>
+          <a href="/signup" class="st-btn st-btn--primary st-btn--sm">Get Started</a>
+          <% } %>
+    </div>
+  </nav>
+  <script>
+    window.addEventListener('scroll', function () {
+      var nav = document.getElementById('st-navbar');
+      if (window.scrollY > 40) { nav.classList.add('scrolled'); }
+      else { nav.classList.remove('scrolled'); }
+    });
+  </script>

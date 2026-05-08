@@ -1,0 +1,53 @@
+    <footer class="st-footer">
+      <div class="st-footer__inner">
+        <div class="st-footer__brand">
+          <div class="st-navbar__brand" style="margin-bottom:0.75rem;">
+            <div class="st-navbar__brand-icon">🌲</div>
+            ShadyTrails
+          </div>
+          <p class="st-footer__tagline">Discover shaded trails and peaceful paths near you.</p>
+        </div>
+        <div class="st-footer__links">
+          <div class="st-footer__group">
+            <h4>Explore</h4>
+            <ul>
+              <li><a href="/map">Trail Map</a></li>
+              <li><a href="#">Near Me</a></li>
+              <li><a href="#">Popular Routes</a></li>
+            </ul>
+          </div>
+          <div class="st-footer__group">
+            <h4>Account</h4>
+            <ul>
+              <li><a href="/login">Sign In</a></li>
+              <li><a href="/signup">Register</a></li>
+              <li><a href="/settings">Settings</a></li>
+            </ul>
+          </div>
+          <div class="st-footer__group">
+            <h4>Company</h4>
+            <ul>
+              <li><a href="#">About</a></li>
+              <li><a href="#">Contact</a></li>
+              <li><a href="#">Privacy</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="st-footer__bottom">
+        <span>© 2025 ShadyTrails. All rights reserved.</span>
+        <span>Made with 🌿 for trail lovers</span>
+      </div>
+    </footer>
+
+<% if (typeof pageScripts !== 'undefined' && pageScripts) { %>
+  <% pageScripts.forEach(function(script) { %>
+    <script src="<%= script %>"></script>
+  <% }) %>
+<% } %>
+
+<% if (typeof pageScript !== 'undefined' && pageScript) { %>
+  <script src="/js/<%= pageScript %>.js"></script>
+<% } %>
+  </body>
+</html>

@@ -1,0 +1,19 @@
+.bookmarks-wrapper {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.bookmarks-page {
+    flex: 1;
+    padding-top: 120px;
+    font-family: var(--font-body);
+    flex: 1;
+    padding-top: 120px;
+    padding-bottom: 40px;
+    color: white;
+}
+
+.bookmarks-container {
+    min-height: 60vh;
+}

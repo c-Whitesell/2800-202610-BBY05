@@ -1,0 +1,107 @@
+<%- include('components/header', { activePage: 'settings' }) %>
+
+  <div style="max-width: 600px; margin: 0 auto; padding: 100px 1.5rem 3rem;">
+
+    <h1 style="font-family: var(--font-display); font-size: 1.8rem; color: var(--warm-white); margin-bottom: 0.25rem;">
+      Settings</h1>
+    <p style="color: rgba(245,240,232,0.5); font-size: 0.875rem; margin-bottom: 2rem;">Manage your preferences</p>
+
+    <!-- Notifications -->
+    <div style="margin-bottom: 2rem;">
+      <h2
+        style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--sage); margin-bottom: 0.75rem;">
+        Notifications</h2>
+      <div
+        style="background: rgba(37,45,26,0.5); border: 1px solid rgba(138,171,94,0.15); border-radius: var(--radius-md); overflow: hidden;">
+
+        <div
+          style="display:flex; justify-content:space-between; align-items:center; padding: 1rem 1.25rem; border-bottom: 1px solid rgba(138,171,94,0.08);">
+          <span style="font-size:0.9rem; color: var(--cream);">Push Notifications</span>
+          <label class="st-switch"><input type="checkbox" checked /><span class="st-switch__slider"></span></label>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; padding: 1rem 1.25rem;">
+          <span style="font-size:0.9rem; color: var(--cream);">UV Alerts</span>
+          <label class="st-switch"><input type="checkbox" checked /><span class="st-switch__slider"></span></label>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Display -->
+    <div style="margin-bottom: 2rem;">
+      <h2
+        style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--sage); margin-bottom: 0.75rem;">
+        Display</h2>
+      <div
+        style="background: rgba(37,45,26,0.5); border: 1px solid rgba(138,171,94,0.15); border-radius: var(--radius-md); overflow: hidden;">
+
+        <div
+          style="display:flex; justify-content:space-between; align-items:center; padding: 1rem 1.25rem; border-bottom: 1px solid rgba(138,171,94,0.08);">
+          <span style="font-size:0.9rem; color: var(--cream);">Dark Mode</span>
+          <label class="st-switch"><input type="checkbox" checked /><span class="st-switch__slider"></span></label>
+        </div>
+
+        <div
+          style="display:flex; justify-content:space-between; align-items:center; padding: 1rem 1.25rem; border-bottom: 1px solid rgba(138,171,94,0.08);">
+          <span style="font-size:0.9rem; color: var(--cream);">Distance Units</span>
+          <select
+            style="background: rgba(10,14,7,0.6); border: 1px solid rgba(138,171,94,0.2); border-radius: var(--radius-sm); padding: 0.35rem 0.75rem; color: var(--cream); font-size: 0.875rem; outline: none;">
+            <option>Kilometers</option>
+            <option>Miles</option>
+          </select>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; padding: 1rem 1.25rem;">
+          <span style="font-size:0.9rem; color: var(--cream);">Temperature</span>
+          <select
+            style="background: rgba(10,14,7,0.6); border: 1px solid rgba(138,171,94,0.2); border-radius: var(--radius-sm); padding: 0.35rem 0.75rem; color: var(--cream); font-size: 0.875rem; outline: none;">
+            <option>Celsius °C</option>
+            <option>Fahrenheit °F</option>
+          </select>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Privacy -->
+    <div style="margin-bottom: 2rem;">
+      <h2
+        style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--sage); margin-bottom: 0.75rem;">
+        Privacy</h2>
+      <div
+        style="background: rgba(37,45,26,0.5); border: 1px solid rgba(138,171,94,0.15); border-radius: var(--radius-md); overflow: hidden;">
+
+        <div style="display:flex; justify-content:space-between; align-items:center; padding: 1rem 1.25rem;">
+          <span style="font-size:0.9rem; color: var(--cream);">Location Services</span>
+          <label class="st-switch"><input type="checkbox" checked /><span class="st-switch__slider"></span></label>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Account -->
+    <div style="margin-bottom: 2rem;">
+      <h2
+        style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--sage); margin-bottom: 0.75rem;">
+        Account</h2>
+      <div
+        style="background: rgba(37,45,26,0.5); border: 1px solid rgba(138,171,94,0.15); border-radius: var(--radius-md); overflow: hidden;">
+
+        <a href="/logout"
+          style="display:flex; justify-content:space-between; align-items:center; padding: 1rem 1.25rem; border-bottom: 1px solid rgba(138,171,94,0.08); color: var(--cream); font-size: 0.9rem;">
+          <span>Sign Out</span>
+          <span style="color: rgba(245,240,232,0.3);">→</span>
+        </a>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; padding: 1rem 1.25rem;">
+          <span style="font-size:0.9rem; color: #e87a6a;">Delete Account</span>
+          <span style="color: rgba(245,240,232,0.3);">→</span>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <%- include('components/footer') %>
