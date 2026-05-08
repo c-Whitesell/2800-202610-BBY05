@@ -1,0 +1,119 @@
+<% if (tutorialMode) { %>
+    <!-- Instruction Overlay -->
+    <div id="instruction-modal" class="map-modal-overlay">
+        <div class="map-modal-content">
+            <!-- Close button on the left -->
+            <span class="map-modal-close" onclick="closeMapInstructions()">&times;</span>
+            
+            <div class="map-modal-header">
+                <h3>Map Guide</h3>
+            </div>
+            
+            <div class="map-modal-body">
+                <p>Welcome to the map! Here is how to use the tools:</p>
+                <ul>
+                    <li><strong>Navigation:</strong> Drag to move, Scroll to zoom.</li>
+                    <li><strong>3D View:</strong> Right-click and drag to tilt/rotate.</li>
+                    <!-- New Time Changer Instruction -->
+                    <li><strong>Sun/Shadows:</strong> Use the <strong>Time Slider</strong> at the top to see how sunlight changes throughout the day.</li>
+                </ul>
+            </div>
+            
+            <button class="map-modal-btn" onclick="closeMapInstructions()">Start Exploring</button>
+        </div>
+    </div>
+
+    <style>
+        .map-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            font-family: sans-serif;
+        }
+
+        .map-modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            position: relative;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        }
+
+        /* Close 'x' on the left */
+        .map-modal-close {
+            position: absolute;
+            left: 15px;
+            top: 10px;
+            font-size: 28px;
+            font-weight: bold;
+            color: #aaa;
+            cursor: pointer;
+        }
+
+        .map-modal-close:hover {
+            color: #333;
+        }
+
+        .map-modal-header h3 {
+            margin-top: 5px;
+            color: #2c3e50;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 10px;
+        }
+
+        .map-modal-body ul {
+            text-align: left;
+            display: inline-block;
+            margin: 20px 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .map-modal-body li {
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+
+        .map-modal-btn {
+            background-color: #28a745; /* Green to match a "start" action */
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+        }
+
+        .map-modal-btn:hover {
+            background-color: #218838;
+        }
+    </style>
+
+    <script>
+        function closeMapInstructions() {
+            const modal = document.getElementById('instruction-modal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // Close if they click the dark backdrop
+        window.onclick = function(event) {
+            const modal = document.getElementById('instruction-modal');
+            if (event.target == modal) {
+                closeMapInstructions();
+            }
+        }
+    </script>
+<% } %>
