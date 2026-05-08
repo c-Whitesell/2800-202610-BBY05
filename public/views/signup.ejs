@@ -1,4 +1,13 @@
 <%- include('components/header') %>
+<% if (typeof tutorialMode !== 'undefined' && tutorialMode) { %>
+  <div id="tutorial-hint" class="tutorial-hint">
+    <div class="tutorial-hint-content">
+      <p>🎉 Join our hiking community</p>
+      <button class="btn-hint-primary" onclick="tutorialSystemAuth.startTutorial()">Learn More</button>
+      <button class="btn-hint-close" onclick="tutorialSystemAuth.closeTutorialHint()">Skip</button>
+    </div>
+  </div>
+<% } %>
 
 <div class="auth-container">
   <div class="auth-card">
@@ -6,7 +15,11 @@
       <h1>Create Account</h1>
       <p>Join us today</p>
     </div>
-
+    <% if (error) { %>
+      <div class="auth-error">
+        <span>⚠️</span> <%= error %>
+      </div>
+    <% } %>
     <form action="/signup" method="POST" class="auth-form">
       <div class="form-group">
         <label for="name">Full Name</label>
@@ -18,7 +31,6 @@
           required
         />
       </div>
-
       <div class="form-group">
         <label for="email">Email Address</label>
         <input
@@ -29,7 +41,6 @@
           required
         />
       </div>
-
       <div class="form-group">
         <label for="password">Password</label>
         <input
@@ -40,7 +51,6 @@
           required
         />
       </div>
-
       <div class="form-group">
         <label for="confirmPassword">Confirm Password</label>
         <input
@@ -51,9 +61,10 @@
           required
         />
       </div>
-
       <button type="submit" class="btn-primary">Create Account</button>
     </form>
+   
   </div>
 </div>
+
 <%- include('components/footer') %>

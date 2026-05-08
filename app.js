@@ -13,6 +13,9 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 app.use(express.urlencoded({ extended: true }));
+
+app.use(express.json());
+
 app.use(express.static(path.join(__dirname, 'public')));
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'public', 'views'));
@@ -74,15 +77,30 @@ app.use((req, res, next) => {
 });
 
 // ── Routes ────────────────────────────────────────────────
-app.get('/', (req, res) => {
+app.get('/', async (req, res) => {
+  let tutorialMode = true; // default for new users
+
+  if (req.session.authenticated) {
+    const user = await users.findOne({ email: req.session.email });
+    if (user) {
+      tutorialMode = user.tutorialMode !== false;
+    }
+  }
   res.render('index', {
-    pageScript: null,
+    pageScript: 'tutorial-home',
     pageScripts: [],
+    tutorialMode: tutorialMode,
+    isAuthenticated: req.session.authenticated || false,
   });
 });
 
 app.get('/signup', isNotAuthenticated, (req, res) => {
-  res.render('signup', { error: null, pageScripts: [], pageScript: null });
+  res.render('signup', {
+    error: null,
+    pageScripts: [],
+    pageScript: 'tutorial-auth',
+    tutorialMode: true,
+  });
 });
 
 app.post('/signup', isNotAuthenticated, async (req, res) => {
@@ -106,6 +124,7 @@ app.post('/signup', isNotAuthenticated, async (req, res) => {
       error: validation.error.details[0].message,
       pageScripts: [],
       pageScript: null,
+      tutorialMode: tutorialMode,
     });
   }
 
@@ -129,7 +148,12 @@ app.post('/signup', isNotAuthenticated, async (req, res) => {
 });
 
 app.get('/login', isNotAuthenticated, (req, res) => {
-  res.render('login', { error: null, pageScripts: [], pageScript: null });
+  res.render('login', {
+    error: null,
+    pageScripts: [],
+    pageScript: 'tutorial-auth',
+    tutorialMode: true,
+  });
 });
 
 app.post('/login', isNotAuthenticated, async (req, res) => {
