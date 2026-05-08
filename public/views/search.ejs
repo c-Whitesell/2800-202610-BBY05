@@ -1,0 +1,39 @@
+<%- include('components/header') %>
+
+<div class="min-vh-100 d-flex flex-column">
+
+    <main class="search-hero text-center flex-grow-1">
+        <div class="container">
+            <h1 class="display-4 fw-bold mb-3">FutTalk</h1>
+
+            <div class="row justify-content-center">
+                <div class="col-md-8 col-lg-6">
+                    <div class="input-group input-group-lg">
+
+                        <input
+                            type="text"
+                            id="searchPageInput"
+                            class="form-control border-0 shadow-sm"
+                            placeholder="What are you looking for?"
+                        >
+
+                        <button class="btn btn-search px-4">
+                            Search
+                        </button>
+
+                        <ul id="history" class="list-group shadow-sm"></ul>
+
+                    </div>
+                </div>
+            </div>
+
+            <div class="container my-5">
+                <div id="searchResults" class="row justify-content-center">
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <%- include('components/footer') %>
+
+</div>

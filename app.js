@@ -236,6 +236,13 @@ app.get("/logout", (req, res) => {
   res.redirect("/");
 });
 
+app.get('/search', (req, res) => {
+  res.render('search', {
+    pageScript: null,
+    pageScripts: [],
+  });
+});
+
 // ── 404 Handler (must be last) ────────────────────────────
 app.use((req, res) => {
   res.status(404).render("404", { pageScripts: [], pageScript: null });
