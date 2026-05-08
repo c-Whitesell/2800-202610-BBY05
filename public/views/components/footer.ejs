@@ -1,48 +1,53 @@
-<div class="container">
-  <footer
-    class="d-flex flex-wrap justify-content-between align-items-center py-3 my-4 border-top"
-  >
-    <p class="col-md-4 mb-0 text-body-secondary">© 2025 Company, Inc</p>
-    <a
-      href="/"
-      class="col-md-4 d-flex align-items-center justify-content-center mb-3 mb-md-0 me-md-auto link-body-emphasis text-decoration-none"
-      aria-label="Bootstrap"
-    >
-      <svg class="bi me-2" width="40" height="32" aria-hidden="true">
-        <use xlink:href="#bootstrap"></use>
-      </svg>
-    </a>
-    <ul class="nav col-md-4 justify-content-end">
-      <li class="nav-item">
-        <a href="#" class="nav-link px-2 text-body-secondary">Home</a>
-      </li>
-      <li class="nav-item">
-        <a href="#" class="nav-link px-2 text-body-secondary">Features</a>
-      </li>
-      <li class="nav-item">
-        <a href="#" class="nav-link px-2 text-body-secondary">Pricing</a>
-      </li>
-      <li class="nav-item">
-        <a href="#" class="nav-link px-2 text-body-secondary">FAQs</a>
-      </li>
-      <li class="nav-item">
-        <a href="#" class="nav-link px-2 text-body-secondary">About</a>
-      </li>
-    </ul>
-  </footer>
-</div>
+    <footer class="st-footer">
+      <div class="st-footer__inner">
+        <div class="st-footer__brand">
+          <div class="st-navbar__brand" style="margin-bottom:0.75rem;">
+            <div class="st-navbar__brand-icon">🌲</div>
+            ShadyTrails
+          </div>
+          <p class="st-footer__tagline">Discover shaded trails and peaceful paths near you.</p>
+        </div>
+        <div class="st-footer__links">
+          <div class="st-footer__group">
+            <h4>Explore</h4>
+            <ul>
+              <li><a href="/map">Trail Map</a></li>
+              <li><a href="#">Near Me</a></li>
+              <li><a href="#">Popular Routes</a></li>
+            </ul>
+          </div>
+          <div class="st-footer__group">
+            <h4>Account</h4>
+            <ul>
+              <li><a href="/login">Sign In</a></li>
+              <li><a href="/signup">Register</a></li>
+              <li><a href="/settings">Settings</a></li>
+            </ul>
+          </div>
+          <div class="st-footer__group">
+            <h4>Company</h4>
+            <ul>
+              <li><a href="#">About</a></li>
+              <li><a href="#">Contact</a></li>
+              <li><a href="#">Privacy</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="st-footer__bottom">
+        <span>© 2025 ShadyTrails. All rights reserved.</span>
+        <span>Made with 🌿 for trail lovers</span>
+      </div>
+    </footer>
 
-<% if (pageScripts) { %>
-  <% pageScripts.forEach(script => { %>
+<% if (typeof pageScripts !== 'undefined' && pageScripts) { %>
+  <% pageScripts.forEach(function(script) { %>
     <script src="<%= script %>"></script>
   <% }) %>
 <% } %>
 
-<% if (pageScript) { %>
+<% if (typeof pageScript !== 'undefined' && pageScript) { %>
   <script src="/js/<%= pageScript %>.js"></script>
 <% } %>
-<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
-</body>
+  </body>
 </html>
