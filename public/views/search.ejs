@@ -1,8 +1,13 @@
-<%- include('components/header') %>
+<%- include('components/header', { 
+  title: 'Map',
+  styles: `
+    <link rel="stylesheet" href="/css/search.css" />
+  `
+  }) %>c
 
-<div class="min-vh-100 d-flex flex-column">
+<div class="page-wrapper">
 
-    <main class="search-hero text-center flex-grow-1">
+    <main class="search-hero text-center">
         <div class="container">
             <h1 class="display-4 fw-bold mb-3">FutTalk</h1>
 
