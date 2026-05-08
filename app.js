@@ -95,7 +95,12 @@ app.post('/signup', isNotAuthenticated, async (req, res) => {
     confirmPassword: Joi.string().valid(Joi.ref('password')).required(),
   });
 
-  const validation = schema.validate({ name, email, password, confirmPassword });
+  const validation = schema.validate({
+    name,
+    email,
+    password,
+    confirmPassword,
+  });
   if (validation.error) {
     return res.render('signup', {
       error: validation.error.details[0].message,
@@ -180,7 +185,6 @@ app.get('/map', (req, res) => {
   });
 });
 
-<<<<<<< harshpal-feature
 app.get('/settings', (req, res) => {
   res.render('settings', {
     pageScript: null,
@@ -195,22 +199,12 @@ app.get('/logout', (req, res) => {
 });
 
 // ── 404 Handler (must be last) ────────────────────────────
-=======
-
-
-
-
->>>>>>> dev
 app.use((req, res) => {
   res.status(404).render('404', { pageScripts: [], pageScript: null });
 });
 
-<<<<<<< harshpal-feature
 // ── Start Server ──────────────────────────────────────────
-=======
 
-
->>>>>>> dev
 app.listen(PORT, () => {
   console.log(`Server is running at port ${PORT}`);
 });
