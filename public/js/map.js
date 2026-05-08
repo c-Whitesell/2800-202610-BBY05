@@ -32,6 +32,12 @@ if (container && !container._map) {
       data: "./data/parks-polygon-representation.geojson",
     });
 
+    // Add GeoJSON Source
+    map.addSource("vancouver-trails", {
+      type: "geojson",
+      data: "./data/overpass-turbo-vancouver-park-trails.geojson",
+    });
+
     // Add Layer to visualize polygons
     map.addLayer({
       id: "parks-layer",
@@ -40,6 +46,27 @@ if (container && !container._map) {
       paint: {
         "fill-color": "#008000",
         "fill-opacity": 0.5,
+      },
+    });
+
+    // Add Layer to visualize polygons
+    map.addLayer({
+      id: "trails-layer",
+      type: "line",
+      source: "vancouver-trails",
+      paint: {
+        "line-color": "#ad7c10",
+        "line-opacity": 0.7,
+        // Set line width to 5 pixels
+        "line-width": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          10,
+          1, // At zoom 10 (or less), width is 1px
+          15,
+          5, // At zoom 15 (or more), width is 5px
+        ],
       },
     });
   });
