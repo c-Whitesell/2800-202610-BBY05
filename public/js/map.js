@@ -1,34 +1,29 @@
-const container = document.getElementById("map");
+const container = document.getElementById('map');
 
 if (container && !container._map) {
   // Function to set explicit container dimensions
   function setMapDimensions() {
-    const navHeight = document.querySelector(".navbar")?.offsetHeight || 0;
-    const footHeight = document.querySelector("footer")?.offsetHeight || 0;
+    const navHeight = document.querySelector('.navbar')?.offsetHeight || 0;
+    const footHeight = document.querySelector('footer')?.offsetHeight || 0;
     const availableHeight = window.innerHeight - navHeight - footHeight;
 
-    container.style.position = "relative";
-    container.style.height = availableHeight + "px";
-    container.style.width = "100%";
+    container.style.position = 'relative';
+    container.style.height = availableHeight + 'px';
+    container.style.width = '100%';
   }
 
   // Set dimensions before creating the map
   setMapDimensions();
 
   const map = new maplibregl.Map({
-    container: "map",
+    container: 'map',
     style:
-      "https://api.maptiler.com/maps/streets-v4/style.json?key=2s3sHm0MZZMQLMHyYJLn",
+      'https://api.maptiler.com/maps/streets-v4/style.json?key=2s3sHm0MZZMQLMHyYJLn',
     center: [-123.1207, 49.2827],
     zoom: 10,
   });
 
   container._map = map;
-
-  const marker = new maplibregl.Marker()
-    .setLngLat([-123.1207, 49.2827])
-    .setPopup(popup)
-    .addTo(map);
 
   map.on('load', function () {
     // Add GeoJSON Source
@@ -51,7 +46,7 @@ if (container && !container._map) {
 
   // Handle window resize
   let resizeTimeout;
-  window.addEventListener("resize", () => {
+  window.addEventListener('resize', () => {
     clearTimeout(resizeTimeout);
     resizeTimeout = setTimeout(() => {
       setMapDimensions();

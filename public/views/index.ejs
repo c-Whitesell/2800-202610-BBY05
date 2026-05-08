@@ -1,4 +1,10 @@
-<%- include('components/header') %>
+<%- include('components/header', { 
+  title: 'home',
+  styles: `
+    <link rel="stylesheet" href="/css/index.css" />
+  `
+}) %>
+<div class="landing-page">
 <div class="landing-container">
   <div class="landing-card">
     <div class="landing-header">
@@ -11,5 +17,6 @@
       <a href="/signup" class="btn btn-secondary">Sign Up</a>
     </div>
   </div>
+</div>
 </div>
 <%- include('components/footer') %>

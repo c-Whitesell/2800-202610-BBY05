@@ -1,3 +1,10 @@
+<%- include('components/header', { 
+  title: 'home',
+  styles: `
+    <link rel="stylesheet" href="/css/auth.css" />
+  `
+}) %>
+<div class="content-container">
 <div class="auth-container">
   <div class="auth-card">
     <div class="auth-header">
@@ -54,3 +61,5 @@
     </form>
   </div>
 </div>
+</div>
+<%- include('components/footer') %>
