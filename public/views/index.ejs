@@ -1,5 +1,14 @@
 <%- include('components/header', { activePage: 'home', bodyClass: 'home-page' }) %>
 
+<% if (typeof tutorialMode !== 'undefined' && tutorialMode) { %>
+  <div id="tutorial-hint" class="tutorial-hint">
+    <div class="tutorial-hint-content">
+      <p>👋 New here? Learn how to use ShadyTrails</p>
+      <button class="btn-hint-primary" onclick="tutorialSystemHome.startTutorial()">Take Tour</button>
+      <button class="btn-hint-close" onclick="tutorialSystemHome.closeTutorialHint()">Skip</button>
+    </div>
+  </div>
+<% } %>
 <!-- ===== HERO ===== -->
 <section class="st-hero">
   <div class="st-hero__bg"></div>
