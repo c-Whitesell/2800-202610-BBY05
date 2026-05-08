@@ -25,16 +25,11 @@ if (container && !container._map) {
 
   container._map = map;
 
-  const marker = new maplibregl.Marker()
-    .setLngLat([-123.1207, 49.2827])
-    .setPopup(popup)
-    .addTo(map);
-
-  map.on('load', function () {
+  map.on("load", function () {
     // Add GeoJSON Source
-    map.addSource('vancouver-parks', {
-      type: 'geojson',
-      data: './data/parks-polygon-representation.geojson',
+    map.addSource("vancouver-parks", {
+      type: "geojson",
+      data: "./data/parks-polygon-representation.geojson",
     });
 
     // Add GeoJSON Source
@@ -45,12 +40,12 @@ if (container && !container._map) {
 
     // Add Layer to visualize polygons
     map.addLayer({
-      id: 'parks-layer',
-      type: 'fill',
-      source: 'vancouver-parks',
+      id: "parks-layer",
+      type: "fill",
+      source: "vancouver-parks",
       paint: {
-        'fill-color': '#008000',
-        'fill-opacity': 0.5,
+        "fill-color": "#008000",
+        "fill-opacity": 0.5,
       },
     });
 
