@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>weather</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: #f5f4f0;
+      color: #1a1a18;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 24px 16px;
+    }
+
+    .app {
+      background: #ffffff;
+      border-radius: 20px;
+      width: 100%;
+      max-width: 420px;
+      overflow: hidden;
+      border: 0.5px solid #d3d1c7;
+    }
+
+    /* Header */
+    .st-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 20px 12px;
+      border-bottom: 0.5px solid #e8e6df;
+    }
+    .st-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #1a1a18;
+    }
+    .st-logo-dot {
+      width: 8px;
+      height: 8px;
+      background: #3b6d11;
+      border-radius: 50%;
+    }
+    .st-nav {
+      display: flex;
+      gap: 4px;
+    }
+    .st-nav a {
+      font-size: 20px;
+      color: #888780;
+      padding: 6px 8px;
+      border-radius: 8px;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      transition: background 0.15s;
+    }
+    .st-nav a:hover { background: #f1efe8; }
+    .st-nav a.active { background: #f1efe8; color: #3b6d11; }
+
+    /* Body */
+    .st-body { padding: 20px; display: flex; flex-direction: column; gap: 20px; }
+
+    /* Location row */
+    .st-location-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .st-location {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .st-location i { font-size: 14px; color: #3b6d11; }
+    .st-location-name { font-size: 13px; font-weight: 500; }
+    .st-location-sub { font-size: 12px; color: #888780; }
+    .st-date { font-size: 12px; color: #b4b2a9; }
+
+    /* Hero */
+    .st-hero {
+      background: #f1efe8;
+      border-radius: 16px;
+      padding: 20px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      align-items: center;
+      border: 0.5px solid #d3d1c7;
+    }
+    .st-condition {
+      font-size: 12px;
+      color: #3b6d11;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .st-condition i { font-size: 14px; }
+    .st-temp {
+      font-family: 'Playfair Display', serif;
+      font-size: 64px;
+      font-weight: 400;
+      line-height: 1;
+      color: #1a1a18;
+    }
+    .st-temp sup {
+      font-size: 22px;
+      vertical-align: top;
+      margin-top: 12px;
+      display: inline-block;
+    }
+    .st-feels { font-size: 13px; color: #888780; margin-top: 6px; }
+
+    /* Shade ring */
+    .st-shade-score { text-align: center; }
+    .st-shade-ring {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      border: 3px solid #c0dd97;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .st-shade-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+      font-weight: 400;
+      color: #3b6d11;
+      line-height: 1;
+    }
+    .st-shade-label { font-size: 10px; color: #888780; margin-top: 2px; }
+    .st-shade-caption { font-size: 11px; color: #888780; margin-top: 6px; line-height: 1.4; }
+
+    /* Metrics */
+    .st-metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .st-metric {
+      background: #f1efe8;
+      border-radius: 8px;
+      padding: 12px 8px;
+      text-align: center;
+      border: 0.5px solid #d3d1c7;
+    }
+    .st-metric-icon { font-size: 18px; color: #888780; margin-bottom: 4px; }
+    .st-metric-val { font-size: 13px; font-weight: 500; color: #1a1a18; }
+    .st-metric-lbl { font-size: 11px; color: #888780; margin-top: 2px; }
+
+    /* Section title */
+    .st-section-title {
+      font-size: 11px;
+      font-weight: 500;
+      color: #888780;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    /* Hourly forecast */
+    .st-hourly {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      scrollbar-width: none;
+    }
+    .st-hourly::-webkit-scrollbar { display: none; }
+    .st-hour {
+      min-width: 62px;
+      background: #f1efe8;
+      border-radius: 10px;
+      padding: 10px 8px;
+      text-align: center;
+      border: 0.5px solid #d3d1c7;
+      flex-shrink: 0;
+    }
+    .st-hour.now { border-color: #639922; background: #eaf3de; }
+    .st-hour-time { font-size: 11px; color: #888780; }
+    .st-hour.now .st-hour-time { color: #3b6d11; font-weight: 500; }
+    .st-hour-icon { font-size: 18px; color: #888780; margin: 6px 0; }
+    .st-hour.now .st-hour-icon { color: #3b6d11; }
+    .st-hour-temp { font-size: 14px; font-weight: 500; color: #1a1a18; }
+    .st-hour-shade { font-size: 10px; color: #888780; margin-top: 4px; }
+    .st-hour.now .st-hour-shade { color: #3b6d11; font-weight: 500; }
+
+    /* Shade bars */
+    .st-shade-bar-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12px;
+    }
+    .st-shade-bar-label { color: #888780; min-width: 60px; }
+    .st-shade-bar-track {
+      flex: 1;
+      height: 6px;
+      background: #e8e6df;
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .st-shade-bar-fill { height: 100%; border-radius: 99px; }
+    .st-shade-bar-pct { min-width: 32px; text-align: right; color: #888780; font-size: 12px; }
+    .st-shade-bars { display: flex; flex-direction: column; gap: 12px; }
+
+    /* Alert */
+    .st-alert {
+      background: #faeeda;
+      border-radius: 10px;
+      padding: 12px 14px;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      border: 0.5px solid #fac775;
+    }
+    .st-alert i { color: #ba7517; font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+    .st-alert-text { font-size: 13px; color: #633806; line-height: 1.5; }
+    .st-alert-text strong { font-weight: 500; display: block; margin-bottom: 2px; color: #412402; }
+
+    /* Trails */
+    .st-trails { display: flex; flex-direction: column; gap: 10px; }
+    .st-trail {
+      background: #ffffff;
+      border: 0.5px solid #d3d1c7;
+      border-radius: 14px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: border-color 0.15s;
+    }
+    .st-trail:hover { border-color: #97c459; }
+    .st-trail-icon-wrap {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: #eaf3de;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .st-trail-icon-wrap i { font-size: 20px; color: #3b6d11; }
+    .st-trail-info { flex: 1; }
+    .st-trail-name { font-size: 14px; font-weight: 500; color: #1a1a18; }
+    .st-trail-meta { font-size: 12px; color: #888780; margin-top: 2px; }
+    .st-trail-badge {
+      padding: 3px 10px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .badge-high { background: #eaf3de; color: #27500a; }
+    .badge-med  { background: #faeeda; color: #633806; }
+    .badge-low  { background: #fcebeb; color: #501313; }
+
+    /* Footer tabs */
+    .st-footer-tabs {
+      display: flex;
+      border-top: 0.5px solid #e8e6df;
+      padding: 10px 20px;
+    }
+    .st-tab {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding: 6px;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: background 0.15s;
+    }
+    .st-tab:hover { background: #f1efe8; }
+    .st-tab i { font-size: 20px; color: #888780; }
+    .st-tab span { font-size: 10px; color: #888780; }
+    .st-tab.active i { color: #3b6d11; }
+    .st-tab.active span { color: #3b6d11; font-weight: 500; }
+  </style>
+</head>
+<body>
+  <div class="app">
+
+    <!-- Header -->
+    <header class="st-header">
+      <div class="st-logo">
+        <div class="st-logo-dot"></div>
+        ShadyTrails
+      </div>
+      <nav class="st-nav">
+        <a href="#" class="active" aria-label="Weather"><i class="ti ti-cloud"></i></a>
+        <a href="#" aria-label="Map"><i class="ti ti-map-2"></i></a>
+        <a href="#" aria-label="Saved"><i class="ti ti-heart"></i></a>
+      </nav>
+    </header>
+
+    <main class="st-body">
+
+      <!-- Location row -->
+      <div class="st-location-row">
+        <div class="st-location">
+          <i class="ti ti-map-pin" aria-hidden="true"></i>
+          <div>
+            <div class="st-location-name">Surrey, BC</div>
+            <div class="st-location-sub">Updated 3 min ago</div>
+          </div>
+        </div>
+        <div class="st-date">Wed, May 6</div>
+      </div>
+
+      <!-- Hero -->
+      <div class="st-hero">
+        <div class="st-temp-block">
+          <div class="st-condition">
+            <i class="ti ti-cloud-sun" aria-hidden="true"></i>
+            Partly Cloudy
+          </div>
+          <div class="st-temp">18<sup>°C</sup></div>
+          <div class="st-feels">Feels like 16° · High 21° · Low 12°</div>
+        </div>
+        <div class="st-shade-score">
+          <div class="st-shade-ring">
+            <div class="st-shade-num">74</div>
+            <div class="st-shade-label">shade</div>
+          </div>
+          <div class="st-shade-caption">Good shade<br>conditions</div>
+        </div>
+      </div>
+
+      <!-- Metrics -->
+      <div class="st-metrics">
+        <div class="st-metric">
+          <div class="st-metric-icon"><i class="ti ti-droplet" aria-hidden="true"></i></div>
+          <div class="st-metric-val">68%</div>
+          <div class="st-metric-lbl">Humidity</div>
+        </div>
+        <div class="st-metric">
+          <div class="st-metric-icon"><i class="ti ti-wind" aria-hidden="true"></i></div>
+          <div class="st-metric-val">12 km/h</div>
+          <div class="st-metric-lbl">Wind</div>
+        </div>
+        <div class="st-metric">
+          <div class="st-metric-icon"><i class="ti ti-sun" aria-hidden="true"></i></div>
+          <div class="st-metric-val">UV 4</div>
+          <div class="st-metric-lbl">UV Index</div>
+        </div>
+        <div class="st-metric">
+          <div class="ti ti-eye" aria-hidden="true" style="font-size:18px; color:#888780; margin-bottom:4px;"></div>
+          <div class="st-metric-val">16 km</div>
+          <div class="st-metric-lbl">Visibility</div>
+        </div>
+      </div>
+
+      <!-- Hourly forecast -->
+      <div>
+        <div class="st-section-title">Hourly forecast</div>
+        <div class="st-hourly">
+          <div class="st-hour now">
+            <div class="st-hour-time">Now</div>
+            <div class="st-hour-icon"><i class="ti ti-cloud-sun" aria-hidden="true"></i></div>
+            <div class="st-hour-temp">18°</div>
+            <div class="st-hour-shade">🌿 74%</div>
+          </div>
+          <div class="st-hour">
+            <div class="st-hour-time">2 PM</div>
+            <div class="st-hour-icon"><i class="ti ti-sun" aria-hidden="true"></i></div>
+            <div class="st-hour-temp">20°</div>
+            <div class="st-hour-shade">☀️ 52%</div>
+          </div>
+          <div class="st-hour">
+            <div class="st-hour-time">4 PM</div>
+            <div class="st-hour-icon"><i class="ti ti-cloud" aria-hidden="true"></i></div>
+            <div class="st-hour-temp">19°</div>
+            <div class="st-hour-shade">🌿 80%</div>
+          </div>
+          <div class="st-hour">
+            <div class="st-hour-time">6 PM</div>
+            <div class="st-hour-icon"><i class="ti ti-cloud" aria-hidden="true"></i></div>
+            <div class="st-hour-temp">17°</div>
+            <div class="st-hour-shade">🌿 85%</div>
+          </div>
+          <div class="st-hour">
+            <div class="st-hour-time">8 PM</div>
+            <div class="st-hour-icon"><i class="ti ti-moon" aria-hidden="true"></i></div>
+            <div class="st-hour-temp">14°</div>
+            <div class="st-hour-shade">🌙 —</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Shade bars -->
+      <div>
+        <div class="st-section-title">Shade coverage by time of day</div>
+        <div class="st-shade-bars">
+          <div class="st-shade-bar-row">
+            <span class="st-shade-bar-label">Morning</span>
+            <div class="st-shade-bar-track"><div class="st-shade-bar-fill" style="width:88%; background:#639922;"></div></div>
+            <span class="st-shade-bar-pct">88%</span>
+          </div>
+          <div class="st-shade-bar-row">
+            <span class="st-shade-bar-label">Midday</span>
+            <div class="st-shade-bar-track"><div class="st-shade-bar-fill" style="width:52%; background:#ba7517;"></div></div>
+            <span class="st-shade-bar-pct">52%</span>
+          </div>
+          <div class="st-shade-bar-row">
+            <span class="st-shade-bar-label">Afternoon</span>
+            <div class="st-shade-bar-track"><div class="st-shade-bar-fill" style="width:74%; background:#639922;"></div></div>
+            <span class="st-shade-bar-pct">74%</span>
+          </div>
+          <div class="st-shade-bar-row">
+            <span class="st-shade-bar-label">Evening</span>
+            <div class="st-shade-bar-track"><div class="st-shade-bar-fill" style="width:85%; background:#3b6d11;"></div></div>
+            <span class="st-shade-bar-pct">85%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Alert -->
+      <div class="st-alert">
+        <i class="ti ti-sun-high" aria-hidden="true"></i>
+        <div class="st-alert-text">
+          <strong>High UV at midday (12–2 PM)</strong>
+          Shade coverage drops to 52% during peak sun hours. Consider morning or evening trails for the best shaded experience today.
+        </div>
+      </div>
+
+      <!-- Nearby trails -->
+      <div>
+        <div class="st-section-title">Nearby shady trails</div>
+        <div class="st-trails">
+          <div class="st-trail">
+            <div class="st-trail-icon-wrap"><i class="ti ti-trees" aria-hidden="true"></i></div>
+            <div class="st-trail-info">
+              <div class="st-trail-name">Redwood Grove Loop</div>
+              <div class="st-trail-meta">3.2 km · 45 min · 0.4 km away</div>
+            </div>
+            <span class="st-trail-badge badge-high">High shade</span>
+          </div>
+          <div class="st-trail">
+            <div class="st-trail-icon-wrap"><i class="ti ti-ripple" aria-hidden="true"></i></div>
+            <div class="st-trail-info">
+              <div class="st-trail-name">Creekside Greenway</div>
+              <div class="st-trail-meta">5.8 km · 1.2 hr · 1.1 km away</div>
+            </div>
+            <span class="st-trail-badge badge-high">High shade</span>
+          </div>
+          <div class="st-trail">
+            <div class="st-trail-icon-wrap"><i class="ti ti-leaf" aria-hidden="true"></i></div>
+            <div class="st-trail-info">
+              <div class="st-trail-name">Meadow Ridge Path</div>
+              <div class="st-trail-meta">2.1 km · 30 min · 1.8 km away</div>
+            </div>
+            <span class="st-trail-badge badge-med">Moderate shade</span>
+          </div>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- Footer tabs -->
+    <nav class="st-footer-tabs" aria-label="Main navigation">
+      <a class="st-tab active" href="#" aria-current="page">
+        <i class="ti ti-cloud" aria-hidden="true"></i>
+        <span>Weather</span>
+      </a>
+      <a class="st-tab" href="#">
+        <i class="ti ti-map-2" aria-hidden="true"></i>
+        <span>Explore</span>
+      </a>
+      <a class="st-tab" href="#">
+        <i class="ti ti-heart" aria-hidden="true"></i>
+        <span>Saved</span>
+      </a>
+      <a class="st-tab" href="#">
+        <i class="ti ti-user" aria-hidden="true"></i>
+        <span>Profile</span>
+      </a>
+    </nav>
+
+  </div>
+</body>
+</html>

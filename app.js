@@ -167,6 +167,13 @@ app.get('/map', (req, res) => {
   });
 });
 
+app.get('/weather', (req, res) => {
+  res.render('weather', {
+    pageScript: null,
+    pageScripts: [],
+  });
+});
+
 app.use((req, res) => {
   res.status(404).render('404', { pageScripts: [], pageScript: null });
 });
