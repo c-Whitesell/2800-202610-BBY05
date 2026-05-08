@@ -7,14 +7,13 @@
 .bookmarks-page {
     flex: 1;
     padding-top: 120px;
-}
-
-.bookmarks-container {
-    min-height: 60vh;
-}
-.bookmarks-page {
+    font-family: var(--font-body);
     flex: 1;
     padding-top: 120px;
     padding-bottom: 40px;
     color: white;
+}
+
+.bookmarks-container {
+    min-height: 60vh;
 }

@@ -84,6 +84,7 @@ app.get('/', async (req, res) => {
     tutorialMode,
     isAuthenticated: req.session.authenticated || false,
   });
+  
 });
 
 app.get('/signup', isNotAuthenticated, (req, res) => {
