@@ -9,6 +9,10 @@
   <link rel="stylesheet" href="/css/style.css" />
   <%- typeof styles !=='undefined' ? styles : '' %>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css">
+
+  <script>
+  window.TUTORIAL_MODE = <%= typeof tutorialMode !== 'undefined' ? tutorialMode : true %>;
+  </script>
 </head>
 
 <body class="<%= typeof bodyClass !== 'undefined' ? bodyClass : '' %>">
