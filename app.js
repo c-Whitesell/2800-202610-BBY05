@@ -180,9 +180,15 @@ app.get('/map', (req, res) => {
   });
 });
 
-<<<<<<< harshpal-feature
 app.get('/settings', (req, res) => {
   res.render('settings', {
+    pageScript: null,
+    pageScripts: [],
+  });
+});
+
+app.get('/weather', (req, res) => {
+  res.render('weather', {
     pageScript: null,
     pageScripts: [],
   });
@@ -195,22 +201,11 @@ app.get('/logout', (req, res) => {
 });
 
 // ── 404 Handler (must be last) ────────────────────────────
-=======
-
-
-
-
->>>>>>> dev
 app.use((req, res) => {
   res.status(404).render('404', { pageScripts: [], pageScript: null });
 });
 
-<<<<<<< harshpal-feature
 // ── Start Server ──────────────────────────────────────────
-=======
-
-
->>>>>>> dev
 app.listen(PORT, () => {
   console.log(`Server is running at port ${PORT}`);
 });
