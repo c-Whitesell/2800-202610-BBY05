@@ -13,9 +13,12 @@ const path = require("path");
 const app = express();
 const PORT = process.env.PORT || 3000;
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, "public")));
-app.set("view engine", "ejs");
-app.set("views", path.join(__dirname, "public", "views"));
+
+app.use(express.json());
+
+app.use(express.static(path.join(__dirname, 'public')));
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'public', 'views'));
 
 // ── Database ──────────────────────────────────────────────
 const client = new MongoClient(process.env.MONGO_URI);
@@ -64,7 +67,7 @@ const isNotAuthenticated = (req, res, next) => {
   if (!req.session.authenticated) {
     return next();
   }
-  res.redirect("/members");
+  res.redirect('/map');
 };
 
 // Makes isAuthenticated available in all EJS templates
@@ -74,15 +77,30 @@ app.use((req, res, next) => {
 });
 
 // ── Routes ────────────────────────────────────────────────
-app.get("/", (req, res) => {
-  res.render("index", {
-    pageScript: null,
+app.get('/', async (req, res) => {
+  let tutorialMode = true; // default for new users
+
+  if (req.session.authenticated) {
+    const user = await users.findOne({ email: req.session.email });
+    if (user) {
+      tutorialMode = user.tutorialMode !== false;
+    }
+  }
+  res.render('index', {
+    pageScript: 'tutorial-home',
     pageScripts: [],
+    tutorialMode: tutorialMode,
+    isAuthenticated: req.session.authenticated || false,
   });
 });
 
-app.get("/signup", isNotAuthenticated, (req, res) => {
-  res.render("signup", { error: null, pageScripts: [], pageScript: null });
+app.get('/signup', isNotAuthenticated, (req, res) => {
+  res.render('signup', {
+    error: null,
+    pageScripts: [],
+    pageScript: 'tutorial-auth',
+    tutorialMode: true,
+  });
 });
 
 app.post("/signup", isNotAuthenticated, async (req, res) => {
@@ -106,6 +124,7 @@ app.post("/signup", isNotAuthenticated, async (req, res) => {
       error: validation.error.details[0].message,
       pageScripts: [],
       pageScript: null,
+      tutorialMode: tutorialMode,
     });
   }
 
@@ -128,8 +147,13 @@ app.post("/signup", isNotAuthenticated, async (req, res) => {
   res.redirect("/map");
 });
 
-app.get("/login", isNotAuthenticated, (req, res) => {
-  res.render("login", { error: null, pageScripts: [], pageScript: null });
+app.get('/login', isNotAuthenticated, (req, res) => {
+  res.render('login', {
+    error: null,
+    pageScripts: [],
+    pageScript: 'tutorial-auth',
+    tutorialMode: true,
+  });
 });
 
 app.post("/login", isNotAuthenticated, async (req, res) => {
@@ -185,8 +209,15 @@ app.get("/map", (req, res) => {
   });
 });
 
-app.get("/settings", (req, res) => {
-  res.render("settings", {
+app.get('/settings', (req, res) => {
+  res.render('settings', {
+    pageScript: null,
+    pageScripts: [],
+  });
+});
+
+app.get('/weather', (req, res) => {
+  res.render('weather', {
     pageScript: null,
     pageScripts: [],
   });
@@ -202,6 +233,8 @@ app.get("/logout", (req, res) => {
 app.use((req, res) => {
   res.status(404).render("404", { pageScripts: [], pageScript: null });
 });
+
+// ── Start Server ──────────────────────────────────────────
 
 app.listen(PORT, () => {
   console.log(`Server is running at port ${PORT}`);
