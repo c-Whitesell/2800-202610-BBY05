@@ -105,13 +105,18 @@ app.post("/signup", isNotAuthenticated, async (req, res) => {
     confirmPassword: Joi.string().valid(Joi.ref("password")).required(),
   });
 
-  const validation = schema.validate({ name, email, password, confirmPassword });
+  const validation = schema.validate({
+    name,
+    email,
+    password,
+    confirmPassword,
+  });
   if (validation.error) {
     return res.render("signup", {
       error: validation.error.details[0].message,
       pageScripts: [],
       pageScript: "tutorial-auth",
-      tutorialMode: true,  // fixed: was referencing undefined variable
+      tutorialMode: true, // fixed: was referencing undefined variable
     });
   }
 
@@ -121,7 +126,7 @@ app.post("/signup", isNotAuthenticated, async (req, res) => {
       error: "Email already in use",
       pageScripts: [],
       pageScript: "tutorial-auth",
-      tutorialMode: true,  // fixed: was missing
+      tutorialMode: true, // fixed: was missing
     });
   }
 
@@ -159,7 +164,7 @@ app.post("/login", isNotAuthenticated, async (req, res) => {
       error: "Invalid email or password",
       pageScripts: [],
       pageScript: "tutorial-auth",
-      tutorialMode: true,  // fixed: was missing
+      tutorialMode: true, // fixed: was missing
     });
   }
 
@@ -169,7 +174,7 @@ app.post("/login", isNotAuthenticated, async (req, res) => {
       error: "User not found",
       pageScripts: [],
       pageScript: "tutorial-auth",
-      tutorialMode: true,  // fixed: was missing
+      tutorialMode: true, // fixed: was missing
     });
   }
 
@@ -179,7 +184,7 @@ app.post("/login", isNotAuthenticated, async (req, res) => {
       error: "Invalid password",
       pageScripts: [],
       pageScript: "tutorial-auth",
-      tutorialMode: true,  // fixed: was missing
+      tutorialMode: true, // fixed: was missing
     });
   }
 
@@ -195,9 +200,18 @@ app.get("/bookmarks", (req, res) => {
 });
 
 app.get("/map", (req, res) => {
+  // Check if the instructions have been shown in this session
+  const showMapTutorial = !req.session.mapInstructionsShown;
+
+  // Mark them as shown so they don't appear on refresh
+  if (showMapTutorial) {
+    req.session.mapInstructionsShown = true;
+  }
+
   res.render("map", {
     pageScript: "map",
     pageScripts: ["https://unpkg.com/maplibre-gl@5.23.0/dist/maplibre-gl.js"],
+    tutorialMode: showMapTutorial, // Passing the session state to EJS
   });
 });
 
