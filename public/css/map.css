@@ -31,3 +31,7 @@ footer {
   margin: 0;
   max-width: 100%;
 }
+
+#map {
+  height: calc(100vh - 68px);
+}

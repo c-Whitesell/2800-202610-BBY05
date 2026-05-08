@@ -1,5 +1,6 @@
 require('dotenv').config();
 
+// ── Dependencies ──────────────────────────────────────────
 const express = require('express');
 const session = require('express-session');
 const MongoStore = require('connect-mongo').default;
@@ -8,16 +9,15 @@ const Joi = require('joi');
 const { MongoClient } = require('mongodb');
 const path = require('path');
 
+// ── App Setup ─────────────────────────────────────────────
 const app = express();
 const PORT = process.env.PORT || 3000;
-
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
-
-const expireTime = 60 * 60 * 1000;
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'public', 'views'));
 
+// ── Database ──────────────────────────────────────────────
 const client = new MongoClient(process.env.MONGO_URI);
 let users;
 
@@ -29,6 +29,8 @@ async function connectDB() {
 }
 connectDB();
 
+// ── Sessions ──────────────────────────────────────────────
+const expireTime = 60 * 60 * 1000;
 app.use(
   session({
     secret: process.env.NODE_SESSION_SECRET,
@@ -44,6 +46,13 @@ app.use(
   }),
 );
 
+// ── Global Template Variables ─────────────────────────────
+app.use((req, res, next) => {
+  res.locals.isAuthenticated = req.session.authenticated || false;
+  next();
+});
+
+// ── Auth Middleware ───────────────────────────────────────
 const isAuthenticated = (req, res, next) => {
   if (req.session.authenticated) {
     return next();
@@ -58,6 +67,13 @@ const isNotAuthenticated = (req, res, next) => {
   res.redirect('/map');
 };
 
+// Makes isAuthenticated available in all EJS templates
+app.use((req, res, next) => {
+  res.locals.isAuthenticated = req.session.authenticated || false;
+  next();
+});
+
+// ── Routes ────────────────────────────────────────────────
 app.get('/', (req, res) => {
   res.render('index', {
     pageScript: null,
@@ -79,12 +95,7 @@ app.post('/signup', isNotAuthenticated, async (req, res) => {
     confirmPassword: Joi.string().valid(Joi.ref('password')).required(),
   });
 
-  const validation = schema.validate({
-    name,
-    email,
-    password,
-    confirmPassword,
-  });
+  const validation = schema.validate({ name, email, password, confirmPassword });
   if (validation.error) {
     return res.render('signup', {
       error: validation.error.details[0].message,
@@ -134,7 +145,6 @@ app.post('/login', isNotAuthenticated, async (req, res) => {
   }
 
   const user = await users.findOne({ email });
-
   if (!user) {
     return res.render('login', {
       error: 'User not found',
@@ -144,7 +154,6 @@ app.post('/login', isNotAuthenticated, async (req, res) => {
   }
 
   const valid = await bcrypt.compare(password, user.password);
-
   if (!valid) {
     return res.render('login', {
       error: 'Invalid password',
@@ -160,6 +169,10 @@ app.post('/login', isNotAuthenticated, async (req, res) => {
   res.redirect('/map');
 });
 
+app.get('/bookmarks', (req, res) => {
+  res.render('bookmarks', { error: null, pageScripts: [], pageScript: null });
+});
+
 app.get('/map', (req, res) => {
   res.render('map', {
     pageScript: 'map',
@@ -167,10 +180,37 @@ app.get('/map', (req, res) => {
   });
 });
 
+<<<<<<< harshpal-feature
+app.get('/settings', (req, res) => {
+  res.render('settings', {
+    pageScript: null,
+    pageScripts: [],
+  });
+});
+
+// log out route
+app.get('/logout', (req, res) => {
+  req.session.destroy();
+  res.redirect('/');
+});
+
+// ── 404 Handler (must be last) ────────────────────────────
+=======
+
+
+
+
+>>>>>>> dev
 app.use((req, res) => {
   res.status(404).render('404', { pageScripts: [], pageScript: null });
 });
 
+<<<<<<< harshpal-feature
+// ── Start Server ──────────────────────────────────────────
+=======
+
+
+>>>>>>> dev
 app.listen(PORT, () => {
   console.log(`Server is running at port ${PORT}`);
 });
