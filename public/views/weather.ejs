@@ -350,7 +350,7 @@
         <i class="ti ti-map-pin location-icon"></i>
         <div>
           <div class="location-name" id="location-name">–</div>
-          <div class="location-sub" id="location-sub">Detecting location…</div>
+          <div class="location-sub" id="location-sub">–</div>
         </div>
       </div>
       <div class="location-date" id="location-date">–</div>
@@ -461,6 +461,11 @@
 </div><%# end .container %>
 
 <script>
+  // Fixed location: Vancouver, BC
+  const VANCOUVER_LAT = 49.2827;
+  const VANCOUVER_LON = -123.1207;
+  const VANCOUVER_LABEL = 'Vancouver, BC';
+
   const WMO_CODES = {
     0:  { label: 'Clear Sky',     icon: 'ti-sun' },
     1:  { label: 'Mainly Clear',  icon: 'ti-sun' },
@@ -522,19 +527,6 @@
     return h < 12 ? `${h} AM` : `${h - 12} PM`;
   }
 
-  async function reverseGeocode(lat, lon) {
-    try {
-      const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`);
-      const d = await r.json();
-      const city    = d.address.city || d.address.town || d.address.village || d.address.county || 'Your Location';
-      const state   = d.address.state_code || d.address.state || '';
-      const country = d.address.country_code ? d.address.country_code.toUpperCase() : '';
-      return `${city}${state ? ', ' + state : ''}${country && country !== 'US' ? ', ' + country : ''}`;
-    } catch {
-      return `${lat.toFixed(2)}°N, ${lon.toFixed(2)}°W`;
-    }
-  }
-
   function showError(message) {
     document.getElementById('weather-loading').style.display  = 'none';
     document.getElementById('weather-content').style.display  = 'none';
@@ -547,21 +539,8 @@
     document.getElementById('weather-error').style.display   = 'none';
     document.getElementById('weather-content').style.display = 'none';
 
-    // Geolocation
-    let lat, lon;
-    let usingFallback = false;
-    try {
-      const pos = await new Promise((res, rej) =>
-        navigator.geolocation.getCurrentPosition(res, rej, { timeout: 8000 })
-      );
-      lat = pos.coords.latitude;
-      lon = pos.coords.longitude;
-    } catch (geoErr) {
-      console.warn('Geolocation unavailable, using default location:', geoErr.message);
-      lat = 49.19;
-      lon = -122.85;
-      usingFallback = true;
-    }
+    const lat = VANCOUVER_LAT;
+    const lon = VANCOUVER_LON;
 
     // Open-Meteo fetch
     let data;
@@ -597,24 +576,22 @@
 
     // Render
     try {
-      await renderWeather(data, lat, lon, usingFallback);
+      await renderWeather(data);
     } catch (renderErr) {
       console.error('Render error:', renderErr);
       showError('Something went wrong displaying the weather. Please try again.');
     }
   }
 
-  async function renderWeather(data, lat, lon, usingFallback) {
+  async function renderWeather(data) {
     const cur  = data.current;
     const hrly = data.hourly;
     const dly  = data.daily;
     const now  = new Date();
 
-    const locationName = await reverseGeocode(lat, lon);
-    document.getElementById('location-name').textContent = locationName;
-    document.getElementById('location-sub').textContent  = usingFallback
-      ? 'Location unavailable – showing Surrey, BC'
-      : `Updated ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+    document.getElementById('location-name').textContent = VANCOUVER_LABEL;
+    document.getElementById('location-sub').textContent  =
+      `Updated ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
     document.getElementById('location-date').textContent =
       now.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
 
