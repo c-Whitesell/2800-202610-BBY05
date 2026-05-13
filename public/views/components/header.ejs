@@ -29,6 +29,9 @@
       <li><a href="/settings"
           class="<%= typeof activePage !== 'undefined' && activePage === 'settings' ? 'active' : '' %>">Settings</a>
       </li>
+      <li><a href="/profile"
+          class="<%= typeof activePage !== 'undefined' && activePage === 'profile' ? 'active' : '' %>">Profile</a>
+      </li>
     </ul>
     <div class="st-navbar__actions">
       <% if (isAuthenticated) { %>

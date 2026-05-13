@@ -1,0 +1,151 @@
+<%- include('components/header', {
+  styles: `
+    <link rel="stylesheet" href="/css/profile.css" />
+    `
+}) %>
+
+<% if (typeof tutorialMode !== 'undefined' && tutorialMode) { %>
+  <div id="tutorial-hint" class="tutorial-hint">
+    <div class="tutorial-hint-content">
+      <p>👋 Learn about your profile</p>
+      <button class="btn-hint-primary" onclick="tutorialSystemProfile.startTutorial()">Take Tour</button>
+      <button class="btn-hint-close" onclick="tutorialSystemProfile.closeTutorialHint()">Skip</button>
+    </div>
+  </div>
+<% } %>
+
+<div class="st-profile-container">
+  <!-- Profile Header -->
+  <div class="st-profile-header">
+    <div class="st-profile-header__inner">
+      <div class="st-profile-hero">
+        <div class="st-profile-picture-wrapper">
+          <img id="profilePicture" class="st-profile-picture" src="<%= user.profilePicture || '/images/default-avatar.png' %>" alt="<%= user.nickname %>">
+          <label class="st-profile-picture-upload" for="pictureInput" title="Click to upload new photo">
+            <span class="upload-icon">📷</span>
+          </label>
+          <input type="file" id="pictureInput" accept="image/*" hidden>
+        </div>
+
+        <div class="st-profile-info">
+          <div class="st-profile-greeting">
+            <h1>Welcome back, <span class="nickname-display"><%= user.nickname %></span>! 👋</h1>
+          </div>
+          <p class="st-profile-email"><%= user.email %></p>
+          <p class="st-profile-since">Member since <%= user.memberSince %></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="st-profile-content">
+    <div class="st-profile-grid">
+      <!-- Profile Card -->
+      <div class="st-profile-card">
+        <div class="st-card-header">
+          <h2>Profile Settings</h2>
+          <p>Manage your account information</p>
+        </div>
+
+        <div class="st-card-body">
+          <!-- Nickname Section -->
+          <div class="st-profile-section">
+            <h3 class="st-section-title">Display Name</h3>
+            <div class="st-edit-field">
+              <input 
+                type="text" 
+                id="nicknameInput" 
+                class="st-nickname-input" 
+                value="<%= user.nickname %>" 
+                placeholder="Enter your nickname"
+                maxlength="50">
+              <button class="st-btn st-btn--save" id="saveNicknameBtn">
+                <span class="save-icon">💾</span>
+                Save
+              </button>
+            </div>
+            <p class="st-field-hint">This is how your name appears throughout ShadyTrails</p>
+          </div>
+
+          <!-- Account Info -->
+          <div class="st-profile-section">
+            <h3 class="st-section-title">Account Details</h3>
+            <div class="st-info-row">
+              <div class="st-info-item">
+                <label>Full Name</label>
+                <p class="st-info-value"><%= user.name %></p>
+              </div>
+              <div class="st-info-item">
+                <label>Email Address</label>
+                <p class="st-info-value"><%= user.email %></p>
+              </div>
+            </div>
+            <div class="st-info-row">
+              <div class="st-info-item full-width">
+                <label>Member Since</label>
+                <p class="st-info-value"><%= user.memberSince %></p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Profile Picture Info -->
+          <div class="st-profile-section">
+            <h3 class="st-section-title">Profile Picture</h3>
+            <p class="st-field-hint">Click the camera icon on your profile photo to upload a new picture. Supported formats: JPG, PNG, GIF, WebP (Max 2MB)</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Links Card -->
+      <div class="st-profile-card st-profile-card--secondary">
+        <div class="st-card-header">
+          <h2>Quick Actions</h2>
+        </div>
+
+        <div class="st-card-body">
+          <a href="/settings" class="st-quick-link">
+            <span class="link-icon">⚙️</span>
+            <span class="link-text">
+              <strong>Settings</strong>
+              <span class="link-desc">Manage preferences and account settings</span>
+            </span>
+            <span class="link-arrow">→</span>
+          </a>
+
+          <a href="/map" class="st-quick-link">
+            <span class="link-icon">🗺️</span>
+            <span class="link-text">
+              <strong>Explore Trails</strong>
+              <span class="link-desc">Discover hiking trails and routes</span>
+            </span>
+            <span class="link-arrow">→</span>
+          </a>
+
+          <a href="/weather" class="st-quick-link">
+            <span class="link-icon">🌤️</span>
+            <span class="link-text">
+              <strong>Weather</strong>
+              <span class="link-desc">Check trail conditions and forecasts</span>
+            </span>
+            <span class="link-arrow">→</span>
+          </a>
+
+          <a href="/bookmarks" class="st-quick-link">
+            <span class="link-icon">🔖</span>
+            <span class="link-text">
+              <strong>Bookmarks</strong>
+              <span class="link-desc">View your saved trails and locations</span>
+            </span>
+            <span class="link-arrow">→</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Notification -->
+<div id="toast" class="st-toast"></div>
+
+<%- include('components/footer') %>
