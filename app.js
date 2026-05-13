@@ -84,7 +84,6 @@ app.get('/', async (req, res) => {
     tutorialMode,
     isAuthenticated: req.session.authenticated || false,
   });
-  
 });
 
 app.get('/signup', isNotAuthenticated, (req, res) => {
@@ -271,6 +270,94 @@ app.post('/toggle-tutorial', async (req, res) => {
 app.get('/logout', (req, res) => {
   req.session.destroy();
   res.redirect('/');
+});
+
+app.get('/profile', isAuthenticated, async (req, res) => {
+  try {
+    const user = await users.findOne({ email: req.session.email });
+    if (!user) {
+      return res.redirect('/login');
+    }
+
+    const tutorialMode = await getTutorialMode(req);
+
+    // Calculate "member since"
+    const createdAt = user.createdAt || new Date();
+    const memberSince = createdAt.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+
+    res.render('profile', {
+      pageScript: 'profile',
+      pageScripts: [],
+      user: {
+        name: user.name,
+        nickname: user.nickname || user.name,
+        email: user.email,
+        profilePicture: user.profilePicture || null,
+        memberSince,
+        createdAt,
+      },
+      tutorialMode,
+    });
+  } catch (err) {
+    console.error('Profile page error:', err);
+    res.redirect('/');
+  }
+});
+
+// Update user profile (nickname)
+app.post('/api/profile/update-nickname', isAuthenticated, async (req, res) => {
+  const { nickname } = req.body;
+
+  if (!nickname || nickname.trim().length === 0) {
+    return res.status(400).json({ error: 'Nickname cannot be empty' });
+  }
+
+  if (nickname.length > 50) {
+    return res
+      .status(400)
+      .json({ error: 'Nickname must be 50 characters or less' });
+  }
+
+  try {
+    await users.updateOne(
+      { email: req.session.email },
+      { $set: { nickname: nickname.trim() } },
+    );
+    req.session.nickname = nickname.trim();
+    res.json({ success: true, nickname: nickname.trim() });
+  } catch (err) {
+    console.error('Error updating nickname:', err);
+    res.status(500).json({ error: 'Failed to update nickname' });
+  }
+});
+
+// Update profile picture (base64 upload)
+app.post('/api/profile/update-picture', isAuthenticated, async (req, res) => {
+  const { profilePicture } = req.body;
+
+  if (!profilePicture) {
+    return res.status(400).json({ error: 'No image provided' });
+  }
+
+  // Optional: validate base64 string length (max 2MB = ~2.7M chars)
+  if (profilePicture.length > 2.7e6) {
+    return res.status(400).json({ error: 'Image too large (max 2MB)' });
+  }
+
+  try {
+    await users.updateOne(
+      { email: req.session.email },
+      { $set: { profilePicture } },
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error updating profile picture:', err);
+    res.status(500).json({ error: 'Failed to update profile picture' });
+  }
 });
 
 // ── 404 Handler (must be last) ────────────────────────────
