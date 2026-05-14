@@ -1,0 +1,97 @@
+<%- include('components/header', { 
+  title: 'Admin Feedback',
+  styles: `<link rel="stylesheet" href="/css/admin-feedback.css" />`
+}) %>
+
+<main class="st-admin-feedback">
+  <div class="st-admin-feedback__header">
+    <h1>Feedback Management</h1>
+    <p>Review, update, and manage user feedback</p>
+  </div>
+
+  <!-- Filters -->
+  <div class="st-admin-feedback__filters">
+    <select id="feedbackFilter">
+      <option value="all">All Status</option>
+      <option value="new">New</option>
+      <option value="reviewed">Reviewed</option>
+      <option value="resolved">Resolved</option>
+    </select>
+
+    <select id="typeFilter">
+      <option value="all">All Types</option>
+      <option value="general">General</option>
+      <option value="bug">Bug</option>
+      <option value="feature">Feature</option>
+      <option value="complaint">Complaint</option>
+    </select>
+  </div>
+
+  <!-- Feedback List -->
+  <div id="feedbackContainer" class="st-admin-feedback__list">
+    <% if (feedbackList.length === 0) { %>
+      <div class="st-admin-feedback__empty-state">
+        <div>📭</div>
+        <h3>No Feedback</h3>
+        <p>No feedback has been submitted yet.</p>
+      </div>
+    <% } %>
+
+    <% feedbackList.forEach(item => { %>
+      <article 
+        class="st-feedback-card"
+        data-feedback-id="<%= item.id %>"
+        data-status="<%= item.status %>"
+        data-type="<%= item.type %>"
+      >
+        <div class="st-feedback-card__header">
+          <span class="st-feedback-card__email"><%= item.email %></span>
+          <span class="st-feedback-card__status st-feedback-card__status-<%= item.status %>">
+            <%= item.status %>
+          </span>
+        </div>
+
+        <div class="st-feedback-card__body">
+          <p><%= item.message %></p>
+        </div>
+
+        <div class="st-feedback-card__meta">
+          <span>Type: <%= item.type %></span>
+          <% if (item.rating) { %>
+            <span>Rating: <%= item.rating %>/5</span>
+          <% } %>
+        </div>
+
+        <div class="st-feedback-card__actions">
+          <button 
+            class="st-feedback-btn--status"
+            data-feedback-id="<%= item.id %>"
+            data-new-status="new"
+          >New</button>
+
+          <button 
+            class="st-feedback-btn--status"
+            data-feedback-id="<%= item.id %>"
+            data-new-status="reviewed"
+          >Review</button>
+
+          <button 
+            class="st-feedback-btn--status"
+            data-feedback-id="<%= item.id %>"
+            data-new-status="resolved"
+          >Resolve</button>
+
+          <button 
+            class="st-feedback-btn--delete"
+            data-feedback-id="<%= item.id %>"
+          >Delete</button>
+        </div>
+      </article>
+    <% }) %>
+  </div>
+
+  <!-- Toast container -->
+  <div id="toastContainer"></div>
+</main>
+
+<%- include('components/footer') %>

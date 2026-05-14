@@ -1,0 +1,204 @@
+/* ── Page Layout ───────────────────────── */
+.st-admin-feedback {
+  padding: 2rem;
+  background: #f4f7f6;
+  min-height: 100vh;
+  font-family: Arial, sans-serif;
+}
+
+/* ── Header ───────────────────────────── */
+.st-admin-feedback__header h1 {
+  margin: 0;
+  font-size: 2rem;
+  color: #1f2937;
+}
+
+.st-admin-feedback__header p {
+  margin-top: 0.5rem;
+  color: #4b5563;
+}
+
+/* ── Filters ──────────────────────────── */
+.st-admin-feedback__filters {
+  margin: 1.5rem 0;
+  display: flex;
+  gap: 1rem;
+}
+
+.st-admin-feedback__filters select {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: white;
+  color: #1f2937;
+  font-size: 0.95rem;
+}
+
+/* ── Feedback List ────────────────────── */
+.st-admin-feedback__list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* ── Feedback Card ────────────────────── */
+.st-feedback-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  border-left: 6px solid #3b82f6;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.st-feedback-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+}
+
+/* ── Card Header ─────────────────────── */
+.st-feedback-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.st-feedback-card__email {
+  font-weight: bold;
+  color: #111827;
+}
+
+/* ── Status Badge ────────────────────── */
+.st-feedback-card__status {
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  text-transform: capitalize;
+}
+
+/* Status Colors */
+.st-feedback-card__status-new {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.st-feedback-card__status-reviewed {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.st-feedback-card__status-resolved {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+/* ── Body ────────────────────────────── */
+.st-feedback-card__body {
+  margin: 0.75rem 0;
+  color: #374151;
+  line-height: 1.4;
+}
+
+/* ── Meta Info ───────────────────────── */
+.st-feedback-card__meta {
+  font-size: 0.85rem;
+  color: #6b7280;
+  display: flex;
+  gap: 1rem;
+}
+
+/* ── Actions ─────────────────────────── */
+.st-feedback-card__actions {
+  margin-top: 0.75rem;
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.st-feedback-card__actions button {
+  border: none;
+  padding: 0.4rem 0.7rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: 0.2s ease;
+}
+
+/* Buttons */
+.st-feedback-btn--status {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+.st-feedback-btn--status:hover {
+  background: #d1d5db;
+}
+
+.st-feedback-btn--delete {
+  background: #ef4444;
+  color: white;
+}
+
+.st-feedback-btn--delete:hover {
+  background: #dc2626;
+}
+
+/* Disabled buttons */
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Empty State ─────────────────────── */
+.st-admin-feedback__empty-state {
+  text-align: center;
+  padding: 3rem;
+  color: #6b7280;
+}
+
+.st-admin-feedback__empty-state h3 {
+  margin-top: 0.5rem;
+  color: #374151;
+}
+
+/* ── Toasts ─────────────────────────── */
+#toastContainer {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+}
+
+.st-admin-feedback__toast {
+  background: #1f2937;
+  color: white;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.st-admin-feedback__toast--show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.st-admin-feedback__toast--success {
+  background: #16a34a;
+}
+
+.st-admin-feedback__toast--error {
+  background: #dc2626;
+}
+
+.st-admin-feedback__toast--info {
+  background: #2563eb;
+}
