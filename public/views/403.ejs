@@ -1,0 +1,25 @@
+<%- include('components/header') %>
+
+<main class="st-error-page">
+  <div class="st-error-card">
+    <div class="st-error-icon">🔒</div>
+
+    <h1 class="st-error-title">Access Denied</h1>
+
+    <p class="st-error-message">
+      <%= reason %>
+    </p>
+
+    <div class="st-error-actions">
+      <% if (isAuthenticated) { %>
+        <a href="/map" class="st-btn st-btn--primary">Go to Dashboard</a>
+        <a href="/" class="st-btn st-btn--ghost">Home</a>
+      <% } else { %>
+        <a href="/login" class="st-btn st-btn--primary">Sign In</a>
+        <a href="/" class="st-btn st-btn--ghost">Home</a>
+      <% } %>
+    </div>
+  </div>
+</main>
+
+<%- include('components/footer') %>
