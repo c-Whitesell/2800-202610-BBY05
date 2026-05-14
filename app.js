@@ -9,6 +9,22 @@ const Joi = require('joi');
 const { MongoClient } = require('mongodb');
 const path = require('path');
 
+const { GoogleGenerativeAI } = require('@google/generative-ai');
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
+async function run() {
+  // Use gemini-1.5-flash for speed/efficiency (free tier)
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+
+  const prompt = 'Explain how AI works to a student in 100 words.';
+
+  const result = await model.generateContent(prompt);
+  const response = await result.response;
+  console.log(response.text());
+}
+
+run();
+
 // ── App Setup ─────────────────────────────────────────────
 const app = express();
 const PORT = process.env.PORT || 3000;
