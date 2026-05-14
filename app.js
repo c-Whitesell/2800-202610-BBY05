@@ -31,7 +31,7 @@ async function connectDB() {
     await client.connect();
     const db = client.db(); // Uses the database name from your URI
 
-    // Initialize all collections
+    // Initialize collections
     users = db.collection("users");
     paths = db.collection("paths");
     parks = db.collection("parks");
