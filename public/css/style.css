@@ -1186,6 +1186,51 @@ body {
   background: var(--forest-dark) !important;
 }
 
+.st-error-page {
+  min-height: calc(100vh - 68px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6rem 1.5rem 3rem;
+}
+
+.st-error-card {
+  background: rgba(37, 45, 26, 0.6);
+  border: 1px solid rgba(138, 171, 94, 0.2);
+  border-radius: var(--radius-lg);
+  padding: 3rem 2.5rem;
+  text-align: center;
+  max-width: 480px;
+  width: 100%;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 20px 60px rgba(10, 15, 8, 0.5);
+}
+
+.st-error-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.st-error-title {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  margin-bottom: 0.75rem;
+  color: var(--warm-white);
+}
+
+.st-error-message {
+  font-size: 0.95rem;
+  color: rgba(245, 240, 232, 0.6);
+  margin-bottom: 2rem;
+}
+
+.st-error-actions {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
 /* Tutorial Hint */
 .tutorial-hint {
   position: fixed;

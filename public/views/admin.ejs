@@ -1,0 +1,154 @@
+<%- include('components/header', {
+  styles: `
+    <link rel="stylesheet" href="/css/admin.css" />
+    `
+}) %>
+<main class="st-admin">
+  <div class="st-admin__header">
+    <div class="st-admin__title-group">
+      <h1 class="st-admin__title">Admin Dashboard</h1>
+      <p class="st-admin__subtitle">Manage users, view analytics, and monitor feedback</p>
+    </div>
+    <nav class="st-admin__nav">
+      <a href="#stats" class="st-admin__nav-link active" data-section="stats">Overview</a>
+      <a href="#users" class="st-admin__nav-link" data-section="users">Users</a>
+      <a href="#analytics" class="st-admin__nav-link" data-section="analytics">Analytics</a>
+      <a href="/admin/feedback" class="st-admin__nav-link">Feedback</a>
+    </nav>
+  </div>
+
+  <!-- Stats Section -->
+  <section id="stats" class="st-admin__section st-admin__section--active">
+    <h2 class="st-admin__section-title">Overview</h2>
+    <div class="st-stats-grid">
+      <div class="st-stat-card">
+        <div class="st-stat-card__icon">👥</div>
+        <div class="st-stat-card__content">
+          <div class="st-stat-card__value"><%= stats.totalUsers %></div>
+          <div class="st-stat-card__label">Total Users</div>
+        </div>
+      </div>
+      <div class="st-stat-card">
+        <div class="st-stat-card__icon">⚙️</div>
+        <div class="st-stat-card__content">
+          <div class="st-stat-card__value"><%= stats.adminUsers %></div>
+          <div class="st-stat-card__label">Admin Accounts</div>
+        </div>
+      </div>
+      <div class="st-stat-card">
+        <div class="st-stat-card__icon">🧑</div>
+        <div class="st-stat-card__content">
+          <div class="st-stat-card__value"><%= stats.regularUsers %></div>
+          <div class="st-stat-card__label">Regular Users</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Users Section -->
+  <section id="users" class="st-admin__section">
+    <div class="st-admin__section-header">
+      <h2 class="st-admin__section-title">User Management</h2>
+      <div class="st-admin__section-controls">
+        <input 
+          type="text" 
+          id="userSearch" 
+          class="st-admin__search"
+          placeholder="Search by name or email..."
+        >
+      </div>
+    </div>
+
+    <div class="st-admin__table-container">
+      <table class="st-admin__table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Member Since</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="userTableBody">
+          <% userList.forEach(user => { %>
+            <tr class="st-admin__table-row" data-email="<%= user.email %>">
+              <td class="st-admin__table-cell">
+                <div class="st-admin__user-name"><%= user.name %></div>
+              </td>
+              <td class="st-admin__table-cell">
+                <code class="st-admin__email"><%= user.email %></code>
+              </td>
+              <td class="st-admin__table-cell">
+                <span class="st-admin__role-badge st-admin__role-<%= user.role %>">
+                  <%= user.role === 'admin' ? 'Admin' : 'User' %>
+                </span>
+              </td>
+              <td class="st-admin__table-cell">
+                <%= new Date(user.createdAt).toLocaleDateString('en-US', { 
+                  year: 'numeric', 
+                  month: 'short', 
+                  day: 'numeric' 
+                }) %>
+              </td>
+              <td class="st-admin__table-cell st-admin__table-cell--actions">
+                <button 
+                  class="st-admin__btn-toggle-role" 
+                  data-email="<%= user.email %>"
+                  data-current-role="<%= user.role %>"
+                  title="<%= user.role === 'admin' ? 'Demote to User' : 'Promote to Admin' %>"
+                >
+                  <% if (user.role === 'admin') { %>
+                    ⬇️ Demote
+                  <% } else { %>
+                    ⬆️ Promote
+                  <% } %>
+                </button>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Analytics Section -->
+  <section id="analytics" class="st-admin__section">
+    <h2 class="st-admin__section-title">Page Analytics</h2>
+    <p class="st-admin__section-desc">Most visited pages in the last 30 days</p>
+
+    <div class="st-admin__analytics-container">
+      <% if (topPages && topPages.length > 0) { %>
+        <div class="st-admin__analytics-list">
+          <% topPages.forEach((page, index) => { %>
+            <div class="st-admin__analytics-item">
+              <div class="st-admin__analytics-rank"><%= index + 1 %></div>
+              <div class="st-admin__analytics-info">
+                <div class="st-admin__analytics-page"><%= page.page || '/' %></div>
+                <div class="st-admin__analytics-meta"><%= page.count %> visits</div>
+              </div>
+              <div class="st-admin__analytics-bar">
+                <div 
+                  class="st-admin__analytics-fill" 
+                  style="width: <%= (page.count / Math.max(...topPages.map(p => p.count))) * 100 %>%"
+                ></div>
+              </div>
+            </div>
+          <% }); %>
+        </div>
+      <% } else { %>
+        <div class="st-admin__empty-state">
+          <p>No analytics data available yet. Visitors will show up here.</p>
+        </div>
+      <% } %>
+    </div>
+
+    <div class="st-admin__analytics-note">
+      <strong>Note:</strong> This section is ready to track additional metrics such as average time on page, user engagement, device types, and conversion rates. The infrastructure is in place to support these features in future updates.
+    </div>
+  </section>
+</main>
+
+<div id="toastContainer" class="st-admin__toast-container"></div>
+
+<%- include('components/footer') %>

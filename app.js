@@ -40,6 +40,16 @@ async function connectDB() {
   } catch (error) {
     console.error("Failed to connect to MongoDB:", error);
   }
+let pageAnalytics;
+let feedback;
+
+async function connectDB() {
+  await client.connect();
+  const db = client.db();
+  users = db.collection('users');
+  pageAnalytics = db.collection('pageAnalytics');
+  feedback = db.collection('feedback');
+  console.log('Connected to MongoDB');
 }
 
 connectDB();
@@ -62,8 +72,42 @@ app.use(
 );
 
 // ── Global Template Variables ─────────────────────────────
-app.use((req, res, next) => {
+app.use(async (req, res, next) => {
   res.locals.isAuthenticated = req.session.authenticated || false;
+
+  if (req.session.authenticated) {
+    try {
+      const user = await users.findOne({ email: req.session.email });
+      res.locals.isAdmin = user && user.role === 'admin';
+    } catch (err) {
+      res.locals.isAdmin = false;
+    }
+  } else {
+    res.locals.isAdmin = false;
+  }
+
+  next();
+});
+
+app.use(async (req, res, next) => {
+  if (
+    req.session.email &&
+    !req.path.startsWith('/api') &&
+    !req.path.startsWith('/js') &&
+    !req.path.startsWith('/css') &&
+    !req.path.startsWith('/images')
+  ) {
+    try {
+      await pageAnalytics.insertOne({
+        email: req.session.email,
+        page: req.path,
+        timestamp: new Date(),
+        userAgent: req.get('user-agent'),
+      });
+    } catch (err) {
+      console.error('Analytics tracking error:', err);
+    }
+  }
   next();
 });
 
@@ -78,9 +122,42 @@ const isNotAuthenticated = (req, res, next) => {
   res.redirect("/map");
 };
 
-// ── Helper: resolve tutorialMode for the current request ──
-// Checks DB for logged-in users, falls back to session for guests.
-// Defaults to true (tips on) for brand-new visitors.
+const isAdmin = async (req, res, next) => {
+  if (!req.session.authenticated) {
+    return res.status(403).render('403', {
+      pageScript: null,
+      pageScripts: [],
+      reason: 'You must be logged in to access this page.',
+      isAuthenticated: false,
+      isAdmin: false,
+    });
+  }
+
+  try {
+    const user = await users.findOne({ email: req.session.email });
+    if (user && user.role === 'admin') {
+      return next();
+    }
+    res.status(403).render('403', {
+      pageScript: null,
+      pageScripts: [],
+      reason:
+        'You do not have permission to access this page. Admin privileges required.',
+      isAuthenticated: true,
+      isAdmin: false,
+    });
+  } catch (err) {
+    console.error('Admin middleware error:', err);
+    res.status(500).render('403', {
+      pageScript: null,
+      pageScripts: [],
+      reason: 'An error occurred while checking permissions.',
+      isAuthenticated: true,
+      isAdmin: false,
+    });
+  }
+};
+
 async function getTutorialMode(req) {
   if (req.session.authenticated) {
     const user = await users.findOne({ email: req.session.email });
@@ -139,14 +216,19 @@ app.post("/signup", isNotAuthenticated, async (req, res) => {
     return res.render("signup", {
       error: "Email already in use",
       pageScripts: [],
-      pageScript: "tutorial-auth",
-      tutorialMode: true, // fixed: was missing
+      pageScript: 'tutorial-auth',
+      tutorialMode: true,
     });
   }
 
   const hash = await bcrypt.hash(password, 10);
-  // Store tutorialMode: true on new users so the DB preference is initialised
-  await users.insertOne({ name, email, password: hash, tutorialMode: true });
+  await users.insertOne({
+    name,
+    email,
+    password: hash,
+    tutorialMode: true,
+    role: 'user',
+  });
 
   req.session.authenticated = true;
   req.session.name = name;
@@ -213,11 +295,9 @@ app.get("/bookmarks", (req, res) => {
   res.render("bookmarks", { error: null, pageScripts: [], pageScript: null });
 });
 
-app.get("/map", (req, res) => {
-  // Check if the instructions have been shown in this session
+app.get('/map', (req, res) => {
   const showMapTutorial = !req.session.mapInstructionsShown;
 
-  // Mark them as shown so they don't appear on refresh
   if (showMapTutorial) {
     req.session.mapInstructionsShown = true;
   }
@@ -236,8 +316,7 @@ app.get("/settings", (req, res) => {
   });
 });
 
-// fixed: removed duplicate route, added tutorialMode + weather-tutorial script
-app.get("/weather", async (req, res) => {
+app.get('/weather', async (req, res) => {
   const tutorialMode = await getTutorialMode(req);
   res.render("weather", {
     pageScript: "weather-tutorial",
@@ -251,6 +330,197 @@ app.get("/search", (req, res) => {
     pageScript: null,
     pageScripts: [],
   });
+});
+
+app.get('/admin', isAdmin, async (req, res) => {
+  try {
+    // Get all users with basic info
+    const allUsers = await users.find({}).toArray();
+    const totalUsers = allUsers.length;
+    const adminUsers = allUsers.filter((u) => u.role === 'admin').length;
+
+    // Get most visited pages (last 30 days)
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const recentAnalytics = await pageAnalytics
+      .find({ timestamp: { $gte: thirtyDaysAgo } })
+      .toArray();
+
+    const pageVisits = {};
+    recentAnalytics.forEach((entry) => {
+      pageVisits[entry.page] = (pageVisits[entry.page] || 0) + 1;
+    });
+
+    const topPages = Object.entries(pageVisits)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 8)
+      .map(([page, count]) => ({ page, count }));
+
+    // Get user list for admin panel
+    const userList = allUsers
+      .map((user) => ({
+        name: user.name,
+        email: user.email,
+        role: user.role || 'user',
+        createdAt: user.createdAt || new Date(),
+        lastVisit: user.lastVisit || null,
+        isAdmin: user.role === 'admin',
+      }))
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    res.render('admin', {
+      pageScript: 'admin',
+      pageScripts: [],
+      stats: {
+        totalUsers,
+        adminUsers,
+        regularUsers: totalUsers - adminUsers,
+      },
+      topPages,
+      userList,
+    });
+  } catch (err) {
+    console.error('Admin dashboard error:', err);
+    res.status(500).render('404', { pageScripts: [], pageScript: null });
+  }
+});
+
+app.post('/api/admin/toggle-role', isAdmin, async (req, res) => {
+  const { email } = req.body;
+
+  if (!email || typeof email !== 'string') {
+    return res.status(400).json({ error: 'Invalid email provided' });
+  }
+
+  // Prevent demoting yourself
+  if (email === req.session.email) {
+    return res.status(400).json({ error: 'You cannot change your own role' });
+  }
+
+  try {
+    const user = await users.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const newRole = user.role === 'admin' ? 'user' : 'admin';
+    await users.updateOne({ email }, { $set: { role: newRole } });
+
+    res.json({
+      success: true,
+      email,
+      newRole,
+      message: `User ${newRole === 'admin' ? 'promoted to admin' : 'demoted to regular user'}`,
+    });
+  } catch (err) {
+    console.error('Error toggling user role:', err);
+    res.status(500).json({ error: 'Failed to update user role' });
+  }
+});
+
+app.get('/admin/feedback', isAdmin, async (req, res) => {
+  try {
+    const allFeedback = await feedback
+      .find({})
+      .sort({ createdAt: -1 })
+      .toArray();
+
+    const feedbackList = allFeedback.map((item) => ({
+      id: item._id.toString(),
+      email: item.email || 'Anonymous',
+      type: item.type || 'general',
+      message: item.message,
+      createdAt: item.createdAt || new Date(),
+      status: item.status || 'new',
+      rating: item.rating || null,
+    }));
+
+    res.render('admin-feedback', {
+      pageScript: 'admin-feedback',
+      pageScripts: [],
+      feedbackList,
+    });
+  } catch (err) {
+    console.error('Admin feedback page error:', err);
+    res.status(500).render('404', { pageScripts: [], pageScript: null });
+  }
+});
+
+app.post('/api/admin/feedback/update-status', isAdmin, async (req, res) => {
+  const { feedbackId, status } = req.body;
+
+  if (!feedbackId || !['new', 'reviewed', 'resolved'].includes(status)) {
+    return res.status(400).json({ error: 'Invalid request' });
+  }
+
+  try {
+    const { ObjectId } = require('mongodb');
+    await feedback.updateOne(
+      { _id: new ObjectId(feedbackId) },
+      { $set: { status, updatedAt: new Date() } },
+    );
+
+    res.json({ success: true, message: 'Feedback status updated' });
+  } catch (err) {
+    console.error('Error updating feedback status:', err);
+    res.status(500).json({ error: 'Failed to update feedback status' });
+  }
+});
+
+app.post('/api/admin/feedback/delete', isAdmin, async (req, res) => {
+  const { feedbackId } = req.body;
+
+  if (!feedbackId) {
+    return res.status(400).json({ error: 'Invalid request' });
+  }
+
+  try {
+    const { ObjectId } = require('mongodb');
+    await feedback.deleteOne({ _id: new ObjectId(feedbackId) });
+
+    res.json({ success: true, message: 'Feedback deleted' });
+  } catch (err) {
+    console.error('Error deleting feedback:', err);
+    res.status(500).json({ error: 'Failed to delete feedback' });
+  }
+});
+
+app.post('/api/feedback/submit', async (req, res) => {
+  const { type, message, rating } = req.body;
+
+  // Validate input
+  if (!message || message.trim().length === 0) {
+    return res.status(400).json({ error: 'Message cannot be empty' });
+  }
+
+  if (message.length > 1000) {
+    return res
+      .status(400)
+      .json({ error: 'Message must be 1000 characters or less' });
+  }
+
+  if (type && !['bug', 'feature', 'general', 'complaint'].includes(type)) {
+    return res.status(400).json({ error: 'Invalid feedback type' });
+  }
+
+  if (rating && (rating < 1 || rating > 5 || !Number.isInteger(rating))) {
+    return res.status(400).json({ error: 'Rating must be between 1 and 5' });
+  }
+
+  try {
+    await feedback.insertOne({
+      email: req.session.email || null,
+      type: type || 'general',
+      message: message.trim(),
+      rating: rating || null,
+      createdAt: new Date(),
+      status: 'new',
+    });
+
+    res.json({ success: true, message: 'Thank you for your feedback!' });
+  } catch (err) {
+    console.error('Error submitting feedback:', err);
+    res.status(500).json({ error: 'Failed to submit feedback' });
+  }
 });
 
 // ── Toggle tutorial tips ──────────────────────────────────
