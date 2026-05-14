@@ -23,6 +23,8 @@ const client = new MongoClient(process.env.MONGO_URI);
 
 // Declare variables for your collections
 let users;
+let pageAnalytics;
+let feedback;
 let paths;
 let parks;
 
@@ -33,24 +35,14 @@ async function connectDB() {
 
     // Initialize all collections
     users = db.collection("users");
+      pageAnalytics = db.collection('pageAnalytics');
+  feedback = db.collection('feedback');
     paths = db.collection("paths");
     parks = db.collection("parks");
-
     console.log("Connected to MongoDB and initialized collections");
   } catch (error) {
     console.error("Failed to connect to MongoDB:", error);
   }
-let pageAnalytics;
-let feedback;
-
-async function connectDB() {
-  await client.connect();
-  const db = client.db();
-  users = db.collection('users');
-  pageAnalytics = db.collection('pageAnalytics');
-  feedback = db.collection('feedback');
-  console.log('Connected to MongoDB');
-}
 
 connectDB();
 
