@@ -185,6 +185,143 @@ app.get('/', async (req, res) => {
   });
 });
 
+app.get('/dashboard', isAuthenticated, async (req, res) => {
+  try {
+    const user = await users.findOne({ email: req.session.email });
+
+    if (!user) {
+      return res
+        .status(404)
+        .render('404', { pageScripts: [], pageScript: null });
+    }
+
+    // Format user stats
+    const userStats = {
+      username: user.username || user.email.split('@')[0],
+      trailsExplored: user.trailsExplored || 0,
+      totalDistance: user.totalDistance || 0,
+      lastActivityDays: calculateDaysSinceLastActivity(user.lastActivityDate),
+    };
+
+    // Fetch recent activity
+    let recentActivity = [];
+    try {
+      // Check if activity collection exists and has data
+      const activityCollection = client.db().collection('activity');
+      recentActivity = await activityCollection
+        .find({ userId: user._id })
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .toArray();
+
+      // Format activity with relative time
+      recentActivity = recentActivity.map((activity) => ({
+        ...activity,
+        timeAgo: getRelativeTime(activity.createdAt),
+      }));
+    } catch (err) {
+      console.warn(
+        'Activity collection not available, showing empty list:',
+        err.message,
+      );
+      recentActivity = [];
+    }
+
+    res.render('dashboard', {
+      pageScript: 'dashboard',
+      pageScripts: [],
+      user: userStats,
+      recentActivity: recentActivity,
+      isAuthenticated: true,
+    });
+  } catch (error) {
+    console.error('Dashboard route error:', error);
+    res.status(500).render('error', {
+      pageScripts: [],
+      pageScript: null,
+      message: 'Error loading dashboard',
+    });
+  }
+});
+
+app.get('/api/recommended-trail', isAuthenticated, async (req, res) => {
+  try {
+    // Fetch a random trail from the database
+    const trailCount = await paths.countDocuments();
+
+    if (trailCount === 0) {
+      return res.status(404).json({ error: 'No trails available' });
+    }
+
+    // Get a random trail
+    const randomIndex = Math.floor(Math.random() * trailCount);
+    const trail = await paths
+      .findOne({})
+      .skip(randomIndex)
+      .toArray()
+      .then((arr) => arr[0]);
+
+    if (!trail) {
+      return res.status(404).json({ error: 'No trail found' });
+    }
+
+    const recommendedTrail = {
+      id: trail._id.toString(),
+      name: trail.name || 'Unnamed Trail',
+      description: trail.description || 'A scenic trail in the area.',
+      distance: trail.distance || 5,
+      duration: trail.duration || '1-2 hours',
+      difficulty: trail.difficulty || 'Moderate',
+      rating: trail.rating || 0,
+    };
+
+    res.json({ trail: recommendedTrail });
+  } catch (error) {
+    console.error('Recommended trail API error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+function calculateDaysSinceLastActivity(lastActivityDate) {
+  if (!lastActivityDate) return '—';
+
+  const now = new Date();
+  const lastDate = new Date(lastActivityDate);
+  const diffTime = Math.abs(now - lastDate);
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) return 'Today';
+  if (diffDays === 1) return '1 day';
+  if (diffDays < 7) return `${diffDays} days`;
+
+  const diffWeeks = Math.floor(diffDays / 7);
+  if (diffWeeks === 1) return '1 week';
+  if (diffWeeks < 4) return `${diffWeeks} weeks`;
+
+  const diffMonths = Math.floor(diffDays / 30);
+  if (diffMonths === 1) return '1 month';
+  return `${diffMonths} months`;
+}
+
+function getRelativeTime(date) {
+  if (!date) return 'recently';
+
+  const now = new Date();
+  const actDate = new Date(date);
+  const diffMs = now - actDate;
+  const diffMins = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffMins < 1) return 'just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays === 1) return 'yesterday';
+  if (diffDays < 7) return `${diffDays}d ago`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
+  return `${Math.floor(diffDays / 30)}mo ago`;
+}
+
 app.get('/signup', isNotAuthenticated, (req, res) => {
   res.render('signup', {
     error: null,
@@ -242,7 +379,7 @@ app.post('/signup', isNotAuthenticated, async (req, res) => {
   req.session.name = name;
   req.session.email = email;
 
-  res.redirect('/map');
+  res.redirect('/dashboard');
 });
 
 app.get('/login', isNotAuthenticated, (req, res) => {
@@ -296,7 +433,7 @@ app.post('/login', isNotAuthenticated, async (req, res) => {
   req.session.name = user.name;
   req.session.email = email;
 
-  res.redirect('/map');
+  res.redirect('/dashboard');
 });
 
 app.get('/bookmarks', (req, res) => {
