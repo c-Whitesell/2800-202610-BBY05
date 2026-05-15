@@ -301,6 +301,13 @@ app.get('/map', (req, res) => {
   });
 });
 
+app.get('/recommendations', (req, res) => {
+  res.render('recommendations', {
+    pageScript: null,
+    pageScripts: [],
+  });
+});
+
 app.get('/settings', (req, res) => {
   res.render('settings', {
     pageScript: null,
