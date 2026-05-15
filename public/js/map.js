@@ -143,6 +143,30 @@ async function addParksToMap(map) {
       "fill-opacity": 0.5,
     },
   });
+
+  // 2. THE TEXT LABEL
+  map.addLayer({
+    id: "park-labels",
+    type: "symbol", // Controls the text
+    source: "parks-data",
+    layout: {
+      // Get the 'value' property and convert it to a string for display
+      //"text-field": ["concat", ["to-string", ["get", "value"]], "%"],
+      "text-field": ["concat", ["to-string", ["get", "park_name"]], "\n50%"],
+      "text-size": [
+        "interpolate",
+        ["linear"],
+        ["zoom"],
+        10,
+        10, // At zoom 10 (or less),
+        15,
+        18, // At zoom 15 (or more),
+      ],
+    },
+    paint: {
+      "text-color": "#000000",
+    },
+  });
 }
 
 async function getMongoMapData(collectionName) {
