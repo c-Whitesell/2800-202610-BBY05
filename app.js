@@ -210,32 +210,30 @@ app.get("/dashboard", isAuthenticated, async (req, res) => {
     });
   } catch (error) {
     console.error("Dashboard route error:", error);
-    res
-      .status(500)
-      .render("error", {
-        pageScripts: [],
-        pageScript: null,
-        message: "Error loading dashboard",
-      });
+    res.status(500).render("error", {
+      pageScripts: [],
+      pageScript: null,
+      message: "Error loading dashboard",
+    });
   }
 });
 
 app.get("/api/recommended-trail", isAuthenticated, async (req, res) => {
   try {
-    const trailCount = await paths.countDocuments();
+    const trailCount = await trails.countDocuments();
     if (trailCount === 0)
       return res.status(404).json({ error: "No trails available" });
 
     const randomIndex = Math.floor(Math.random() * trailCount);
-    const trail = await paths.find({}).skip(randomIndex).limit(1).next();
+    const trail = await trails.find({}).skip(randomIndex).limit(1).next();
     if (!trail) return res.status(404).json({ error: "No trail found" });
 
     res.json({
       trail: {
         id: trail._id.toString(),
-        name: trail.name || "Unnamed Trail",
+        name: trail.trail_name || "Unnamed Trail",
         description: trail.description || "A scenic trail in the area.",
-        distance: trail.distance || 5,
+        distance: String(trail.length_meters || "???"),
         duration: trail.duration || "1-2 hours",
         difficulty: trail.difficulty || "Moderate",
         rating: trail.rating || 0,
@@ -249,12 +247,12 @@ app.get("/api/recommended-trail", isAuthenticated, async (req, res) => {
 
 app.get("/api/recommended-trail/ai", isAuthenticated, async (req, res) => {
   try {
-    const trailCount = await paths.countDocuments();
+    const trailCount = await trails.countDocuments();
     if (trailCount === 0)
       return res.status(404).json({ error: "No trails available" });
 
     const randomIndex = Math.floor(Math.random() * trailCount);
-    const trail = await paths.find({}).skip(randomIndex).limit(1).next();
+    const trail = await trails.find({}).skip(randomIndex).limit(1).next();
     if (!trail) return res.status(404).json({ error: "No trail found" });
 
     const prompt = `
@@ -264,10 +262,12 @@ Do NOT include labels like "Trail:", "Name:", "Distance:", markdown formatting, 
 Only return a clean paragraph.
 
 Trail name: ${trail.trail_name}
-Distance: ${trail.distance}
+Distance: ${trail.length_meters}
 Difficulty: ${trail.difficulty}
 
 Focus on shade and comfort, best time to go, and who it's ideal for.
+Be specific, and include information from the internet about the trail.
+If the trail name ends in 'Trails', put information about the park, the park name comes before 'Trails' in the trail name
 Tone: friendly, helpful, concise.
 `.trim();
 
@@ -278,10 +278,10 @@ Tone: friendly, helpful, concise.
         id: trail._id.toString(),
         name: trail.trail_name || "Unnamed Trail",
         description: aiDescription,
-        distance: trail.distance || 5,
-        duration: trail.duration || "1-2 hours",
-        difficulty: trail.difficulty || "Moderate",
-        rating: trail.rating || 0,
+        distance: String(trail.length_meters || "unkown"),
+        //duration: trail.duration || "1-2 hours",
+        //difficulty: trail.difficulty || "Moderate",
+        //rating: trail.rating || 0,
       },
     });
   } catch (err) {
