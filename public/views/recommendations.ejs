@@ -1,0 +1,75 @@
+<%- include('components/header', { activePage: 'recommendations' , styles: `<link rel="stylesheet"
+  href="/css/recommendations.css" />`,
+pageScript: 'recommendations'
+}) %>
+
+<div class="rec-page">
+
+  <!-- ===== SPOTLIGHT STORIES ===== -->
+  <section class="spotlight-section">
+    <div class="spotlight-section__header">
+      <h2 class="spotlight-section__title">✨ Spotlight Stories</h2>
+      <a href="#" class="spotlight-section__see-all">See all →</a>
+    </div>
+    <div class="spotlight-strip" id="spotlight-strip">
+      <!-- Injected by JS -->
+    </div>
+  </section>
+
+  <div class="rec-divider"></div>
+
+  <!-- ===== TRAIL RECOMMENDATIONS ===== -->
+  <div class="rec-header">
+    <div class="rec-header__eyebrow">🥾 Trail Recommendations</div>
+    <h1 class="rec-header__title">Find Your Next Trail</h1>
+    <p class="rec-header__sub">Shaded routes across Metro Vancouver, curated for you</p>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="rec-toolbar">
+    <div class="rec-filters">
+      <span style="font-size:0.75rem; color:rgba(245,240,232,0.4); margin-right:0.25rem;">Difficulty:</span>
+      <button class="rec-filter-btn active" data-filter="all">All</button>
+      <button class="rec-filter-btn" data-filter="footway">Footway</button>
+      <button class="rec-filter-btn" data-filter="cycleway">Cycleway</button>
+      <button class="rec-filter-btn" data-filter="path">Path</button>
+      <button class="rec-filter-btn" data-filter="neighbourhood">Neighbourhood</button>
+      <button class="rec-filter-btn" data-filter="community">Community</button>
+    </div>
+    <div class="rec-sort">
+      <label for="sort-select">Sort by:</label>
+      <select id="sort-select">
+        <option value="default">Default</option>
+        <option value="name">Name A–Z</option>
+        <option value="distance-asc">Distance ↑</option>
+        <option value="distance-desc">Distance ↓</option>
+        <option value="length-asc">Length ↑</option>
+        <option value="length-desc">Length ↓</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="rec-count" id="rec-count"></div>
+
+  <!-- Loading -->
+  <div class="rec-loading" id="rec-loading">
+    <div class="rec-loading__spinner"></div>
+    <p>Finding trails near you…</p>
+  </div>
+
+  <!-- Empty -->
+  <div class="rec-empty" id="rec-empty" style="display:none;">
+    <div class="rec-empty__icon">🌲</div>
+    <div class="rec-empty__title">No trails found</div>
+    <div class="rec-empty__desc">Try adjusting your filters</div>
+  </div>
+
+  <!-- Grid -->
+  <div class="rec-grid" id="rec-grid"></div>
+
+</div>
+
+<!-- Toast -->
+<div class="rec-toast" id="rec-toast"></div>
+
+<%- include('components/footer') %>
