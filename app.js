@@ -303,7 +303,7 @@ app.get('/map', (req, res) => {
 
 app.get('/recommendations', (req, res) => {
   res.render('recommendations', {
-    pageScript: null,
+    pageScript: 'recommendations',
     pageScripts: [],
   });
 });
