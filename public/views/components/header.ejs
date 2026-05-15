@@ -37,6 +37,9 @@
       <li><a href="/profile"
           class="<%= typeof activePage !== 'undefined' && activePage === 'profile' ? 'active' : '' %>">Profile</a>
       </li>
+       <li><a href="/dashboard"
+          class="<%= typeof activePage !== 'undefined' && activePage === 'dashboard' ? 'active' : '' %>">Dashboard</a>
+      </li>
     </ul>
     <div class="st-navbar__actions">
       <% if (isAuthenticated) { %>

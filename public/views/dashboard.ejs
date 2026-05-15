@@ -1,0 +1,242 @@
+<%- include('components/header', {
+  styles: `
+    <link rel="stylesheet" href="/css/dashboard.css" />
+    `
+}) %>
+
+<main class="st-dashboard">
+  <!-- Welcome Hero Section -->
+  <section class="st-dashboard__welcome">
+    <div class="st-dashboard__welcome-content">
+      <div class="st-dashboard__greeting">
+        <h1 class="st-dashboard__title">
+          Welcome back, <span class="st-dashboard__username"><%= user.username %></span>!
+        </h1>
+        <p class="st-dashboard__subtitle">Ready for your next outdoor adventure?</p>
+      </div>
+      
+      <!-- Quick Stats -->
+      <div class="st-dashboard__stats">
+        <div class="st-stat-card">
+          <div class="st-stat-card__icon">🥾</div>
+          <div class="st-stat-card__content">
+            <div class="st-stat-card__number"><%= user.trailsExplored || 0 %></div>
+            <div class="st-stat-card__label">Trails Explored</div>
+          </div>
+        </div>
+        
+        <div class="st-stat-card">
+          <div class="st-stat-card__icon">📏</div>
+          <div class="st-stat-card__content">
+            <div class="st-stat-card__number"><%= user.totalDistance || 0 %> km</div>
+            <div class="st-stat-card__label">Distance Walked</div>
+          </div>
+        </div>
+        
+        <div class="st-stat-card">
+          <div class="st-stat-card__icon">🕐</div>
+          <div class="st-stat-card__content">
+            <div class="st-stat-card__number"><%= user.lastActivityDays || '—' %></div>
+            <div class="st-stat-card__label">Days Since Last Visit</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Content Grid -->
+  <div class="st-dashboard__grid">
+    <!-- Left Column -->
+    <div class="st-dashboard__column st-dashboard__column--main">
+      
+      <!-- Weather Widget -->
+      <section class="st-dashboard__card st-dashboard__card--weather">
+        <div class="st-dashboard__card-header">
+          <h2 class="st-dashboard__card-title">Today's Weather</h2>
+          <span class="st-dashboard__card-location">📍 Vancouver, BC</span>
+        </div>
+        
+        <div id="weather-loading" class="st-weather__loading">
+          <p>Loading weather data...</p>
+        </div>
+        
+        <div id="weather-content" class="st-dashboard__weather-display" style="display: none;">
+          <div class="st-weather__main">
+            <div class="st-weather__icon" id="weather-icon">🌤️</div>
+            <div class="st-weather__info">
+              <div class="st-weather__condition" id="weather-condition">—</div>
+              <div class="st-weather__temp"><span id="weather-temp">—</span>°C</div>
+            </div>
+          </div>
+          
+          <div class="st-weather__details">
+            <div class="st-weather__detail">
+              <span class="st-weather__detail-icon">💨</span>
+              <span class="st-weather__detail-value"><span id="weather-wind">—</span> km/h</span>
+            </div>
+            <div class="st-weather__detail">
+              <span class="st-weather__detail-icon">💧</span>
+              <span class="st-weather__detail-value"><span id="weather-humidity">—</span>%</span>
+            </div>
+            <div class="st-weather__detail">
+              <span class="st-weather__detail-icon">🌞</span>
+              <span class="st-weather__detail-value"><span id="weather-uv">—</span> UV</span>
+            </div>
+          </div>
+        </div>
+        
+        <div id="weather-error" style="display: none; color: #e74c3c; padding: 1rem;">
+          <p id="weather-error-text">Could not load weather data. Check your connection and try again.</p>
+        </div>
+        
+        <div class="st-dashboard__card-cta">
+          <a href="/map" class="st-btn st-btn--primary st-btn--sm">Explore Trails Now</a>
+        </div>
+      </section>
+
+      <!-- Personalized Trail Recommendation -->
+      <section class="st-dashboard__card st-dashboard__card--trail">
+        <div class="st-dashboard__card-header">
+          <h2 class="st-dashboard__card-title">Just For You</h2>
+          <span class="st-dashboard__card-badge">✨ Recommended</span>
+        </div>
+        
+        <div id="trail-loading" style="padding: 1.5rem; text-align: center; color: rgba(245, 240, 232, 0.6);">
+          <p>Loading trail recommendation...</p>
+        </div>
+        
+        <div id="trail-content" class="st-trail-rec" style="display: none;">
+          <div class="st-trail-rec__header">
+            <h3 class="st-trail-rec__name" id="trail-name">—</h3>
+            <div class="st-trail-rec__rating">
+              <span class="st-trail-rec__stars" id="trail-stars">☆☆☆☆☆</span>
+              <span class="st-trail-rec__rating-value" id="trail-rating">—</span>
+            </div>
+          </div>
+          
+          <p class="st-trail-rec__description" id="trail-description">—</p>
+          
+          <div class="st-trail-rec__details">
+            <div class="st-trail-rec__detail-item">
+              <span class="st-trail-rec__detail-label">Distance</span>
+              <span class="st-trail-rec__detail-value" id="trail-distance">— km</span>
+            </div>
+            <div class="st-trail-rec__detail-item">
+              <span class="st-trail-rec__detail-label">Duration</span>
+              <span class="st-trail-rec__detail-value" id="trail-duration">—</span>
+            </div>
+            <div class="st-trail-rec__detail-item">
+              <span class="st-trail-rec__detail-label">Difficulty</span>
+              <span class="st-trail-rec__detail-value" id="trail-difficulty">—</span>
+            </div>
+          </div>
+          
+          <div class="st-dashboard__card-cta">
+            <a href="#" id="trail-map-link" class="st-btn st-btn--primary">View on Map</a>
+            <button class="st-btn st-btn--ghost" id="btn-next-recommendation">See Another</button>
+          </div>
+        </div>
+        
+        <div id="trail-error" style="display: none; color: #e74c3c; padding: 1rem;">
+          <p id="trail-error-text">Could not load trail recommendation. Please try again.</p>
+        </div>
+      </section>
+
+      <!-- Tips of the Day -->
+      <section class="st-dashboard__card st-dashboard__card--tips">
+        <div class="st-dashboard__card-header">
+          <h2 class="st-dashboard__card-title">Tip of the Day</h2>
+          <span class="st-dashboard__card-icon">💡</span>
+        </div>
+        
+        <div class="st-tips">
+          <p class="st-tips__content" id="tip-content">Loading tip of the day...</p>
+          <p class="st-tips__category" id="tip-category"></p>
+        </div>
+      </section>
+    </div>
+
+    <!-- Right Column: Sidebar -->
+    <aside class="st-dashboard__column st-dashboard__column--sidebar">
+      
+      <!-- Recent Activity -->
+      <section class="st-dashboard__card st-dashboard__card--activity">
+        <div class="st-dashboard__card-header">
+          <h2 class="st-dashboard__card-title">Recent Activity</h2>
+        </div>
+        
+        <% if (recentActivity && recentActivity.length > 0) { %>
+          <div class="st-activity-list">
+            <% recentActivity.slice(0, 5).forEach(activity => { %>
+              <div class="st-activity-item">
+                <div class="st-activity-item__icon">
+                  <% if (activity.type === 'trail_completed') { %>
+                    ✓
+                  <% } else if (activity.type === 'trail_bookmarked') { %>
+                    ♡
+                  <% } else if (activity.type === 'profile_updated') { %>
+                    ⚙️
+                  <% } else { %>
+                    •
+                  <% } %>
+                </div>
+                <div class="st-activity-item__content">
+                  <div class="st-activity-item__text"><%= activity.description %></div>
+                  <div class="st-activity-item__time"><%= activity.timeAgo %></div>
+                </div>
+              </div>
+            <% }); %>
+          </div>
+        <% } else { %>
+          <div class="st-activity-empty">
+            <p>No activity yet. Start exploring trails!</p>
+          </div>
+        <% } %>
+      </section>
+
+      <!-- Quick Links -->
+      <section class="st-dashboard__card st-dashboard__card--quick-links">
+        <div class="st-dashboard__card-header">
+          <h2 class="st-dashboard__card-title">Quick Access</h2>
+        </div>
+        
+        <nav class="st-quick-links">
+          <a href="/map" class="st-quick-link">
+            <span class="st-quick-link__icon">🗺️</span>
+            <span class="st-quick-link__label">Explore Map</span>
+            <span class="st-quick-link__arrow">→</span>
+          </a>
+          <a href="/profile" class="st-quick-link">
+            <span class="st-quick-link__icon">👤</span>
+            <span class="st-quick-link__label">My Profile</span>
+            <span class="st-quick-link__arrow">→</span>
+          </a>
+          <a href="/settings" class="st-quick-link">
+            <span class="st-quick-link__icon">⚙️</span>
+            <span class="st-quick-link__label">Settings</span>
+            <span class="st-quick-link__arrow">→</span>
+          </a>
+          <a href="/" class="st-quick-link">
+            <span class="st-quick-link__icon">📚</span>
+            <span class="st-quick-link__label">About ShadyTrails</span>
+            <span class="st-quick-link__arrow">→</span>
+          </a>
+        </nav>
+      </section>
+
+      <!-- Motivational CTA -->
+      <section class="st-dashboard__card st-dashboard__card--cta">
+        <div class="st-cta-box">
+          <div class="st-cta-box__icon">🌲</div>
+          <h3 class="st-cta-box__title">Ready to Explore?</h3>
+          <p class="st-cta-box__text">Discover shaded trails perfect for any season and skill level.</p>
+          <a href="/map" class="st-btn st-btn--primary st-btn--full">Start Exploring</a>
+        </div>
+      </section>
+    </aside>
+  </div>
+</main>
+
+<%- include('components/footer') %>
+
+

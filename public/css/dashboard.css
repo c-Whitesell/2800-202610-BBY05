@@ -1,0 +1,699 @@
+/* =========================================
+   ShadyTrails Dashboard — Page Styling
+   ========================================= */
+
+.st-dashboard {
+  padding-top: 68px;
+  padding-bottom: 3rem;
+  background: var(--forest-dark);
+  min-height: 100vh;
+}
+
+/* ──────────────────────────────────────────
+   WELCOME SECTION
+   ────────────────────────────────────────── */
+
+.st-dashboard__welcome {
+  background: linear-gradient(
+    135deg,
+    rgba(90, 122, 58, 0.15) 0%,
+    rgba(138, 171, 94, 0.08) 100%
+  );
+  border-bottom: 1px solid var(--glass-border);
+  padding: 3rem 2.5rem;
+  margin-bottom: 3rem;
+}
+
+.st-dashboard__welcome-content {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.st-dashboard__greeting {
+  margin-bottom: 2.5rem;
+}
+
+.st-dashboard__title {
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  font-weight: 700;
+  color: var(--warm-white);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.5rem;
+}
+
+.st-dashboard__username {
+  background: linear-gradient(135deg, var(--sage) 0%, var(--moss) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-style: italic;
+}
+
+.st-dashboard__subtitle {
+  font-size: 1.05rem;
+  color: rgba(245, 240, 232, 0.7);
+  font-weight: 300;
+}
+
+/* Quick Stats Grid */
+.st-dashboard__stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5rem;
+  max-width: 1000px;
+}
+
+.st-stat-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  backdrop-filter: blur(20px);
+  transition: var(--transition);
+}
+
+.st-stat-card:hover {
+  background: rgba(26, 31, 20, 0.85);
+  border-color: rgba(138, 171, 94, 0.4);
+  transform: translateY(-2px);
+}
+
+.st-stat-card__icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.st-stat-card__content {
+  flex: 1;
+}
+
+.st-stat-card__number {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--sage);
+  line-height: 1;
+  margin-bottom: 0.35rem;
+}
+
+.st-stat-card__label {
+  font-size: 0.8rem;
+  color: rgba(245, 240, 232, 0.6);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+/* ──────────────────────────────────────────
+   MAIN GRID LAYOUT
+   ────────────────────────────────────────── */
+
+.st-dashboard__grid {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2.5rem;
+  display: grid;
+  grid-template-columns: 1fr 350px;
+  gap: 2rem;
+}
+
+.st-dashboard__column--main {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.st-dashboard__column--sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+@media (max-width: 1024px) {
+  .st-dashboard__grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .st-dashboard__column--sidebar {
+    grid-column: 1;
+  }
+}
+
+/* ──────────────────────────────────────────
+   DASHBOARD CARDS (Universal Styles)
+   ────────────────────────────────────────── */
+
+.st-dashboard__card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  transition: var(--transition);
+  box-shadow: 0 10px 40px rgba(10, 15, 8, 0.3);
+}
+
+.st-dashboard__card:hover {
+  border-color: rgba(138, 171, 94, 0.35);
+  box-shadow: 0 15px 50px rgba(10, 15, 8, 0.4);
+}
+
+.st-dashboard__card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
+}
+
+.st-dashboard__card-title {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--warm-white);
+  margin: 0;
+}
+
+.st-dashboard__card-location,
+.st-dashboard__card-badge,
+.st-dashboard__card-icon {
+  font-size: 0.85rem;
+  color: rgba(245, 240, 232, 0.65);
+  font-weight: 500;
+}
+
+.st-dashboard__card-badge {
+  background: rgba(138, 171, 94, 0.15);
+  color: var(--sage);
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.st-dashboard__card-cta {
+  margin-top: 1.5rem;
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* ──────────────────────────────────────────
+   WEATHER WIDGET
+   ────────────────────────────────────────── */
+
+.st-dashboard__weather-display {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.st-weather__loading,
+.st-weather__error {
+  padding: 2rem;
+  text-align: center;
+  color: rgba(245, 240, 232, 0.6);
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.st-weather__loading p,
+.st-weather__error p {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.st-weather__main {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.st-weather__icon {
+  font-size: 4rem;
+  line-height: 1;
+}
+
+.st-weather__info {
+  flex: 1;
+}
+
+.st-weather__condition {
+  font-size: 0.9rem;
+  color: rgba(245, 240, 232, 0.65);
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+  text-transform: capitalize;
+}
+
+.st-weather__temp {
+  font-family: var(--font-display);
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: var(--warm-white);
+  line-height: 1;
+}
+
+.st-weather__details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.st-weather__detail {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.95rem;
+}
+
+.st-weather__detail-icon {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.st-weather__detail-value {
+  color: rgba(245, 240, 232, 0.75);
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .st-dashboard__weather-display {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+
+/* ──────────────────────────────────────────
+   TRAIL RECOMMENDATION CARD
+   ────────────────────────────────────────── */
+
+.st-trail-rec {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.st-trail-rec__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.st-trail-rec__name {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--warm-white);
+  margin: 0;
+  flex: 1;
+}
+
+.st-trail-rec__rating {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.st-trail-rec__stars {
+  font-size: 1rem;
+  color: var(--gold);
+  letter-spacing: 0.15em;
+}
+
+.st-trail-rec__rating-value {
+  font-weight: 600;
+  color: rgba(245, 240, 232, 0.8);
+  min-width: 28px;
+}
+
+.st-trail-rec__description {
+  color: rgba(245, 240, 232, 0.75);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.st-trail-rec__details {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  padding: 1.5rem;
+  background: rgba(138, 171, 94, 0.08);
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(138, 171, 94, 0.15);
+}
+
+.st-trail-rec__detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.st-trail-rec__detail-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(245, 240, 232, 0.5);
+  font-weight: 600;
+}
+
+.st-trail-rec__detail-value {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--sage);
+}
+
+.st-trail-rec__difficulty--easy {
+  color: #27ae60;
+}
+
+.st-trail-rec__difficulty--moderate {
+  color: var(--amber);
+}
+
+.st-trail-rec__difficulty--hard {
+  color: #e74c3c;
+}
+
+.st-trail-rec__difficulty--expert {
+  color: #c0392b;
+}
+
+@media (max-width: 640px) {
+  .st-trail-rec__details {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+/* ──────────────────────────────────────────
+   TIPS OF THE DAY
+   ────────────────────────────────────────── */
+
+.st-tips {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.st-tips__content {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: rgba(245, 240, 232, 0.8);
+  margin: 0;
+  padding: 1.5rem;
+  background: rgba(138, 171, 94, 0.08);
+  border-left: 3px solid var(--sage);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.st-tips__category {
+  display: inline-block;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--sage);
+  font-weight: 600;
+  margin: 0;
+  padding: 0.35rem 0.75rem;
+  background: rgba(138, 171, 94, 0.1);
+  border-radius: var(--radius-sm);
+  width: fit-content;
+}
+
+/* ──────────────────────────────────────────
+   RECENT ACTIVITY
+   ────────────────────────────────────────── */
+
+.st-activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.st-activity-item {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(138, 171, 94, 0.05);
+  border-radius: var(--radius-sm);
+  border-left: 3px solid rgba(138, 171, 94, 0.3);
+  transition: var(--transition);
+}
+
+.st-activity-item:hover {
+  background: rgba(138, 171, 94, 0.1);
+  border-left-color: var(--sage);
+}
+
+.st-activity-item__icon {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  background: rgba(138, 171, 94, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  color: var(--sage);
+  font-weight: 700;
+}
+
+.st-activity-item__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.st-activity-item__text {
+  font-size: 0.9rem;
+  color: rgba(245, 240, 232, 0.85);
+  margin-bottom: 0.25rem;
+  word-break: break-word;
+}
+
+.st-activity-item__time {
+  font-size: 0.75rem;
+  color: rgba(245, 240, 232, 0.5);
+}
+
+.st-activity-empty {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: rgba(245, 240, 232, 0.5);
+}
+
+.st-activity-empty p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+/* ──────────────────────────────────────────
+   QUICK LINKS
+   ────────────────────────────────────────── */
+
+.st-quick-links {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.st-quick-link {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(138, 171, 94, 0.08);
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(138, 171, 94, 0.15);
+  transition: var(--transition);
+  color: inherit;
+  text-decoration: none;
+}
+
+.st-quick-link:hover {
+  background: rgba(138, 171, 94, 0.15);
+  border-color: rgba(138, 171, 94, 0.3);
+  transform: translateX(4px);
+}
+
+.st-quick-link__icon {
+  font-size: 1.35rem;
+  flex-shrink: 0;
+}
+
+.st-quick-link__label {
+  flex: 1;
+  font-weight: 500;
+  color: var(--cream);
+}
+
+.st-quick-link__arrow {
+  font-size: 0.85rem;
+  color: var(--sage);
+  opacity: 0;
+  transition:
+    opacity var(--transition),
+    transform var(--transition);
+}
+
+.st-quick-link:hover .st-quick-link__arrow {
+  opacity: 1;
+  transform: translateX(2px);
+}
+
+/* ──────────────────────────────────────────
+   CTA BOX (Motivational)
+   ────────────────────────────────────────── */
+
+.st-cta-box {
+  text-align: center;
+  padding: 2rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.st-cta-box__icon {
+  font-size: 3rem;
+}
+
+.st-cta-box__title {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--warm-white);
+  margin: 0;
+}
+
+.st-cta-box__text {
+  font-size: 0.9rem;
+  color: rgba(245, 240, 232, 0.7);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ──────────────────────────────────────────
+   BUTTON VARIANTS
+   ────────────────────────────────────────── */
+
+.st-btn--full {
+  width: 100%;
+  justify-content: center;
+}
+
+/* ──────────────────────────────────────────
+   RESPONSIVE DESIGN
+   ────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .st-dashboard {
+    padding-top: 68px;
+    padding-bottom: 2rem;
+  }
+
+  .st-dashboard__welcome {
+    padding: 2rem 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .st-dashboard__grid {
+    padding: 0 1.5rem;
+  }
+
+  .st-dashboard__card {
+    padding: 1.5rem;
+  }
+
+  .st-dashboard__title {
+    font-size: 1.8rem;
+  }
+
+  .st-stat-card {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .st-dashboard__stats {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .st-dashboard__welcome {
+    padding: 1.5rem 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .st-dashboard__grid {
+    padding: 0 1rem;
+    gap: 1rem;
+  }
+
+  .st-dashboard__card {
+    padding: 1.25rem;
+  }
+
+  .st-dashboard__title {
+    font-size: 1.5rem;
+  }
+
+  .st-dashboard__card-title {
+    font-size: 1.15rem;
+  }
+
+  .st-trail-rec__name {
+    font-size: 1.25rem;
+  }
+
+  .st-trail-rec__details {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ──────────────────────────────────────────
+   ANIMATIONS
+   ────────────────────────────────────────── */
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.st-dashboard__card {
+  animation: fadeUp 0.6s ease forwards;
+}
+
+.st-dashboard__card:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.st-dashboard__card:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.st-dashboard__card:nth-child(3) {
+  animation-delay: 0.3s;
+}
