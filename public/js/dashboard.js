@@ -183,7 +183,8 @@
 
     // Generate stars
     let stars = '';
-    const rating = parseFloat(trail.rating) || 0;
+    const parsedRating = parseFloat(trail.rating);
+    const rating = isNaN(parsedRating) ? 0 : parsedRating;
     for (let i = 0; i < 5; i++) {
       stars += i < Math.floor(rating) ? '★' : '☆';
     }
@@ -200,8 +201,16 @@
 
     if (nameEl) nameEl.textContent = trail.name || '—';
     if (starsEl) starsEl.textContent = stars;
-    if (ratingEl) ratingEl.textContent = (trail.rating || '—').toFixed(1);
-    if (descEl) descEl.textContent = trail.description || '—';
+    if (ratingEl)
+      ratingEl.textContent = !isNaN(rating) ? rating.toFixed(1) : '—';
+    if (descEl) {
+      const cleanDescription = (trail.description || '—')
+        .replace(/\*\*/g, '')
+        .replace(/Trail:|Name:|Distance:|Difficulty:/gi, '')
+        .trim();
+
+      descEl.textContent = cleanDescription;
+    }
     if (distanceEl) distanceEl.textContent = (trail.distance || '—') + ' km';
     if (durationEl) durationEl.textContent = trail.duration || '—';
 
@@ -305,10 +314,12 @@
 
   async function fetchNextRecommendation() {
     try {
-      const response = await fetch('/api/recommended-trail');
+      console.log('Fetching next AI recommendation...');
+
+      const response = await fetch('/api/recommended-trail/ai');
 
       if (!response.ok) {
-        console.error('Failed to fetch next recommendation:', response.status);
+        console.error('Failed to fetch AI recommendation:', response.status);
         return;
       }
 
@@ -316,11 +327,11 @@
 
       if (data.trail) {
         updateTrailDisplay(data.trail);
-        // Add animation effect
-        const trailCard = document.querySelector('.st-dashboard__card--trail');
-        if (trailCard) {
-          animateCardUpdate(trailCard);
-        }
+
+        const card = document.querySelector('.st-dashboard__card--trail');
+        if (card) animateCardUpdate(card);
+      } else {
+        console.warn('No trail returned from AI endpoint');
       }
     } catch (error) {
       console.error('Error fetching next trail recommendation:', error);

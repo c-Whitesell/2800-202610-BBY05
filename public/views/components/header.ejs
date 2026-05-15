@@ -40,6 +40,9 @@
        <li><a href="/dashboard"
           class="<%= typeof activePage !== 'undefined' && activePage === 'dashboard' ? 'active' : '' %>">Dashboard</a>
       </li>
+         <li><a href="/admin"
+          class="<%= typeof activePage !== 'undefined' && activePage === 'admin' ? 'active' : '' %>">Admin Page</a>
+      </li>
     </ul>
     <div class="st-navbar__actions">
       <% if (isAuthenticated) { %>
