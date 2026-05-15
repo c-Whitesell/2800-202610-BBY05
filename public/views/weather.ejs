@@ -41,7 +41,35 @@
   }
   .nav-tabs .nav-link:hover { color: #3b6d11; }
 
-  .weather-page { max-width: 540px; margin: 2rem auto; }
+  .weather-page { max-width: 540px; margin: 2rem auto; 
+  padding-top: 50px; }
+
+  .unit-toggle {
+    display: inline-flex;
+    background: #f1efe8;
+    border: 1px solid #d3d1c7;
+    border-radius: 99px;
+    padding: 3px;
+    gap: 2px;
+  }
+  .unit-toggle button {
+    background: none;
+    border: none;
+    border-radius: 99px;
+    padding: 3px 11px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: #888780;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    line-height: 1.4;
+  }
+  .unit-toggle button.active {
+    background: #ffffff;
+    color: #3b6d11;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  .unit-toggle button:hover:not(.active) { color: #3b6d11; }
 
   .location-bar {
     display: flex;
@@ -353,7 +381,13 @@
           <div class="location-sub" id="location-sub">–</div>
         </div>
       </div>
-      <div class="location-date" id="location-date">–</div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="location-date" id="location-date">–</div>
+        <div class="unit-toggle">
+          <button id="btn-c" class="active" onclick="setUnit('C')">°C</button>
+          <button id="btn-f" onclick="setUnit('F')">°F</button>
+        </div>
+      </div>
     </div>
 
     <div class="hero-card mb-3">
@@ -465,6 +499,51 @@
   const VANCOUVER_LAT = 49.2827;
   const VANCOUVER_LON = -123.1207;
   const VANCOUVER_LABEL = 'Vancouver, BC';
+
+  // Temperature unit state
+  let currentUnit = 'C';
+  let lastWeatherData = null;
+
+  function toF(c) { return Math.round(c * 9 / 5 + 32); }
+  function displayTemp(c) { return currentUnit === 'C' ? Math.round(c) : toF(c); }
+  function unitLabel() { return currentUnit === 'C' ? '°C' : '°F'; }
+
+  function setUnit(unit) {
+    if (unit === currentUnit) return;
+    currentUnit = unit;
+    document.getElementById('btn-c').classList.toggle('active', unit === 'C');
+    document.getElementById('btn-f').classList.toggle('active', unit === 'F');
+    if (lastWeatherData) updateTemperatureDisplays();
+  }
+
+  function updateTemperatureDisplays() {
+    const { cur, hrly, dly, sliceStart, times } = lastWeatherData;
+    const ul = unitLabel();
+
+    document.getElementById('temp-display').innerHTML =
+      `${displayTemp(cur.temperature_2m)}<sup>${ul}</sup>`;
+    document.getElementById('feels-like').textContent =
+      `Feels like ${displayTemp(cur.apparent_temperature)}° · High ${displayTemp(dly.temperature_2m_max[0])}° · Low ${displayTemp(dly.temperature_2m_min[0])}°`;
+
+    // Rebuild hourly strip
+    const strip = document.getElementById('hourly-strip');
+    strip.innerHTML = '';
+    times.slice(sliceStart, sliceStart + 6).forEach((t, i) => {
+      const idx        = sliceStart + i;
+      const temp       = displayTemp(hrly.temperature_2m[idx]);
+      const wmoH       = getWmo(hrly.weather_code[idx]);
+      const uvH        = hrly.uv_index ? hrly.uv_index[idx] : 0;
+      const shadeH     = calcShadeScore(hrly.weather_code[idx], uvH);
+      const shadeEmoji = shadeH >= 65 ? '🌿' : shadeH >= 40 ? '⛅' : '☀️';
+      strip.innerHTML +=
+        `<div class="hour-card${i === 0 ? ' now' : ''}">
+          <div class="hour-time">${i === 0 ? 'Now' : fmtHour(t)}</div>
+          <i class="ti ${wmoH.icon}"></i>
+          <div class="hour-temp">${temp}°</div>
+          <div class="hour-shade">${shadeEmoji} ${shadeH}%</div>
+        </div>`;
+    });
+  }
 
   const WMO_CODES = {
     0:  { label: 'Clear Sky',     icon: 'ti-sun' },
@@ -589,6 +668,13 @@
     const dly  = data.daily;
     const now  = new Date();
 
+    const times      = hrly.time;
+    const startIdx   = times.findIndex(t => new Date(t).getHours() === now.getHours());
+    const sliceStart = startIdx >= 0 ? startIdx : 0;
+
+    // Cache data for unit toggle re-renders
+    lastWeatherData = { cur, hrly, dly, times, sliceStart };
+
     document.getElementById('location-name').textContent = VANCOUVER_LABEL;
     document.getElementById('location-sub').textContent  =
       `Updated ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
@@ -598,9 +684,9 @@
     const wmo = getWmo(cur.weather_code);
     document.getElementById('condition-icon').className    = `ti ${wmo.icon}`;
     document.getElementById('condition-text').textContent  = wmo.label;
-    document.getElementById('temp-display').innerHTML      = `${Math.round(cur.temperature_2m)}<sup>°C</sup>`;
+    document.getElementById('temp-display').innerHTML      = `${displayTemp(cur.temperature_2m)}<sup>${unitLabel()}</sup>`;
     document.getElementById('feels-like').textContent      =
-      `Feels like ${Math.round(cur.apparent_temperature)}° · High ${Math.round(dly.temperature_2m_max[0])}° · Low ${Math.round(dly.temperature_2m_min[0])}°`;
+      `Feels like ${displayTemp(cur.apparent_temperature)}° · High ${displayTemp(dly.temperature_2m_max[0])}° · Low ${displayTemp(dly.temperature_2m_min[0])}°`;
 
     const score = calcShadeScore(cur.weather_code, cur.uv_index ?? 0);
     const cls   = shadeClass(score);
@@ -614,15 +700,12 @@
     document.getElementById('m-uv').textContent         = `UV ${Math.round(cur.uv_index ?? 0)}`;
     document.getElementById('m-visibility').textContent = `${Math.round((cur.visibility ?? 0) / 1000)} km`;
 
-    const times      = hrly.time;
-    const startIdx   = times.findIndex(t => new Date(t).getHours() === now.getHours());
-    const sliceStart = startIdx >= 0 ? startIdx : 0;
-    const strip      = document.getElementById('hourly-strip');
+    const strip = document.getElementById('hourly-strip');
     strip.innerHTML  = '';
 
     times.slice(sliceStart, sliceStart + 6).forEach((t, i) => {
       const idx        = sliceStart + i;
-      const temp       = Math.round(hrly.temperature_2m[idx]);
+      const temp       = displayTemp(hrly.temperature_2m[idx]);
       const wmoH       = getWmo(hrly.weather_code[idx]);
       const uvH        = hrly.uv_index ? hrly.uv_index[idx] : 0;
       const shadeH     = calcShadeScore(hrly.weather_code[idx], uvH);
