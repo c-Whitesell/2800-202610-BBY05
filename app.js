@@ -12,18 +12,78 @@ const path = require('path');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-async function run() {
-  // Use gemini-1.5-flash for speed/efficiency (free tier)
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+// ── Gemini AI Helpers ─────────────────────────────────────
+async function generateTrailSummary(trail, weather = null) {
+  try {
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
-  const prompt = 'Explain how AI works to a student in 100 words.';
+    const weatherContext = weather
+      ? `
+Current Weather:
+- Temperature: ${weather.temp}°C
+- Condition: ${weather.condition}
+- UV Index: ${weather.uv}
+`
+      : '';
 
-  const result = await model.generateContent(prompt);
-  const response = await result.response;
-  console.log(response.text());
+    const prompt = `
+Write a short hiking trail description.
+
+Do NOT include:
+- labels like "Trail:", "Name:", "Distance:"
+- markdown formatting
+- bullet points
+
+Only return a clean paragraph.
+
+Trail name: ${trail.trail_name}
+Distance: ${trail.distance}
+Difficulty: ${trail.difficulty}
+
+${weatherContext}
+
+Focus on:
+- Shade and comfort
+- Best time to go
+- Who it's ideal for
+
+Tone: friendly, helpful, concise.
+`;
+
+    const result = await model.generateContent(prompt);
+    return result.response.text().trim();
+  } catch (err) {
+    console.error('Gemini trail summary error:', err);
+    return trail.description || 'A great trail to explore.';
+  }
 }
 
-run();
+async function generateParkSummary(park) {
+  try {
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+
+    const prompt = `
+Write a short 2 sentence summary of this park in Vancouver.
+
+Park:
+- Name: ${park.name}
+- Features: ${park.features || 'green space, walking paths'}
+
+Focus on:
+- Atmosphere
+- Shade/greenery
+- Why someone would visit
+
+Tone: friendly and concise.
+`;
+
+    const result = await model.generateContent(prompt);
+    return result.response.text().trim();
+  } catch (err) {
+    console.error('Gemini park summary error:', err);
+    return 'A peaceful green space to relax and explore.';
+  }
+}
 
 // ── App Setup ─────────────────────────────────────────────
 const app = express();
@@ -246,39 +306,58 @@ app.get('/dashboard', isAuthenticated, async (req, res) => {
 
 app.get('/api/recommended-trail', isAuthenticated, async (req, res) => {
   try {
-    // Fetch a random trail from the database
     const trailCount = await paths.countDocuments();
-
-    if (trailCount === 0) {
-      return res.status(404).json({ error: 'No trails available' });
-    }
-
-    // Get a random trail
     const randomIndex = Math.floor(Math.random() * trailCount);
-    const trail = await paths
-      .findOne({})
-      .skip(randomIndex)
-      .toArray()
-      .then((arr) => arr[0]);
+
+    const trail = await paths.find({}).skip(randomIndex).limit(1).next();
 
     if (!trail) {
       return res.status(404).json({ error: 'No trail found' });
     }
 
-    const recommendedTrail = {
-      id: trail._id.toString(),
-      name: trail.name || 'Unnamed Trail',
-      description: trail.description || 'A scenic trail in the area.',
-      distance: trail.distance || 5,
-      duration: trail.duration || '1-2 hours',
-      difficulty: trail.difficulty || 'Moderate',
-      rating: trail.rating || 0,
-    };
-
-    res.json({ trail: recommendedTrail });
-  } catch (error) {
-    console.error('Recommended trail API error:', error);
+    res.json({
+      trail: {
+        id: trail._id.toString(),
+        name: trail.trail_name || 'Unnamed Trail',
+        description: trail.description || 'A scenic trail in the area.',
+        distance: trail.distance || 5,
+        duration: trail.duration || '1–2 hours',
+        difficulty: trail.difficulty || 'Moderate',
+        rating: Number(trail.rating) || 0,
+      },
+    });
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.get('/api/recommended-trail/ai', isAuthenticated, async (req, res) => {
+  try {
+    const trailCount = await paths.countDocuments();
+    const randomIndex = Math.floor(Math.random() * trailCount);
+
+    const trail = await paths.find({}).skip(randomIndex).limit(1).next();
+    if (!trail) {
+      return res.status(404).json({ error: 'No trail found' });
+    }
+
+    const aiDescription = await generateTrailSummary(trail);
+
+    res.json({
+      trail: {
+        id: trail._id.toString(),
+        name: trail.trail_name || 'Unnamed Trail',
+        description: aiDescription,
+        distance: trail.distance || 5,
+        duration: trail.duration || '1–2 hours',
+        difficulty: trail.difficulty || 'Moderate',
+        rating: Number(trail.rating) || 0,
+      },
+    });
+  } catch (err) {
+    console.error('Gemini error:', err);
+    res.status(500).json({ error: 'AI failed' });
   }
 });
 
@@ -796,14 +875,27 @@ app.post('/api/profile/update-picture', isAuthenticated, async (req, res) => {
   }
 });
 
-// ── pass database data to client ──────────────────────────
-// Example: Get all parks
 app.get('/api/parks', async (req, res) => {
   try {
-    // We use the 'parks' variable defined in your connectDB function
-    const allParks = await parks.find({}).toArray();
-    res.json(allParks);
+    const allParks = await parks.find({}).limit(20).toArray();
+
+    const updatedParks = await Promise.all(
+      allParks.map(async (park) => {
+        if (!park.aiSummary) {
+          const aiSummary = await generateParkSummary(park);
+
+          await parks.updateOne({ _id: park._id }, { $set: { aiSummary } });
+
+          park.aiSummary = aiSummary;
+        }
+
+        return park;
+      }),
+    );
+
+    res.json(updatedParks);
   } catch (err) {
+    console.error('Failed to fetch parks:', err);
     res.status(500).json({ error: 'Failed to fetch parks' });
   }
 });
