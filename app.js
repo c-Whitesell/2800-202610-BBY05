@@ -1,93 +1,20 @@
 require('dotenv').config();
 
 // ── Dependencies ──────────────────────────────────────────
-const express = require('express');
-const session = require('express-session');
+const express    = require('express');
+const session    = require('express-session');
 const MongoStore = require('connect-mongo').default;
-const bcrypt = require('bcrypt');
-const Joi = require('joi');
+const bcrypt     = require('bcrypt');
+const Joi        = require('joi');
 const { MongoClient } = require('mongodb');
-const path = require('path');
+const path       = require('path');
 
-const { GoogleGenerativeAI } = require('@google/generative-ai');
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-
-// ── Gemini AI Helpers ─────────────────────────────────────
-async function generateTrailSummary(trail, weather = null) {
-  try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-
-    const weatherContext = weather
-      ? `
-Current Weather:
-- Temperature: ${weather.temp}°C
-- Condition: ${weather.condition}
-- UV Index: ${weather.uv}
-`
-      : '';
-
-    const prompt = `
-Write a short hiking trail description.
-
-Do NOT include:
-- labels like "Trail:", "Name:", "Distance:"
-- markdown formatting
-- bullet points
-
-Only return a clean paragraph.
-
-Trail name: ${trail.trail_name}
-Distance: ${trail.distance}
-Difficulty: ${trail.difficulty}
-
-${weatherContext}
-
-Focus on:
-- Shade and comfort
-- Best time to go
-- Who it's ideal for
-
-Tone: friendly, helpful, concise.
-`;
-
-    const result = await model.generateContent(prompt);
-    return result.response.text().trim();
-  } catch (err) {
-    console.error('Gemini trail summary error:', err);
-    return trail.description || 'A great trail to explore.';
-  }
-}
-
-async function generateParkSummary(park) {
-  try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-
-    const prompt = `
-Write a short 2 sentence summary of this park in Vancouver.
-
-Park:
-- Name: ${park.name}
-- Features: ${park.features || 'green space, walking paths'}
-
-Focus on:
-- Atmosphere
-- Shade/greenery
-- Why someone would visit
-
-Tone: friendly and concise.
-`;
-
-    const result = await model.generateContent(prompt);
-    return result.response.text().trim();
-  } catch (err) {
-    console.error('Gemini park summary error:', err);
-    return 'A peaceful green space to relax and explore.';
-  }
-}
+const { generateAIResponse } = require('./public/js/aiService');
 
 // ── App Setup ─────────────────────────────────────────────
-const app = express();
+const app  = express();
 const PORT = process.env.PORT || 3000;
+
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -97,7 +24,6 @@ app.set('views', path.join(__dirname, 'public', 'views'));
 // ── Database ──────────────────────────────────────────────
 const client = new MongoClient(process.env.MONGO_URI);
 
-// Declare variables for your collections
 let users;
 let pageAnalytics;
 let feedback;
@@ -107,14 +33,14 @@ let parks;
 async function connectDB() {
   try {
     await client.connect();
-    const db = client.db(); // Uses the database name from your URI
+    const db = client.db();
 
-    // Initialize all collections
-    users = db.collection('users');
+    users         = db.collection('users');
     pageAnalytics = db.collection('pageAnalytics');
-    feedback = db.collection('feedback');
-    paths = db.collection('paths');
-    parks = db.collection('parks');
+    feedback      = db.collection('feedback');
+    paths         = db.collection('paths');
+    parks         = db.collection('parks');
+
     console.log('Connected to MongoDB and initialized collections');
   } catch (error) {
     console.error('Failed to connect to MongoDB:', error);
@@ -124,14 +50,13 @@ connectDB();
 
 // ── Sessions ──────────────────────────────────────────────
 const expireTime = 60 * 60 * 1000;
+
 app.use(
   session({
     secret: process.env.NODE_SESSION_SECRET,
     store: MongoStore.create({
       mongoUrl: process.env.MONGO_URI,
-      crypto: {
-        secret: process.env.MONGODB_SESSION_SECRET,
-      },
+      crypto: { secret: process.env.MONGODB_SESSION_SECRET },
     }),
     cookie: { maxAge: expireTime },
     resave: false,
@@ -146,8 +71,8 @@ app.use(async (req, res, next) => {
   if (req.session.authenticated) {
     try {
       const user = await users.findOne({ email: req.session.email });
-      res.locals.isAdmin = user && user.role === 'admin';
-    } catch (err) {
+      res.locals.isAdmin = user?.role === 'admin';
+    } catch {
       res.locals.isAdmin = false;
     }
   } else {
@@ -158,17 +83,14 @@ app.use(async (req, res, next) => {
 });
 
 app.use(async (req, res, next) => {
-  if (
-    req.session.email &&
-    !req.path.startsWith('/api') &&
-    !req.path.startsWith('/js') &&
-    !req.path.startsWith('/css') &&
-    !req.path.startsWith('/images')
-  ) {
+  const skipPrefixes = ['/api', '/js', '/css', '/images'];
+  const shouldTrack  = req.session.email && !skipPrefixes.some(p => req.path.startsWith(p));
+
+  if (shouldTrack) {
     try {
       await pageAnalytics.insertOne({
-        email: req.session.email,
-        page: req.path,
+        email:     req.session.email,
+        page:      req.path,
         timestamp: new Date(),
         userAgent: req.get('user-agent'),
       });
@@ -193,35 +115,27 @@ const isNotAuthenticated = (req, res, next) => {
 const isAdmin = async (req, res, next) => {
   if (!req.session.authenticated) {
     return res.status(403).render('403', {
-      pageScript: null,
-      pageScripts: [],
+      pageScript: null, pageScripts: [],
       reason: 'You must be logged in to access this page.',
-      isAuthenticated: false,
-      isAdmin: false,
+      isAuthenticated: false, isAdmin: false,
     });
   }
 
   try {
     const user = await users.findOne({ email: req.session.email });
-    if (user && user.role === 'admin') {
-      return next();
-    }
+    if (user?.role === 'admin') return next();
+
     res.status(403).render('403', {
-      pageScript: null,
-      pageScripts: [],
-      reason:
-        'You do not have permission to access this page. Admin privileges required.',
-      isAuthenticated: true,
-      isAdmin: false,
+      pageScript: null, pageScripts: [],
+      reason: 'You do not have permission to access this page. Admin privileges required.',
+      isAuthenticated: true, isAdmin: false,
     });
   } catch (err) {
     console.error('Admin middleware error:', err);
     res.status(500).render('403', {
-      pageScript: null,
-      pageScripts: [],
+      pageScript: null, pageScripts: [],
       reason: 'An error occurred while checking permissions.',
-      isAuthenticated: true,
-      isAdmin: false,
+      isAuthenticated: true, isAdmin: false,
     });
   }
 };
@@ -238,96 +152,69 @@ async function getTutorialMode(req) {
 app.get('/', async (req, res) => {
   const tutorialMode = await getTutorialMode(req);
   res.render('index', {
-    pageScript: 'tutorial-home',
-    pageScripts: [],
-    tutorialMode,
-    isAuthenticated: req.session.authenticated || false,
+    pageScript: 'tutorial-home', pageScripts: [],
+    tutorialMode, isAuthenticated: req.session.authenticated || false,
   });
 });
 
 app.get('/dashboard', isAuthenticated, async (req, res) => {
   try {
     const user = await users.findOne({ email: req.session.email });
+    if (!user) return res.status(404).render('404', { pageScripts: [], pageScript: null });
 
-    if (!user) {
-      return res
-        .status(404)
-        .render('404', { pageScripts: [], pageScript: null });
-    }
-
-    // Format user stats
     const userStats = {
-      username: user.username || user.email.split('@')[0],
-      trailsExplored: user.trailsExplored || 0,
-      totalDistance: user.totalDistance || 0,
+      username:         user.username || user.email.split('@')[0],
+      trailsExplored:   user.trailsExplored || 0,
+      totalDistance:    user.totalDistance || 0,
       lastActivityDays: calculateDaysSinceLastActivity(user.lastActivityDate),
     };
 
-    // Fetch recent activity
     let recentActivity = [];
     try {
-      // Check if activity collection exists and has data
       const activityCollection = client.db().collection('activity');
-      recentActivity = await activityCollection
+      const raw = await activityCollection
         .find({ userId: user._id })
         .sort({ createdAt: -1 })
         .limit(5)
         .toArray();
 
-      // Format activity with relative time
-      recentActivity = recentActivity.map((activity) => ({
-        ...activity,
-        timeAgo: getRelativeTime(activity.createdAt),
-      }));
+      recentActivity = raw.map(a => ({ ...a, timeAgo: getRelativeTime(a.createdAt) }));
     } catch (err) {
-      console.warn(
-        'Activity collection not available, showing empty list:',
-        err.message,
-      );
-      recentActivity = [];
+      console.warn('Activity collection not available:', err.message);
     }
 
     res.render('dashboard', {
-      pageScript: 'dashboard',
-      pageScripts: [],
-      user: userStats,
-      recentActivity: recentActivity,
-      isAuthenticated: true,
+      pageScript: 'dashboard', pageScripts: [],
+      user: userStats, recentActivity, isAuthenticated: true,
     });
   } catch (error) {
     console.error('Dashboard route error:', error);
-    res.status(500).render('error', {
-      pageScripts: [],
-      pageScript: null,
-      message: 'Error loading dashboard',
-    });
+    res.status(500).render('error', { pageScripts: [], pageScript: null, message: 'Error loading dashboard' });
   }
 });
 
 app.get('/api/recommended-trail', isAuthenticated, async (req, res) => {
   try {
     const trailCount = await paths.countDocuments();
+    if (trailCount === 0) return res.status(404).json({ error: 'No trails available' });
+
     const randomIndex = Math.floor(Math.random() * trailCount);
-
     const trail = await paths.find({}).skip(randomIndex).limit(1).next();
-
-    if (!trail) {
-      return res.status(404).json({ error: 'No trail found' });
-    }
+    if (!trail) return res.status(404).json({ error: 'No trail found' });
 
     res.json({
       trail: {
-        id: trail._id.toString(),
-        name: trail.trail_name || 'Unnamed Trail',
+        id:          trail._id.toString(),
+        name:        trail.name        || 'Unnamed Trail',
         description: trail.description || 'A scenic trail in the area.',
-        distance: trail.distance || 5,
-        duration: trail.duration || '1–2 hours',
-        difficulty: trail.difficulty || 'Moderate',
-        rating: Number(trail.rating) || 0,
+        distance:    trail.distance    || 5,
+        duration:    trail.duration    || '1-2 hours',
+        difficulty:  trail.difficulty  || 'Moderate',
+        rating:      trail.rating      || 0,
       },
     });
-  } catch (err) {
-    console.error(err);
+  } catch (error) {
+    console.error('Recommended trail API error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -335,103 +222,140 @@ app.get('/api/recommended-trail', isAuthenticated, async (req, res) => {
 app.get('/api/recommended-trail/ai', isAuthenticated, async (req, res) => {
   try {
     const trailCount = await paths.countDocuments();
+    if (trailCount === 0) return res.status(404).json({ error: 'No trails available' });
+
     const randomIndex = Math.floor(Math.random() * trailCount);
-
     const trail = await paths.find({}).skip(randomIndex).limit(1).next();
-    if (!trail) {
-      return res.status(404).json({ error: 'No trail found' });
-    }
+    if (!trail) return res.status(404).json({ error: 'No trail found' });
 
-    const aiDescription = await generateTrailSummary(trail);
+    const prompt = `
+Write a short hiking trail description.
+
+Do NOT include labels like "Trail:", "Name:", "Distance:", markdown formatting, or bullet points.
+Only return a clean paragraph.
+
+Trail name: ${trail.trail_name}
+Distance: ${trail.distance}
+Difficulty: ${trail.difficulty}
+
+Focus on shade and comfort, best time to go, and who it's ideal for.
+Tone: friendly, helpful, concise.
+`.trim();
+
+    const aiDescription = await generateAIResponse(prompt);
 
     res.json({
       trail: {
-        id: trail._id.toString(),
-        name: trail.trail_name || 'Unnamed Trail',
+        id:          trail._id.toString(),
+        name:        trail.trail_name  || 'Unnamed Trail',
         description: aiDescription,
-        distance: trail.distance || 5,
-        duration: trail.duration || '1–2 hours',
-        difficulty: trail.difficulty || 'Moderate',
-        rating: Number(trail.rating) || 0,
+        distance:    trail.distance    || 5,
+        duration:    trail.duration    || '1-2 hours',
+        difficulty:  trail.difficulty  || 'Moderate',
+        rating:      trail.rating      || 0,
       },
     });
   } catch (err) {
-    console.error('Gemini error:', err);
-    res.status(500).json({ error: 'AI failed' });
+    console.error('AI trail recommendation error:', err);
+    res.status(500).json({ error: 'AI recommendation unavailable' });
   }
 });
 
+// ── AI Weather Summary ────────────────────────────────────
+// Accepts weather data as query params sent by the client,
+// builds a hiking-focused prompt, and returns a Gemini summary.
+app.get('/api/ai-weather-summary', async (req, res) => {
+  const { temp, rain, wind, uv, condition } = req.query;
+
+  // Validate — all fields must be present
+  if ([temp, rain, wind, uv, condition].some(v => v === undefined || v === '')) {
+    return res.status(400).json({ error: 'Missing weather parameters.' });
+  }
+
+  const prompt = `
+You are a friendly hiking assistant.
+Given the weather data below, write a short hiking advisory for today.
+
+Weather conditions:
+- Temperature: ${temp}°C
+- Rain Chance: ${rain}%
+- Wind Speed: ${wind} km/h
+- UV Index: ${uv}
+- Sky Conditions: ${condition}
+
+Rules:
+- 2–4 sentences only
+- Focus on hiking safety and comfort
+- Include gear suggestions if the weather warrants it
+- Suggest the best time of day to hike if applicable
+- Friendly, natural tone
+
+Output ONLY the summary text. No headings, no bullet points.
+`.trim();
+
+  try {
+    const summary = await generateAIResponse(prompt);
+    res.json({ summary: summary.trim() });
+  } catch (err) {
+    console.error('AI weather summary error:', err);
+    res.status(500).json({ error: 'AI summary unavailable.' });
+  }
+});
+
+// ── Utility functions ─────────────────────────────────────
 function calculateDaysSinceLastActivity(lastActivityDate) {
   if (!lastActivityDate) return '—';
 
-  const now = new Date();
-  const lastDate = new Date(lastActivityDate);
-  const diffTime = Math.abs(now - lastDate);
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
+  const diffDays = Math.ceil(Math.abs(new Date() - new Date(lastActivityDate)) / (1000 * 60 * 60 * 24));
   if (diffDays === 0) return 'Today';
   if (diffDays === 1) return '1 day';
-  if (diffDays < 7) return `${diffDays} days`;
+  if (diffDays < 7)  return `${diffDays} days`;
 
   const diffWeeks = Math.floor(diffDays / 7);
   if (diffWeeks === 1) return '1 week';
-  if (diffWeeks < 4) return `${diffWeeks} weeks`;
+  if (diffWeeks < 4)  return `${diffWeeks} weeks`;
 
   const diffMonths = Math.floor(diffDays / 30);
-  if (diffMonths === 1) return '1 month';
-  return `${diffMonths} months`;
+  return diffMonths === 1 ? '1 month' : `${diffMonths} months`;
 }
 
 function getRelativeTime(date) {
   if (!date) return 'recently';
 
-  const now = new Date();
-  const actDate = new Date(date);
-  const diffMs = now - actDate;
-  const diffMins = Math.floor(diffMs / (1000 * 60));
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const diffMs    = Date.now() - new Date(date);
+  const diffMins  = Math.floor(diffMs / 60_000);
+  const diffHours = Math.floor(diffMs / 3_600_000);
+  const diffDays  = Math.floor(diffMs / 86_400_000);
 
-  if (diffMins < 1) return 'just now';
-  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffMins  < 1)  return 'just now';
+  if (diffMins  < 60) return `${diffMins}m ago`;
   if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays === 1) return 'yesterday';
-  if (diffDays < 7) return `${diffDays}d ago`;
-  if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
+  if (diffDays  === 1) return 'yesterday';
+  if (diffDays  < 7)  return `${diffDays}d ago`;
+  if (diffDays  < 30) return `${Math.floor(diffDays / 7)}w ago`;
   return `${Math.floor(diffDays / 30)}mo ago`;
 }
 
+// ── Auth routes ───────────────────────────────────────────
 app.get('/signup', isNotAuthenticated, (req, res) => {
-  res.render('signup', {
-    error: null,
-    pageScripts: [],
-    pageScript: 'tutorial-auth',
-    tutorialMode: true,
-  });
+  res.render('signup', { error: null, pageScripts: [], pageScript: 'tutorial-auth', tutorialMode: true });
 });
 
 app.post('/signup', isNotAuthenticated, async (req, res) => {
   const { name, email, password, confirmPassword } = req.body;
 
   const schema = Joi.object({
-    name: Joi.string().max(50).required(),
-    email: Joi.string().email().required(),
-    password: Joi.string().min(6).max(50).required(),
+    name:            Joi.string().max(50).required(),
+    email:           Joi.string().email().required(),
+    password:        Joi.string().min(6).max(50).required(),
     confirmPassword: Joi.string().valid(Joi.ref('password')).required(),
   });
 
-  const validation = schema.validate({
-    name,
-    email,
-    password,
-    confirmPassword,
-  });
-  if (validation.error) {
+  const { error } = schema.validate({ name, email, password, confirmPassword });
+  if (error) {
     return res.render('signup', {
-      error: validation.error.details[0].message,
-      pageScripts: [],
-      pageScript: 'tutorial-auth',
-      tutorialMode: true, // fixed: was referencing undefined variable
+      error: error.details[0].message,
+      pageScripts: [], pageScript: 'tutorial-auth', tutorialMode: true,
     });
   }
 
@@ -439,52 +363,35 @@ app.post('/signup', isNotAuthenticated, async (req, res) => {
   if (existingUser) {
     return res.render('signup', {
       error: 'Email already in use',
-      pageScripts: [],
-      pageScript: 'tutorial-auth',
-      tutorialMode: true,
+      pageScripts: [], pageScript: 'tutorial-auth', tutorialMode: true,
     });
   }
 
   const hash = await bcrypt.hash(password, 10);
-  await users.insertOne({
-    name,
-    email,
-    password: hash,
-    tutorialMode: true,
-    role: 'user',
-  });
+  await users.insertOne({ name, email, password: hash, tutorialMode: true, role: 'user' });
 
   req.session.authenticated = true;
-  req.session.name = name;
+  req.session.name  = name;
   req.session.email = email;
-
   res.redirect('/dashboard');
 });
 
 app.get('/login', isNotAuthenticated, (req, res) => {
-  res.render('login', {
-    error: null,
-    pageScripts: [],
-    pageScript: 'tutorial-auth',
-    tutorialMode: true,
-  });
+  res.render('login', { error: null, pageScripts: [], pageScript: 'tutorial-auth', tutorialMode: true });
 });
 
 app.post('/login', isNotAuthenticated, async (req, res) => {
   const { email, password } = req.body;
 
-  const schema = Joi.object({
-    email: Joi.string().email().required(),
+  const { error } = Joi.object({
+    email:    Joi.string().email().required(),
     password: Joi.string().required(),
-  });
+  }).validate({ email, password });
 
-  const validation = schema.validate({ email, password });
-  if (validation.error) {
+  if (error) {
     return res.render('login', {
       error: 'Invalid email or password',
-      pageScripts: [],
-      pageScript: 'tutorial-auth',
-      tutorialMode: true, // fixed: was missing
+      pageScripts: [], pageScript: 'tutorial-auth', tutorialMode: true,
     });
   }
 
@@ -492,9 +399,7 @@ app.post('/login', isNotAuthenticated, async (req, res) => {
   if (!user) {
     return res.render('login', {
       error: 'User not found',
-      pageScripts: [],
-      pageScript: 'tutorial-auth',
-      tutorialMode: true, // fixed: was missing
+      pageScripts: [], pageScript: 'tutorial-auth', tutorialMode: true,
     });
   }
 
@@ -502,112 +407,82 @@ app.post('/login', isNotAuthenticated, async (req, res) => {
   if (!valid) {
     return res.render('login', {
       error: 'Invalid password',
-      pageScripts: [],
-      pageScript: 'tutorial-auth',
-      tutorialMode: true, // fixed: was missing
+      pageScripts: [], pageScript: 'tutorial-auth', tutorialMode: true,
     });
   }
 
   req.session.authenticated = true;
-  req.session.name = user.name;
+  req.session.name  = user.name;
   req.session.email = email;
-
   res.redirect('/dashboard');
 });
 
+// ── Page routes ───────────────────────────────────────────
 app.get('/bookmarks', (req, res) => {
   res.render('bookmarks', { error: null, pageScripts: [], pageScript: null });
 });
 
 app.get('/map', (req, res) => {
   const showMapTutorial = !req.session.mapInstructionsShown;
-
-  if (showMapTutorial) {
-    req.session.mapInstructionsShown = true;
-  }
+  if (showMapTutorial) req.session.mapInstructionsShown = true;
 
   res.render('map', {
     pageScript: 'map',
     pageScripts: ['https://unpkg.com/maplibre-gl@5.23.0/dist/maplibre-gl.js'],
-    tutorialMode: showMapTutorial, // Passing the session state to EJS
+    tutorialMode: showMapTutorial,
   });
 });
 
 app.get('/recommendations', (req, res) => {
-  res.render('recommendations', {
-    pageScript: 'recommendations',
-    pageScripts: [],
-  });
+  res.render('recommendations', { pageScript: 'recommendations', pageScripts: [] });
 });
 
 app.get('/settings', (req, res) => {
-  res.render('settings', {
-    pageScript: null,
-    pageScripts: [],
-  });
+  res.render('settings', { pageScript: null, pageScripts: [] });
 });
 
 app.get('/weather', async (req, res) => {
   const tutorialMode = await getTutorialMode(req);
-  res.render('weather', {
-    pageScript: 'weather-tutorial',
-    pageScripts: [],
-    tutorialMode,
-  });
+  res.render('weather', { pageScript: 'weather-tutorial', pageScripts: [], tutorialMode });
 });
 
 app.get('/search', (req, res) => {
-  res.render('search', {
-    pageScript: null,
-    pageScripts: [],
-  });
+  res.render('search', { pageScript: null, pageScripts: [] });
 });
 
+// ── Admin routes ──────────────────────────────────────────
 app.get('/admin', isAdmin, async (req, res) => {
   try {
-    // Get all users with basic info
-    const allUsers = await users.find({}).toArray();
+    const allUsers   = await users.find({}).toArray();
     const totalUsers = allUsers.length;
-    const adminUsers = allUsers.filter((u) => u.role === 'admin').length;
+    const adminUsers = allUsers.filter(u => u.role === 'admin').length;
 
-    // Get most visited pages (last 30 days)
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-    const recentAnalytics = await pageAnalytics
-      .find({ timestamp: { $gte: thirtyDaysAgo } })
-      .toArray();
+    const thirtyDaysAgo  = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const recentAnalytics = await pageAnalytics.find({ timestamp: { $gte: thirtyDaysAgo } }).toArray();
 
     const pageVisits = {};
-    recentAnalytics.forEach((entry) => {
-      pageVisits[entry.page] = (pageVisits[entry.page] || 0) + 1;
-    });
+    recentAnalytics.forEach(e => { pageVisits[e.page] = (pageVisits[e.page] || 0) + 1; });
 
     const topPages = Object.entries(pageVisits)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 8)
       .map(([page, count]) => ({ page, count }));
 
-    // Get user list for admin panel
     const userList = allUsers
-      .map((user) => ({
-        name: user.name,
-        email: user.email,
-        role: user.role || 'user',
-        createdAt: user.createdAt || new Date(),
-        lastVisit: user.lastVisit || null,
-        isAdmin: user.role === 'admin',
+      .map(u => ({
+        name:      u.name,
+        email:     u.email,
+        role:      u.role || 'user',
+        createdAt: u.createdAt || new Date(),
+        lastVisit: u.lastVisit || null,
+        isAdmin:   u.role === 'admin',
       }))
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
     res.render('admin', {
-      pageScript: 'admin',
-      pageScripts: [],
-      stats: {
-        totalUsers,
-        adminUsers,
-        regularUsers: totalUsers - adminUsers,
-      },
-      topPages,
-      userList,
+      pageScript: 'admin', pageScripts: [],
+      stats: { totalUsers, adminUsers, regularUsers: totalUsers - adminUsers },
+      topPages, userList,
     });
   } catch (err) {
     console.error('Admin dashboard error:', err);
@@ -617,29 +492,18 @@ app.get('/admin', isAdmin, async (req, res) => {
 
 app.post('/api/admin/toggle-role', isAdmin, async (req, res) => {
   const { email } = req.body;
-
-  if (!email || typeof email !== 'string') {
-    return res.status(400).json({ error: 'Invalid email provided' });
-  }
-
-  // Prevent demoting yourself
-  if (email === req.session.email) {
-    return res.status(400).json({ error: 'You cannot change your own role' });
-  }
+  if (!email || typeof email !== 'string') return res.status(400).json({ error: 'Invalid email provided' });
+  if (email === req.session.email) return res.status(400).json({ error: 'You cannot change your own role' });
 
   try {
     const user = await users.findOne({ email });
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
+    if (!user) return res.status(404).json({ error: 'User not found' });
 
     const newRole = user.role === 'admin' ? 'user' : 'admin';
     await users.updateOne({ email }, { $set: { role: newRole } });
 
     res.json({
-      success: true,
-      email,
-      newRole,
+      success: true, email, newRole,
       message: `User ${newRole === 'admin' ? 'promoted to admin' : 'demoted to regular user'}`,
     });
   } catch (err) {
@@ -650,26 +514,18 @@ app.post('/api/admin/toggle-role', isAdmin, async (req, res) => {
 
 app.get('/admin/feedback', isAdmin, async (req, res) => {
   try {
-    const allFeedback = await feedback
-      .find({})
-      .sort({ createdAt: -1 })
-      .toArray();
-
-    const feedbackList = allFeedback.map((item) => ({
-      id: item._id.toString(),
-      email: item.email || 'Anonymous',
-      type: item.type || 'general',
-      message: item.message,
+    const allFeedback = await feedback.find({}).sort({ createdAt: -1 }).toArray();
+    const feedbackList = allFeedback.map(item => ({
+      id:        item._id.toString(),
+      email:     item.email || 'Anonymous',
+      type:      item.type  || 'general',
+      message:   item.message,
       createdAt: item.createdAt || new Date(),
-      status: item.status || 'new',
-      rating: item.rating || null,
+      status:    item.status    || 'new',
+      rating:    item.rating    || null,
     }));
 
-    res.render('admin-feedback', {
-      pageScript: 'admin-feedback',
-      pageScripts: [],
-      feedbackList,
-    });
+    res.render('admin-feedback', { pageScript: 'admin-feedback', pageScripts: [], feedbackList });
   } catch (err) {
     console.error('Admin feedback page error:', err);
     res.status(500).render('404', { pageScripts: [], pageScript: null });
@@ -678,7 +534,6 @@ app.get('/admin/feedback', isAdmin, async (req, res) => {
 
 app.post('/api/admin/feedback/update-status', isAdmin, async (req, res) => {
   const { feedbackId, status } = req.body;
-
   if (!feedbackId || !['new', 'reviewed', 'resolved'].includes(status)) {
     return res.status(400).json({ error: 'Invalid request' });
   }
@@ -689,7 +544,6 @@ app.post('/api/admin/feedback/update-status', isAdmin, async (req, res) => {
       { _id: new ObjectId(feedbackId) },
       { $set: { status, updatedAt: new Date() } },
     );
-
     res.json({ success: true, message: 'Feedback status updated' });
   } catch (err) {
     console.error('Error updating feedback status:', err);
@@ -699,15 +553,11 @@ app.post('/api/admin/feedback/update-status', isAdmin, async (req, res) => {
 
 app.post('/api/admin/feedback/delete', isAdmin, async (req, res) => {
   const { feedbackId } = req.body;
-
-  if (!feedbackId) {
-    return res.status(400).json({ error: 'Invalid request' });
-  }
+  if (!feedbackId) return res.status(400).json({ error: 'Invalid request' });
 
   try {
     const { ObjectId } = require('mongodb');
     await feedback.deleteOne({ _id: new ObjectId(feedbackId) });
-
     res.json({ success: true, message: 'Feedback deleted' });
   } catch (err) {
     console.error('Error deleting feedback:', err);
@@ -718,35 +568,24 @@ app.post('/api/admin/feedback/delete', isAdmin, async (req, res) => {
 app.post('/api/feedback/submit', async (req, res) => {
   const { type, message, rating } = req.body;
 
-  // Validate input
-  if (!message || message.trim().length === 0) {
-    return res.status(400).json({ error: 'Message cannot be empty' });
-  }
-
-  if (message.length > 1000) {
-    return res
-      .status(400)
-      .json({ error: 'Message must be 1000 characters or less' });
-  }
-
+  if (!message?.trim()) return res.status(400).json({ error: 'Message cannot be empty' });
+  if (message.length > 1000) return res.status(400).json({ error: 'Message must be 1000 characters or less' });
   if (type && !['bug', 'feature', 'general', 'complaint'].includes(type)) {
     return res.status(400).json({ error: 'Invalid feedback type' });
   }
-
   if (rating && (rating < 1 || rating > 5 || !Number.isInteger(rating))) {
     return res.status(400).json({ error: 'Rating must be between 1 and 5' });
   }
 
   try {
     await feedback.insertOne({
-      email: req.session.email || null,
-      type: type || 'general',
-      message: message.trim(),
-      rating: rating || null,
+      email:     req.session.email || null,
+      type:      type || 'general',
+      message:   message.trim(),
+      rating:    rating || null,
       createdAt: new Date(),
-      status: 'new',
+      status:    'new',
     });
-
     res.json({ success: true, message: 'Thank you for your feedback!' });
   } catch (err) {
     console.error('Error submitting feedback:', err);
@@ -754,27 +593,20 @@ app.post('/api/feedback/submit', async (req, res) => {
   }
 });
 
-// ── Toggle tutorial tips ──────────────────────────────────
+// ── Tutorial toggle ───────────────────────────────────────
 app.post('/toggle-tutorial', async (req, res) => {
   const { tutorialMode } = req.body;
-
   if (typeof tutorialMode !== 'boolean') {
     return res.status(400).json({ error: 'tutorialMode must be a boolean' });
   }
 
-  // Always save to session (works for guests too)
   req.session.tutorialMode = tutorialMode;
 
-  // Persist to DB for logged-in users so the preference survives across sessions
   if (req.session.authenticated) {
     try {
-      await users.updateOne(
-        { email: req.session.email },
-        { $set: { tutorialMode } },
-      );
+      await users.updateOne({ email: req.session.email }, { $set: { tutorialMode } });
     } catch (err) {
       console.error('Failed to save tutorialMode to DB:', err);
-      // Non-fatal — session value is still set
     }
   }
 
@@ -787,30 +619,22 @@ app.get('/logout', (req, res) => {
   res.redirect('/');
 });
 
+// ── Profile routes ────────────────────────────────────────
 app.get('/profile', isAuthenticated, async (req, res) => {
   try {
     const user = await users.findOne({ email: req.session.email });
-    if (!user) {
-      return res.redirect('/login');
-    }
+    if (!user) return res.redirect('/login');
 
-    const tutorialMode = await getTutorialMode(req);
-
-    // Calculate "member since"
-    const createdAt = user.createdAt || new Date();
-    const memberSince = createdAt.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
+    const tutorialMode  = await getTutorialMode(req);
+    const createdAt     = user.createdAt || new Date();
+    const memberSince   = createdAt.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
     res.render('profile', {
-      pageScript: 'profile',
-      pageScripts: [],
+      pageScript: 'profile', pageScripts: [],
       user: {
-        name: user.name,
-        nickname: user.nickname || user.name,
-        email: user.email,
+        name:           user.name,
+        nickname:       user.nickname || user.name,
+        email:          user.email,
         profilePicture: user.profilePicture || null,
         memberSince,
         createdAt,
@@ -823,25 +647,13 @@ app.get('/profile', isAuthenticated, async (req, res) => {
   }
 });
 
-// Update user profile (nickname)
 app.post('/api/profile/update-nickname', isAuthenticated, async (req, res) => {
   const { nickname } = req.body;
-
-  if (!nickname || nickname.trim().length === 0) {
-    return res.status(400).json({ error: 'Nickname cannot be empty' });
-  }
-
-  if (nickname.length > 50) {
-    return res
-      .status(400)
-      .json({ error: 'Nickname must be 50 characters or less' });
-  }
+  if (!nickname?.trim()) return res.status(400).json({ error: 'Nickname cannot be empty' });
+  if (nickname.length > 50) return res.status(400).json({ error: 'Nickname must be 50 characters or less' });
 
   try {
-    await users.updateOne(
-      { email: req.session.email },
-      { $set: { nickname: nickname.trim() } },
-    );
+    await users.updateOne({ email: req.session.email }, { $set: { nickname: nickname.trim() } });
     req.session.nickname = nickname.trim();
     res.json({ success: true, nickname: nickname.trim() });
   } catch (err) {
@@ -850,24 +662,13 @@ app.post('/api/profile/update-nickname', isAuthenticated, async (req, res) => {
   }
 });
 
-// Update profile picture (base64 upload)
 app.post('/api/profile/update-picture', isAuthenticated, async (req, res) => {
   const { profilePicture } = req.body;
-
-  if (!profilePicture) {
-    return res.status(400).json({ error: 'No image provided' });
-  }
-
-  // Optional: validate base64 string length (max 2MB = ~2.7M chars)
-  if (profilePicture.length > 2.7e6) {
-    return res.status(400).json({ error: 'Image too large (max 2MB)' });
-  }
+  if (!profilePicture) return res.status(400).json({ error: 'No image provided' });
+  if (profilePicture.length > 2.7e6) return res.status(400).json({ error: 'Image too large (max 2MB)' });
 
   try {
-    await users.updateOne(
-      { email: req.session.email },
-      { $set: { profilePicture } },
-    );
+    await users.updateOne({ email: req.session.email }, { $set: { profilePicture } });
     res.json({ success: true });
   } catch (err) {
     console.error('Error updating profile picture:', err);
@@ -875,46 +676,27 @@ app.post('/api/profile/update-picture', isAuthenticated, async (req, res) => {
   }
 });
 
+// ── Data API ──────────────────────────────────────────────
 app.get('/api/parks', async (req, res) => {
   try {
-    const allParks = await parks.find({}).limit(20).toArray();
-
-    const updatedParks = await Promise.all(
-      allParks.map(async (park) => {
-        if (!park.aiSummary) {
-          const aiSummary = await generateParkSummary(park);
-
-          await parks.updateOne({ _id: park._id }, { $set: { aiSummary } });
-
-          park.aiSummary = aiSummary;
-        }
-
-        return park;
-      }),
-    );
-
-    res.json(updatedParks);
-  } catch (err) {
-    console.error('Failed to fetch parks:', err);
+    res.json(await parks.find({}).toArray());
+  } catch {
     res.status(500).json({ error: 'Failed to fetch parks' });
   }
 });
-// Example: Get all paths
+
 app.get('/api/paths', async (req, res) => {
   try {
-    // We use the 'paths' variable defined in your connectDB function
-    const allPaths = await paths.find({}).toArray();
-    res.json(allPaths);
-  } catch (err) {
+    res.json(await paths.find({}).toArray());
+  } catch {
     res.status(500).json({ error: 'Failed to fetch paths' });
   }
 });
-// ── 404 Handler (must be last) ────────────────────────────
+
+// ── 404 Handler ───────────────────────────────────────────
 app.use((req, res) => {
   res.status(404).render('404', { pageScripts: [], pageScript: null });
 });
 
 // ── Start Server ──────────────────────────────────────────
-app.listen(PORT, () => {
-  console.log(`Server is running at port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`Server is running at port ${PORT}`));

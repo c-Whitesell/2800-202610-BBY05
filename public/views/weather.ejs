@@ -1,10 +1,7 @@
 <%- include('components/header') %>
 
-<link
-  rel="stylesheet"
-  href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"
-/>
-<link rel="stylesheet" href="/css/weather.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
+<link rel="stylesheet" href="/css/weather.css" />
 
 <div class="container weather-page">
 
@@ -22,19 +19,23 @@
     <button class="hint-close" onclick="tutorialSystemWeather.closeTutorialHint()" aria-label="Close">×</button>
   </div>
 
+  <!-- Loading -->
   <div id="weather-loading">
     <i class="ti ti-loader" style="font-size:2rem;"></i>
     <p class="mt-2">Checking shade conditions…</p>
   </div>
 
+  <!-- Error -->
   <div id="weather-error">
     <i class="ti ti-alert-circle" style="font-size:2rem;"></i>
     <p class="mt-2" id="weather-error-msg">Could not load weather data. Please try again.</p>
     <button class="btn btn-sm btn-outline-secondary mt-2" onclick="manualRefresh()">Retry</button>
   </div>
 
+  <!-- Content -->
   <div id="weather-content">
 
+    <!-- Location bar -->
     <div class="location-bar">
       <div class="d-flex align-items-center">
         <i class="ti ti-map-pin location-icon"></i>
@@ -49,7 +50,7 @@
           <div class="location-sub" id="location-sub">–</div>
         </div>
       </div>
-      <div style="display:flex;align-items:center;gap:10px;">
+      <div class="d-flex align-items-center" style="gap:10px;">
         <div class="location-date" id="location-date">–</div>
         <div class="unit-toggle">
           <button id="btn-c" class="active" onclick="setUnit('C')">°C</button>
@@ -58,6 +59,7 @@
       </div>
     </div>
 
+    <!-- Hero card -->
     <div class="hero-card mb-3">
       <div>
         <div class="condition-label">
@@ -76,6 +78,16 @@
       </div>
     </div>
 
+    <!-- AI Hiking Weather Summary -->
+    <div class="ai-summary-box" id="ai-summary-box" style="display:none;">
+      <div class="ai-summary-header">
+        <i class="ti ti-robot"></i>
+        <span>AI Hiking Summary</span>
+      </div>
+      <p class="ai-summary-text" id="ai-summary">Loading…</p>
+    </div>
+
+    <!-- Metrics -->
     <div class="metrics-grid mb-4">
       <div class="metric-card">
         <i class="ti ti-droplet"></i>
@@ -99,9 +111,11 @@
       </div>
     </div>
 
+    <!-- Hourly forecast -->
     <div class="section-title">Hourly forecast</div>
     <div class="hourly-strip" id="hourly-strip"></div>
 
+    <!-- Shade bars -->
     <div class="section-title">Shade coverage by time of day</div>
     <div class="mb-4">
       <div class="shade-bar-row">
@@ -126,11 +140,13 @@
       </div>
     </div>
 
+    <!-- Shade alert -->
     <div class="shade-alert" id="shade-alert" style="display:none;">
       <i class="ti ti-sun-high"></i>
       <div id="shade-alert-text"></div>
     </div>
 
+    <!-- Nearby trails -->
     <div class="section-title">Nearby shady trails</div>
     <div id="trails-list">
       <div class="trail-card">
