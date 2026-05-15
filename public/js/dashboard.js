@@ -211,7 +211,7 @@
 
       descEl.textContent = cleanDescription;
     }
-    if (distanceEl) distanceEl.textContent = (trail.distance || '—') + ' km';
+    if (distanceEl) distanceEl.textContent = (trail.distance || '—') + ' m';
     if (durationEl) durationEl.textContent = trail.duration || '—';
 
     if (difficultyEl) {
