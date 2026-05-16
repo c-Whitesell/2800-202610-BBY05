@@ -807,6 +807,76 @@ app.get("/api/trails", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch trails" });
   }
 });
+// ── Bookmark Routes ────────────────────────────────────────
+app.post("/bookmark/:trailId", isAuthenticated, async (req, res) => {
+  try {
+    const trailId = req.params.trailId;
+
+    const user = await users.findOne({
+      email: req.session.email,
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        error: "User not found",
+      });
+    }
+
+    const alreadySaved = user.bookmarks?.includes(trailId);
+
+    if (alreadySaved) {
+      await users.updateOne(
+        { email: req.session.email },
+        {
+          $pull: {
+            bookmarks: trailId,
+          },
+        },
+      );
+
+      return res.json({
+        saved: false,
+      });
+    }
+
+    await users.updateOne(
+      { email: req.session.email },
+      {
+        $addToSet: {
+          bookmarks: trailId,
+        },
+      },
+    );
+
+    res.json({
+      saved: true,
+    });
+
+  } catch (err) {
+    console.error("Bookmark error:", err);
+
+    res.status(500).json({
+      error: "Server error",
+    });
+  }
+});
+
+app.get("/api/bookmarks", isAuthenticated, async (req, res) => {
+  try {
+    const user = await users.findOne({ email: req.session.email });
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json({
+      bookmarks: user.bookmarks || [],
+    });
+  } catch (err) {
+    console.error("Get bookmarks error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
 
 // ── 404 Handler ───────────────────────────────────────────
 app.use((req, res) => {
