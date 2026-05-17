@@ -158,6 +158,11 @@ async function getTutorialMode(req) {
   return req.session.tutorialMode !== false;
 }
 
+const isAuthenticatedAPI = (req, res, next) => {
+  if (req.session.authenticated) return next();
+  return res.status(401).json({ error: "Not logged in" });
+};
+
 // ── Routes ────────────────────────────────────────────────
 app.get("/", async (req, res) => {
   const tutorialMode = await getTutorialMode(req);
@@ -477,8 +482,12 @@ app.post("/login", isNotAuthenticated, async (req, res) => {
 });
 
 // ── Page routes ───────────────────────────────────────────
-app.get("/bookmarks", (req, res) => {
-  res.render("bookmarks", { error: null, pageScripts: [], pageScript: null });
+app.get("/bookmarks", isAuthenticated, async (req, res) => {
+  res.render("bookmarks", {
+    pageScript: "bookmarks",
+    pageScripts: [],
+    isAuthenticated: true,
+  });
 });
 
 app.get("/map", (req, res) => {
