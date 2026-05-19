@@ -158,6 +158,11 @@ async function getTutorialMode(req) {
   return req.session.tutorialMode !== false;
 }
 
+const isAuthenticatedAPI = (req, res, next) => {
+  if (req.session.authenticated) return next();
+  return res.status(401).json({ error: "Not logged in" });
+};
+
 // ── Routes ────────────────────────────────────────────────
 app.get("/", async (req, res) => {
   const tutorialMode = await getTutorialMode(req);
@@ -477,8 +482,12 @@ app.post("/login", isNotAuthenticated, async (req, res) => {
 });
 
 // ── Page routes ───────────────────────────────────────────
-app.get("/bookmarks", (req, res) => {
-  res.render("bookmarks", { error: null, pageScripts: [], pageScript: null });
+app.get("/bookmarks", isAuthenticated, async (req, res) => {
+  res.render("bookmarks", {
+    pageScript: "bookmarks",
+    pageScripts: [],
+    isAuthenticated: true,
+  });
 });
 
 app.get("/map", (req, res) => {
@@ -805,6 +814,76 @@ app.get("/api/trails", async (req, res) => {
     res.json(await trails.find({}).toArray());
   } catch {
     res.status(500).json({ error: "Failed to fetch trails" });
+  }
+});
+// ── Bookmark Routes ────────────────────────────────────────
+app.post("/bookmark/:trailId", isAuthenticated, async (req, res) => {
+  try {
+    const trailId = req.params.trailId;
+
+    const user = await users.findOne({
+      email: req.session.email,
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        error: "User not found",
+      });
+    }
+
+    const alreadySaved = user.bookmarks?.includes(trailId);
+
+    if (alreadySaved) {
+      await users.updateOne(
+        { email: req.session.email },
+        {
+          $pull: {
+            bookmarks: trailId,
+          },
+        },
+      );
+
+      return res.json({
+        saved: false,
+      });
+    }
+
+    await users.updateOne(
+      { email: req.session.email },
+      {
+        $addToSet: {
+          bookmarks: trailId,
+        },
+      },
+    );
+
+    res.json({
+      saved: true,
+    });
+
+  } catch (err) {
+    console.error("Bookmark error:", err);
+
+    res.status(500).json({
+      error: "Server error",
+    });
+  }
+});
+
+app.get("/api/bookmarks", isAuthenticated, async (req, res) => {
+  try {
+    const user = await users.findOne({ email: req.session.email });
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json({
+      bookmarks: user.bookmarks || [],
+    });
+  } catch (err) {
+    console.error("Get bookmarks error:", err);
+    res.status(500).json({ error: "Server error" });
   }
 });
 

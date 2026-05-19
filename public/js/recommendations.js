@@ -1,5 +1,5 @@
 let allTrails = [];
-let savedIds = JSON.parse(localStorage.getItem('st_bookmarks') || '[]');
+let savedIds = [];
 let activeFilter = 'all';
 let activeSort = 'default';
 
@@ -186,19 +186,65 @@ function renderGrid() {
         grid.innerHTML = list.map(renderCard).join('');
     }
 }
-
 // ── Bookmark ──────────────────────────────────────────
-function toggleBookmark(id, btnEl) {
-    const idx = savedIds.indexOf(id);
-    if (idx === -1) {
-        savedIds.push(id);
-        showToast('🔖 Trail saved to bookmarks');
-    } else {
-        savedIds.splice(idx, 1);
-        showToast('Removed from bookmarks');
+async function loadBookmarks() {
+    try {
+        const res = await fetch('/api/bookmarks');
+
+       if (res.status === 401) {
+    savedIds = [];
+    showToast("Log in to save bookmarks");
+    return;
+}
+
+        if (!res.ok) {
+            savedIds = [];
+            return;
+        }
+
+        const data = await res.json();
+        savedIds = data.bookmarks || [];
+
+    } catch (err) {
+        console.error(err);
+        savedIds = [];
     }
-    localStorage.setItem('st_bookmarks', JSON.stringify(savedIds));
-    renderGrid(); // re-render to update all buttons
+}
+
+async function toggleBookmark(id) {
+    try {
+        const res = await fetch(`/bookmark/${id}`, {
+            method: 'POST'
+        });
+
+        if (res.status === 401 || res.redirected) {
+            showToast('Please log in first');
+            return;
+        }
+
+        const contentType = res.headers.get("content-type");
+
+        if (!contentType || !contentType.includes("application/json")) {
+            showToast('Please log in first');
+            return;
+        }
+
+        const data = await res.json();
+
+        if (data.saved) {
+            if (!savedIds.includes(id)) savedIds.push(id);
+            showToast('🔖 Trail saved');
+        } else {
+            savedIds = savedIds.filter(x => x !== id);
+            showToast('Removed from bookmarks');
+        }
+
+        renderGrid();
+
+    } catch (err) {
+        console.error(err);
+        showToast('Something went wrong');
+    }
 }
 
 // ── View on Map ───────────────────────────────────────
@@ -279,5 +325,13 @@ document.getElementById('sort-select').addEventListener('change', function () {
 });
 
 // ── Init ──────────────────────────────────────────────
-renderSpotlight();
-loadTrails();
+async function init() {
+    renderSpotlight();
+
+    if (isLoggedIn) {
+    loadBookmarks();
+}
+    await loadTrails();
+}
+
+init();
