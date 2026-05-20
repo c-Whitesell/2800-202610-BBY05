@@ -28,8 +28,12 @@
           class="<%= typeof activePage !== 'undefined' && activePage === 'map' ? 'active' : '' %>">Explore</a></li>
       <li><a href="/weather"
           class="<%= typeof activePage !== 'undefined' && activePage === 'weather' ? 'active' : '' %>">Weather</a>
+      </li>
       <li><a href="/recommendations"
           class="<%= typeof activePage !== 'undefined' && activePage === 'recommendations' ? 'active' : '' %>">Trails</a>
+      </li>
+      <li><a href="/bookmarks"
+          class="<%= typeof activePage !== 'undefined' && activePage === 'bookmarks' ? 'active' : '' %>">Bookmarks</a>
       </li>
       <li><a href="/settings"
           class="<%= typeof activePage !== 'undefined' && activePage === 'settings' ? 'active' : '' %>">Settings</a>
@@ -47,6 +51,7 @@
     <div class="st-navbar__actions">
       <% if (isAuthenticated) { %>
         <a href="/" class="st-btn st-btn--primary st-btn--sm">Home</a>
+         <a href="/logout" class="st-btn st-btn--primary st-btn--sm">Log out</a>
         <% } else { %>
           <a href="/login" class="st-btn st-btn--ghost st-btn--sm">Sign In</a>
           <a href="/signup" class="st-btn st-btn--primary st-btn--sm">Get Started</a>
