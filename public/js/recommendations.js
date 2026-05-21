@@ -1,3 +1,16 @@
+let distanceUnit = 'km'; // default
+
+async function loadUserSettings() {
+  try {
+    const res = await fetch('/api/settings');
+    if (!res.ok) return;
+    const s = await res.json();
+    if (s.distanceUnits) distanceUnit = s.distanceUnits;
+  } catch (e) {
+    console.log('Could not load user settings');
+  }
+}
+
 let allTrails = [];
 let savedIds = [];
 let activeFilter = 'all';
@@ -95,7 +108,12 @@ function trailEmoji(t) {
 function renderCard(t) {
     const badge = difficultyBadge(t.difficulty);
     const isSaved = savedIds.includes(t._id);
-    const distStr = t.distance ? `${t.distance.toFixed(2)} km` : (t.length ? `${t.length} km` : '');
+    const rawDist = t.distance || t.length || 0;
+const distStr = rawDist
+  ? distanceUnit === 'mi'
+    ? `${(rawDist * 0.621371).toFixed(1)} mi`
+    : `${rawDist.toFixed(2)} km`
+  : '';
     const durStr = t.duration ? `${t.duration}` : '';
     const elevStr = t.elevation ? `${t.elevation}m gain` : '';
     const hasCoords = t.lat && t.lng;
@@ -345,6 +363,8 @@ async function init() {
     if (isLoggedIn) {
         loadBookmarks();
     }
+
+    await loadUserSettings();
     await loadTrails();
 }
 
