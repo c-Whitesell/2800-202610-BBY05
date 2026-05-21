@@ -212,7 +212,6 @@ async function fetchWeather({ silent = false } = {}) {
 
   try {
     renderWeather(data);
-    fetchAISummary(data.current); // fire-and-forget after render
     lastFetchTime = Date.now();
     markStale(false);
     scheduleAutoRefresh();
@@ -228,17 +227,26 @@ async function fetchWeather({ silent = false } = {}) {
 }
 
 /* ── AI summary ───────────────────────────────────────────────── */
+function requestAISummary() {
+  if (!lastWeatherData) return;
+  fetchAISummary(lastWeatherData.cur);
+}
+
 async function fetchAISummary(cur) {
-  const summaryEl = el('ai-summary');
-  if (!summaryEl) return;
+  const idleEl    = document.getElementById('ai-summary-idle');
+  const loadingEl = document.getElementById('ai-summary-loading');
+  const summaryEl = document.getElementById('ai-summary');
+  const regenEl   = document.getElementById('ai-summary-regen');
+  const btn       = document.getElementById('ai-summary-btn');
 
-  summaryEl.textContent = 'Loading…';
-  el('ai-summary-box').style.display = 'block';
+  // Show loading, hide everything else
+  idleEl.style.display    = 'none';
+  loadingEl.style.display = 'flex';
+  summaryEl.style.display = 'none';
+  regenEl.style.display   = 'none';
+  if (btn) btn.disabled   = true;
 
-  const wmo = getWmo(cur.weather_code);
-
-  // Rain chance is not in the current-weather block from Open-Meteo;
-  // we approximate from the condition (precipitation codes start at 51).
+  const wmo        = getWmo(cur.weather_code);
   const rainChance = cur.weather_code >= 51 ? 70 : cur.weather_code >= 2 ? 20 : 5;
 
   const params = new URLSearchParams({
@@ -252,12 +260,18 @@ async function fetchAISummary(cur) {
   try {
     const res  = await fetch(`/api/ai-weather-summary?${params}`);
     const data = await res.json();
-
     if (!res.ok || data.error) throw new Error(data.error || 'Unknown error');
-    summaryEl.textContent = data.summary;
+
+    summaryEl.textContent   = data.summary;
+    summaryEl.style.display = 'block';
+    regenEl.style.display   = 'block';
   } catch (err) {
     console.error('AI summary error:', err);
-    summaryEl.textContent = 'AI summary unavailable. Please check the weather details manually.';
+    summaryEl.textContent   = 'AI summary unavailable. Please check the weather details manually.';
+    summaryEl.style.display = 'block';
+    regenEl.style.display   = 'block';
+  } finally {
+    loadingEl.style.display = 'none';
   }
 }
 
