@@ -1,7 +1,10 @@
+<!-- weather.ejs -->
 <%- include('components/header') %>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
 <link rel="stylesheet" href="/css/weather.css" />
+<link rel="stylesheet" href="/css/weather-icons.css" />
+<link rel="stylesheet" href="/css/weather-trail-recs.css" />
 
 <div class="container weather-page">
 
@@ -163,33 +166,10 @@
       <div id="shade-alert-text"></div>
     </div>
 
-    <!-- Nearby trails -->
-    <div class="section-title">Nearby shady trails</div>
-    <div id="trails-list">
-      <div class="trail-card">
-        <div class="trail-icon"><i class="ti ti-trees"></i></div>
-        <div class="trail-info">
-          <div class="trail-name">Redwood Grove Loop</div>
-          <div class="trail-meta">3.2 km · 45 min · 0.4 km away</div>
-        </div>
-        <span class="badge-shade-high">High shade</span>
-      </div>
-      <div class="trail-card">
-        <div class="trail-icon"><i class="ti ti-ripple"></i></div>
-        <div class="trail-info">
-          <div class="trail-name">Creekside Greenway</div>
-          <div class="trail-meta">5.8 km · 1.2 hr · 1.1 km away</div>
-        </div>
-        <span class="badge-shade-high">High shade</span>
-      </div>
-      <div class="trail-card">
-        <div class="trail-icon"><i class="ti ti-leaf"></i></div>
-        <div class="trail-info">
-          <div class="trail-name">Meadow Ridge Path</div>
-          <div class="trail-meta">2.1 km · 30 min · 1.8 km away</div>
-        </div>
-        <span class="badge-shade-med">Moderate shade</span>
-      </div>
+   <!-- Weather-aware trail recommendations -->
+    <div class="section-title">Recommended trails for today's conditions</div>
+    <div id="weather-trail-recs">
+      <p class="wtr-note">Loading recommendations…</p>
     </div>
 
   </div><%# end #weather-content %>
@@ -200,5 +180,6 @@
 </script>
 <script src="/js/weather.js"></script>
 <script src="/js/weather-tutorial.js"></script>
+<script src="/js/weather-trail-recs.js"></script>
 
 <%- include('components/footer') %>
