@@ -74,7 +74,7 @@ img {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 2.5rem;
+  padding: 0 2.5rem !important;
   height: 68px;
   background: var(--glass-bg);
   backdrop-filter: blur(20px);
@@ -251,7 +251,7 @@ img {
   padding: 0;
 }
 
-@media (max-width: 991px) {
+@media (max-width: 1199px) {
   .st-navbar {
     padding: 0 1.5rem;
   }
@@ -286,11 +286,6 @@ img {
     justify-content: center;
   }
 }
-/* =========================================
-   LANDING / HOME PAGE
-   ========================================= */
-
-/* Hero */
 .st-hero {
   position: relative;
   height: 100vh;
@@ -1112,13 +1107,12 @@ img {
    RESPONSIVE
    ========================================= */
 @media (max-width: 768px) {
-  .st-navbar {
+  /* .st-navbar {
     padding: 0 1.25rem;
-  }
-  .st-navbar__links {
+  } */
+  /* .st-navbar__links {
     display: none;
-  }
-
+  } */
   .st-hero__content {
     padding: 0 1.25rem 5rem;
   }
@@ -1260,7 +1254,6 @@ img {
   box-shadow: 0 4px 20px rgba(90, 122, 58, 0.5);
 }
 
-/* Compact footer - default for all pages except home */
 .st-footer {
   padding: 0 2.5rem 0.5rem;
 }
