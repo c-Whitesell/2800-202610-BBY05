@@ -1,0 +1,64 @@
+/* ── Feels-like enhanced display ─────────────────────────────────
+ * Append these rules to weather.css                               */
+
+.feels-like {
+  font-size: 0.82rem;
+  color: #888780;
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  line-height: 1.5;
+}
+
+/* "Feels like X°" number — slightly bolder */
+.feels-like strong {
+  color: #4a4a46;
+  font-weight: 600;
+}
+
+/* Comfort label pill: "Comfortable", "Hot", etc. */
+.feels-label {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 1px 8px;
+  border-radius: 99px;
+  background: #eef5e6;
+  color: #3b6d11;
+  letter-spacing: 0.02em;
+}
+
+/* Difference from actual temp e.g. (+3°) */
+.feels-diff {
+  font-size: 0.72rem;
+  color: #aaa89f;
+}
+
+/* High / Low range */
+.feels-range {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: #888780;
+  margin-left: 2px;
+}
+
+.feels-range-sep {
+  color: #c8c6be;
+}
+
+/* ── Animated icon sizing within hero condition label ─────────── */
+.condition-label .wi {
+  font-size: 1.1rem;
+  margin-right: 1px;
+}
+
+/* Hourly strip animated icon sizing */
+.hour-card .wi {
+  font-size: 1.3rem;
+  display: block;
+  margin: 6px auto;
+}
