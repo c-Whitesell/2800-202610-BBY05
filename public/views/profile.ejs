@@ -67,7 +67,37 @@
             </div>
             <p class="st-field-hint">This is how your name appears throughout ShadyTrails</p>
           </div>
+          
+          <!-- Trail Logging Section -->
+          <div class="st-profile-section">
+            <h3 class="st-section-title">Log a Trail</h3>
 
+            <input
+              type="text"
+              id="trailSearchInput"
+              class="st-nickname-input"
+              placeholder="Search for a trail..."
+              autocomplete="off"
+            />
+
+            <div id="trailSuggestions" class="st-suggestions"></div>
+
+            <input
+              type="number"
+              id="trailDistanceInput"
+              class="st-nickname-input"
+              placeholder="Distance (km) — optional if trail has data"
+              step="0.1"
+            />
+
+            <button class="st-btn st-btn--save" id="logTrailBtn">
+              Log Trail
+            </button>
+
+            <p class="st-field-hint">
+              Search and log trails you’ve completed. Distance will auto-fill if available.
+            </p>
+          </div>
           <!-- Account Info -->
           <div class="st-profile-section">
             <h3 class="st-section-title">Account Details</h3>

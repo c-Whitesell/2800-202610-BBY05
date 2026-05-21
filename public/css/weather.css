@@ -1,3 +1,5 @@
+/* weather.css */
+@import url("weather-additions.css");
 /* ── Page ─────────────────────────────────────────────────────── */
 body { background: #f5f4f0; }
 
@@ -20,6 +22,7 @@ body { background: #f5f4f0; }
   display: flex;
   align-items: center;
   gap: 6px;
+  color: #888780;
 }
 .location-sub  { color: #888780; font-size: 0.75rem; }
 .location-date { color: #b4b2a9; }
@@ -164,15 +167,68 @@ body { background: #f5f4f0; }
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: #3b6d11;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
 }
 .ai-summary-header i { font-size: 0.95rem; }
+
+/* Idle state */
+.ai-summary-idle { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.ai-summary-prompt { font-size: 0.8rem; color: #4a7a1e; margin: 0; line-height: 1.5; }
+.ai-summary-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  background: #3b6d11;
+  color: #ffffff;
+  border: none;
+  border-radius: 99px;
+  padding: 6px 14px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.ai-summary-btn:hover    { background: #2e5509; }
+.ai-summary-btn:disabled { background: #7aaa4a; cursor: not-allowed; }
+.ai-summary-btn i        { font-size: 0.85rem; }
+
+/* Loading state */
+.ai-summary-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: #4a7a1e;
+}
+.ai-summary-loading i { animation: spin 0.8s linear infinite; font-size: 0.95rem; }
+
+/* Result text */
 .ai-summary-text {
   font-size: 0.875rem;
   color: #2c4a0e;
   line-height: 1.6;
-  margin: 0;
+  margin: 0 0 0.75rem;
 }
+
+/* Regenerate button */
+.ai-summary-regen { display: flex; justify-content: flex-end; }
+.ai-summary-regen-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: 1px solid #97c459;
+  border-radius: 99px;
+  padding: 4px 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #3b6d11;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.ai-summary-regen-btn:hover { background: #e4f2d0; border-color: #3b6d11; }
+.ai-summary-regen-btn i     { font-size: 0.8rem; }
 
 /* ── Metrics grid ─────────────────────────────────────────────── */
 .metrics-grid {
@@ -347,45 +403,48 @@ body { background: #f5f4f0; }
   align-items: center;
   justify-content: center;
   padding: 16px;
+  overflow-y: auto;
   animation: fadeIn 0.2s ease;
 }
 .tutorial-modal-weather.fade-out { animation: fadeOut 0.3s ease forwards; }
 .tutorial-modal-content-weather {
   background: #ffffff;
-  border-radius: 16px;
+  border-radius: 14px;
   width: 100%;
-  max-width: 420px;
-  padding: 24px;
+  max-width: 340px;          /* was 420px */
+  max-height: calc(100dvh - 32px);
+  padding: 18px 20px;        /* was 24px */
   position: relative;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  margin: auto;
 }
 .tutorial-modal-weather .modal-close {
-  position: absolute; top: 14px; right: 16px;
-  background: none; border: none; font-size: 1.4rem;
+  position: absolute; top: 12px; right: 14px;
+  background: none; border: none; font-size: 1.2rem;  /* was 1.4rem */
   color: #b4b2a9; cursor: pointer; line-height: 1;
 }
 .tutorial-modal-weather .modal-close:hover        { color: #1a1a18; }
-.tutorial-modal-weather .modal-header             { margin-bottom: 20px; }
-.tutorial-modal-weather .modal-header h2          { font-size: 1.1rem; font-weight: 600; color: #1a1a18; margin-bottom: 4px; }
-.tutorial-modal-weather .modal-header p           { font-size: 0.82rem; color: #888780; margin: 0; }
-.tutorial-modal-weather .modal-body               { display: flex; flex-direction: column; gap: 16px; margin-bottom: 20px; }
-.tutorial-modal-weather .tutorial-step            { display: flex; gap: 14px; align-items: flex-start; }
+.tutorial-modal-weather .modal-header             { margin-bottom: 14px; }  /* was 20px */
+.tutorial-modal-weather .modal-header h2          { font-size: 0.95rem; font-weight: 600; color: #1a1a18; margin-bottom: 3px; }  /* was 1.1rem */
+.tutorial-modal-weather .modal-header p           { font-size: 0.75rem; color: #888780; margin: 0; }  /* was 0.82rem */
+.tutorial-modal-weather .modal-body               { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }  /* gap was 16px, margin was 20px */
+.tutorial-modal-weather .tutorial-step            { display: flex; gap: 12px; align-items: flex-start; }  /* gap was 14px */
 .tutorial-modal-weather .step-number {
-  width: 28px; height: 28px; border-radius: 50%;
+  width: 24px; height: 24px; border-radius: 50%;    /* was 28px */
   background: #eaf3de; color: #3b6d11;
-  font-size: 0.8rem; font-weight: 600;
+  font-size: 0.75rem; font-weight: 600;             /* was 0.8rem */
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
 }
-.tutorial-modal-weather .step-content h4         { font-size: 0.9rem; font-weight: 600; color: #1a1a18; margin: 0 0 3px; }
-.tutorial-modal-weather .step-content p          { font-size: 0.8rem; color: #888780; margin: 0; line-height: 1.5; }
-.tutorial-modal-weather .modal-footer            { display: flex; gap: 10px; }
-.tutorial-modal-weather .modal-footer .btn       { font-size: 0.85rem; border-radius: 99px; padding: 7px 18px; }
+.tutorial-modal-weather .step-content h4         { font-size: 0.82rem; font-weight: 600; color: #1a1a18; margin: 0 0 2px; }  /* was 0.9rem */
+.tutorial-modal-weather .step-content p          { font-size: 0.74rem; color: #888780; margin: 0; line-height: 1.45; }  /* was 0.8rem */
+.tutorial-modal-weather .modal-footer            { display: flex; gap: 8px; }  /* was 10px */
+.tutorial-modal-weather .modal-footer .btn       { font-size: 0.8rem; border-radius: 99px; padding: 6px 16px; }  /* was 0.85rem / 7px 18px */
 .tutorial-modal-weather .btn-primary             { background: #3b6d11; border-color: #3b6d11; color: #fff; }
 .tutorial-modal-weather .btn-primary:hover       { background: #2e5509; border-color: #2e5509; }
 .tutorial-modal-weather .btn-secondary           { background: transparent; border: 1px solid #d3d1c7; color: #888780; }
 .tutorial-modal-weather .btn-secondary:hover     { background: #f1efe8; }
-
+ 
 /* ── Animations ───────────────────────────────────────────────── */
 @keyframes spin    { to { transform: rotate(360deg); } }
 @keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
