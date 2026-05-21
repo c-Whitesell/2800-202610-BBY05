@@ -30,6 +30,7 @@ let feedback;
 let paths;
 let parks;
 let trails;
+let parkshade;
 
 async function connectDB() {
   try {
@@ -42,6 +43,7 @@ async function connectDB() {
     paths = db.collection("paths");
     parks = db.collection("parks");
     trails = db.collection("trails");
+    parkshade = db.collection("parkShade"); // <-- Initialize this
 
     console.log("Connected to MongoDB and initialized collections");
   } catch (error) {
@@ -496,7 +498,11 @@ app.get("/map", (req, res) => {
 
   res.render("map", {
     pageScript: "map",
-    pageScripts: ["https://unpkg.com/maplibre-gl@5.23.0/dist/maplibre-gl.js"],
+    pageScripts: [
+      "https://unpkg.com/maplibre-gl@5.23.0/dist/maplibre-gl.js",
+      "https://cdn.jsdelivr.net/npm/@turf/turf@7/turf.min.js",
+      "https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js",
+    ],
     tutorialMode: showMapTutorial,
   });
 });
@@ -816,6 +822,84 @@ app.get("/api/trails", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch trails" });
   }
 });
+
+app.get("/api/parkShade", async (req, res) => {
+  try {
+    const { time } = req.query;
+    const targetDate = new Date(parseInt(time));
+    console.log("---");
+    console.log("🟢 [API] Incoming Request Time:", targetDate.toISOString());
+
+    // 1. Check if the database has data
+    const totalDocs = await parkshade.countDocuments();
+    console.log("DEBUG: Total documents in parkshade collection:", totalDocs);
+
+    if (totalDocs === 0) {
+      console.log("❌ ERROR: parkshade collection is completely empty!");
+      return res.json({ shadeData: [] });
+    }
+
+    // 2. Print a sample document to verify field names
+    const sampleDoc = await parkshade.findOne();
+    console.log("DEBUG: Sample document 'time' field:", sampleDoc.time);
+
+    // 3. Get distinct times
+    const distinctTimes = await parkshade.distinct("time");
+    console.log(
+      `DEBUG: Found ${distinctTimes.length} unique time strings in DB.`,
+    );
+
+    let closestTime = null;
+    let minDiff = Infinity;
+    const targetMs = targetDate.getTime();
+
+    // 4. Safely parse and find closest
+    distinctTimes.forEach((timeStr) => {
+      if (!timeStr) return; // Skip if timeStr is undefined/null
+
+      // Clean string: Remove " PDT", and replace the space between date and time with "T" for safe parsing
+      // "2026-05-20 19:00:00 PDT" -> "2026-05-20T19:00:00"
+      const cleanStr = timeStr
+        .replace(/ (PDT|PST|UTC|GMT)$/, "")
+        .replace(" ", "T");
+      const dbDateMs = new Date(cleanStr).getTime();
+
+      if (isNaN(dbDateMs)) {
+        console.log(
+          `⚠️ WARNING: Failed to parse time string: "${timeStr}" (Cleaned: "${cleanStr}")`,
+        );
+        return;
+      }
+
+      const diff = Math.abs(dbDateMs - targetMs);
+
+      if (diff < minDiff) {
+        minDiff = diff;
+        closestTime = timeStr;
+      }
+    });
+
+    console.log("🔵 [API] Closest Time found in DB:", closestTime);
+
+    if (!closestTime) {
+      return res.json({ data: [] });
+    }
+
+    const shadingDocs = await parkshade.find({ time: closestTime }).toArray();
+    console.log(
+      `🟡 [API] Documents found for ${closestTime}: ${shadingDocs.length}`,
+    );
+
+    res.json({
+      selectedTime: closestTime,
+      data: shadingDocs,
+    });
+  } catch (err) {
+    console.error("❌ [API] Error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ── Bookmark Routes ────────────────────────────────────────
 app.post("/bookmark/:trailId", isAuthenticated, async (req, res) => {
   try {
@@ -860,7 +944,6 @@ app.post("/bookmark/:trailId", isAuthenticated, async (req, res) => {
     res.json({
       saved: true,
     });
-
   } catch (err) {
     console.error("Bookmark error:", err);
 
