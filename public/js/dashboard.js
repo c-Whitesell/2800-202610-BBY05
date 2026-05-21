@@ -22,6 +22,10 @@
     initializeTrailRecommendation();
     initializeActivityAnimations();
     initializeCardAnimations();
+    const loadMoreBtn = document.getElementById('load-more-activity');
+    if (loadMoreBtn) {
+      loadMoreBtn.addEventListener('click', loadMoreActivity);
+    }
   });
 
   // ──────────────────────────────────────────────────────────
@@ -348,10 +352,6 @@
     }, 100);
   }
 
-  // ──────────────────────────────────────────────────────────
-  // ACTIVITY LIST ANIMATIONS
-  // ──────────────────────────────────────────────────────────
-
   function initializeActivityAnimations() {
     const activityItems = document.querySelectorAll('.st-activity-item');
 
@@ -370,10 +370,6 @@
     });
   }
 
-  // ──────────────────────────────────────────────────────────
-  // CARD HOVER EFFECTS
-  // ──────────────────────────────────────────────────────────
-
   function initializeCardAnimations() {
     const cards = document.querySelectorAll('.st-dashboard__card');
 
@@ -388,9 +384,55 @@
     });
   }
 
-  // ──────────────────────────────────────────────────────────
-  // UTILITY: Smooth scroll to section
-  // ──────────────────────────────────────────────────────────
+  let activityOffset = 5;
+  const ACTIVITY_LIMIT = 5;
+
+  async function loadMoreActivity() {
+    try {
+      const res = await fetch(
+        `/api/activity?limit=${ACTIVITY_LIMIT}&skip=${activityOffset}`,
+      );
+
+      const data = await res.json();
+
+      if (!data.length) {
+        document.getElementById('load-more-activity').style.display = 'none';
+        return;
+      }
+
+      appendActivityItems(data);
+      activityOffset += data.length;
+    } catch (err) {
+      console.error('Load more activity error:', err);
+    }
+  }
+
+  function appendActivityItems(items) {
+    const container = document.querySelector('.st-activity-list');
+    if (!container) return;
+
+    items.forEach((activity) => {
+      const el = document.createElement('div');
+      el.className = 'st-activity-item';
+
+      el.innerHTML = `
+      <div class="st-activity-item__icon">${getActivityIcon(activity.type)}</div>
+      <div class="st-activity-item__content">
+        <div class="st-activity-item__text">${activity.description}</div>
+        <div class="st-activity-item__time">${activity.timeAgo}</div>
+      </div>
+    `;
+
+      container.appendChild(el);
+    });
+  }
+
+  function getActivityIcon(type) {
+    if (type === 'trail_completed') return '✓';
+    if (type === 'trail_bookmarked') return '♡';
+    if (type === 'profile_updated') return '⚙️';
+    return '•';
+  }
 
   window.scrollToSection = function (sectionId) {
     const section = document.getElementById(sectionId);
@@ -398,10 +440,6 @@
       section.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   };
-
-  // ──────────────────────────────────────────────────────────
-  // LOCAL STORAGE: Remember user preferences (optional)
-  // ──────────────────────────────────────────────────────────
 
   window.saveDashboardPreference = function (key, value) {
     try {
