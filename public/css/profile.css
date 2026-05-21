@@ -1,14 +1,9 @@
-/* =========================================
-   PROFILE PAGE STYLES
-   ========================================= */
-
 .st-profile-container {
   min-height: calc(100vh - 68px);
   background: var(--forest-dark);
   padding-top: 68px;
 }
 
-/* ─── Profile Header ─── */
 .st-profile-header {
   background: linear-gradient(
     135deg,
@@ -30,7 +25,6 @@
   gap: 2.5rem;
 }
 
-/* ─── Profile Picture ─── */
 .st-profile-picture-wrapper {
   position: relative;
   flex-shrink: 0;
@@ -84,7 +78,6 @@
   line-height: 1;
 }
 
-/* ─── Profile Info ─── */
 .st-profile-info {
   flex: 1;
   padding-top: 0.5rem;
@@ -120,7 +113,6 @@
   margin: 0.3rem 0 0 0;
 }
 
-/* ─── Profile Content ─── */
 .st-profile-content {
   padding: 3rem 2.5rem;
   max-width: 1200px;
@@ -134,7 +126,6 @@
   align-items: start;
 }
 
-/* ─── Profile Card ─── */
 .st-profile-card {
   background: rgba(37, 45, 26, 0.5);
   border: 1px solid rgba(138, 171, 94, 0.15);
@@ -200,7 +191,6 @@
   letter-spacing: -0.01em;
 }
 
-/* ─── Edit Field (Nickname) ─── */
 .st-edit-field {
   display: flex;
   gap: 0.75rem;
@@ -267,6 +257,23 @@
   font-size: 1.1rem;
 }
 
+.st-suggestions {
+  background: white;
+  border-radius: 8px;
+  margin-top: 5px;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.trail-suggestion {
+  padding: 8px;
+  cursor: pointer;
+}
+
+.trail-suggestion:hover {
+  background: #eee;
+}
+
 .st-field-hint {
   font-size: 0.8rem;
   color: rgba(245, 240, 232, 0.35);
@@ -274,7 +281,6 @@
   line-height: 1.5;
 }
 
-/* ─── Info Rows ─── */
 .st-info-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
