@@ -1,48 +1,90 @@
-<%- include('components/header', { 
-  title: 'Map',
+\<%- include('components/header', { 
+  title: 'Search',
   styles: `
     <link rel="stylesheet" href="/css/search.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
   `
-  }) %>
+}) %>
 
-<div class="page-wrapper">
+<div class="search-wrapper">
 
-    <main class="search-hero text-center">
-        <div class="container">
-            <div class="search-hero-bg">
-            <h1 class="display-4 fw-bold mb-3">ShadyTrails</h1>
-            </div>
-            <div class="search-hero-content">
-                <p class="lead mb-4">Find your next shaded trail adventure</p>
-            <div class="row justify-content-center">
-                <div class="col-md-8 col-lg-6">
-                    <div class="input-group input-group-lg">
+  <main class="search-main">
 
-                        <input
-                            type="text"
-                            id="searchPageInput"
-                            class="form-control border-0 shadow-sm"
-                            placeholder="What are you looking for?"
-                        >
+    <!-- Hero search section -->
+    <section class="search-hero">
+      <div class="search-hero__eyebrow">
+        <span class="search-hero__dot"></span>
+        Explore The Lower Mainland
+      </div>
+      <h1 class="search-hero__title">Find your next<br><em> park or path</em></h1>
 
-                        <button class="btn btn-search px-4 st-btn st-btn--primary st-btn--sm">
-                            Search
-                        </button>
-
-                        <ul id="history" class="list-group shadow-sm"></ul>
-
-                    </div>
-                </div>
-            </div>
-
-            <div class="container my-5">
-                <div id="searchResults" class="row justify-content-center">
-                </div>
-            </div>
+      <div class="search-bar-wrap">
+        <div class="search-bar" id="searchBar">
+          <span class="search-bar__icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+          </span>
+          <input
+            id="searchInput"
+            class="search-bar__input"
+            type="text"
+            placeholder="Search"
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <button class="search-bar__clear" id="clearBtn" aria-label="Clear search">✕</button>
         </div>
-        </div>
-    </main>
-    
-    <%- include('components/footer') %>
+
+        <!-- Live dropdown -->
+        <div class="search-dropdown" id="searchDropdown"></div>
+      </div>
+
+      <!-- Filter pills -->
+      <div class="search-filters" id="searchFilters">
+        <button class="search-pill active" data-type="all">All</button>
+        <button class="search-pill" data-type="park">🌳 Parks</button>
+        <button class="search-pill" data-type="path">🥾 Paths</button>
+      </div>
+    </section>
+
+    <!-- Results section -->
+    <section class="search-results-section" id="resultsSection" style="display:none">
+      <div class="search-results-header">
+        <span id="resultsLabel" class="search-results-label"></span>
+      </div>
+      <div class="search-results-grid" id="resultsGrid"></div>
+    </section>
+
+    <!-- Empty state -->
+    <div class="search-empty" id="searchEmpty" style="display:none">
+      <div class="search-empty__icon">🔍</div>
+      <p class="search-empty__title">No results found</p>
+      <p class="search-empty__sub">Try a different name or filter</p>
+    </div>
+
+    <!-- Search history (logged-in users only) -->
+    <% if (isAuthenticated) { %>
+    <section class="search-history-section" id="historySection">
+      <div class="search-history-header">
+        <span class="search-history-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Recent searches
+        </span>
+        <button class="search-history-clear-all" id="clearHistoryBtn">Clear all</button>
+      </div>
+      <div class="search-history-list" id="historyList"></div>
+      <p class="search-history-empty" id="historyEmpty">Your recent searches will appear here.</p>
+    </section>
+    <% } %>
+
+  </main>
 
 </div>
+
+<%- include('components/footer') %>
+<script>
+  const IS_LOGGED_IN = <%= isAuthenticated ? 'true' : 'false' %>;
+</script>
+<script src="/js/search.js"></script>
