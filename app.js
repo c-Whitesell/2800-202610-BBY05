@@ -37,13 +37,13 @@ async function connectDB() {
     await client.connect();
     const db = client.db();
 
-    users = db.collection("users");
-    pageAnalytics = db.collection("pageAnalytics");
-    feedback = db.collection("feedback");
-    paths = db.collection("paths");
-    parks = db.collection("parks");
-    trails = db.collection("trails");
-    parkshade = db.collection("parkShade");
+    users = db.collection('users');
+    pageAnalytics = db.collection('pageAnalytics');
+    feedback = db.collection('feedback');
+    paths = db.collection('paths');
+    parks = db.collection('parks');
+    trails = db.collection('trails');
+    parkshade = db.collection('parkShade');
 
     console.log("Connected to MongoDB and initialized collections");
   } catch (error) {
@@ -178,46 +178,29 @@ app.get("/", async (req, res) => {
 
 app.get("/dashboard", isAuthenticated, async (req, res) => {
   try {
-    const user = await users.findOne({ email: req.session.email });
-    if (!user)
-      return res
-        .status(404)
-        .render("404", { pageScripts: [], pageScript: null });
+    const user = await getUserByEmail(req.session.email);
 
-    const userStats = {
-      username: user.username || user.email.split("@")[0],
-      trailsExplored: user.trailsExplored || 0,
-      totalDistance: user.totalDistance || 0,
-      lastActivityDays: calculateDaysSinceLastActivity(user.lastActivityDate),
-    };
-
-    let recentActivity = [];
-    try {
-      const activityCollection = client.db().collection("activity");
-      const raw = await activityCollection
-        .find({ email: req.session.email })
-        .sort({ createdAt: -1 })
-        .limit(5)
-        .toArray();
-
-      recentActivity = raw.map((a) => ({
-        ...a,
-        timeAgo: getRelativeTime(a.createdAt),
-      }));
-    } catch (err) {
-      console.warn("Activity collection not available:", err.message);
+    if (!user) {
+      return res.status(404).render('404', {
+        pageScripts: [],
+        pageScript: null,
+      });
     }
 
-    res.render("dashboard", {
-      pageScript: "dashboard",
+    const recentActivity = await getRecentActivity(req.session.email);
+    const lastActivityDate = getLastActivityDate(user, recentActivity);
+    const userStats = buildUserStats(user, lastActivityDate);
+
+    return res.render('dashboard', {
+      pageScript: 'dashboard',
       pageScripts: [],
       user: userStats,
       recentActivity,
       isAuthenticated: true,
     });
   } catch (error) {
-    console.error("Dashboard route error:", error);
-    res.status(500).render("error", {
+    console.error('Dashboard route error:', error);
+    return res.status(500).render('error', {
       pageScripts: [],
       pageScript: null,
       message: "Error loading dashboard",
@@ -225,7 +208,46 @@ app.get("/dashboard", isAuthenticated, async (req, res) => {
   }
 });
 
-app.get("/api/recommended-trail", isAuthenticated, async (req, res) => {
+async function getUserByEmail(email) {
+  return await users.findOne({ email });
+}
+
+async function getRecentActivity(email) {
+  try {
+    const activityCollection = client.db().collection('activity');
+
+    const raw = await activityCollection
+      .find({ email })
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .toArray();
+
+    return raw.map((a) => ({
+      ...a,
+      timeAgo: getRelativeTime(a.createdAt),
+    }));
+  } catch (err) {
+    console.warn('Activity collection not available:', err.message);
+    return [];
+  }
+}
+
+function getLastActivityDate(user, recentActivity) {
+  return recentActivity?.[0]?.createdAt ?? user.lastActivityDate ?? null;
+}
+
+function buildUserStats(user, lastActivityDate) {
+  return {
+    username: user.username || user.name || user.email.split('@')[0],
+    trailsExplored: Number(user.trailsExplored || 0),
+    totalDistance: Number(user.totalDistance || 0),
+    lastActivityDays: lastActivityDate
+      ? calculateDaysSinceLastActivity(lastActivityDate)
+      : '—',
+  };
+}
+
+app.get('/api/recommended-trail', isAuthenticated, async (req, res) => {
   try {
     const trailCount = await trails.countDocuments();
     if (trailCount === 0)
@@ -938,7 +960,7 @@ app.get("/api/trails/search", async (req, res) => {
   }
 });
 
-app.get("/api/parkShade", async (req, res) => {
+app.get('/api/parkShade', async (req, res) => {
   try {
     const { time } = req.query;
 
@@ -953,7 +975,7 @@ app.get("/api/parkShade", async (req, res) => {
 
     // 1. Check if the database has data
     const totalDocs = await parkshade.countDocuments();
-    console.log("DEBUG: Total documents in parkshade collection:", totalDocs);
+    console.log('DEBUG: Total documents in parkshade collection:', totalDocs);
 
     if (totalDocs === 0) {
       console.log("❌ ERROR: parkshade collection is completely empty!");
@@ -965,7 +987,7 @@ app.get("/api/parkShade", async (req, res) => {
     console.log("DEBUG: Sample document 'time' field:", sampleDoc?.time);
 
     // 3. Get distinct times
-    const distinctTimes = await parkshade.distinct("time");
+    const distinctTimes = await parkshade.distinct('time');
     console.log(
       `DEBUG: Found ${distinctTimes.length} unique time strings in DB.`,
     );
@@ -1009,7 +1031,7 @@ app.get("/api/parkShade", async (req, res) => {
       }
     });
 
-    console.log("🔵 [API] Closest Time found in DB:", closestTime);
+    console.log('🔵 [API] Closest Time found in DB:', closestTime);
 
     if (!closestTime) {
       return res.json({ data: [] });
@@ -1025,7 +1047,7 @@ app.get("/api/parkShade", async (req, res) => {
       data: shadingDocs,
     });
   } catch (err) {
-    console.error("❌ [API] Error:", err);
+    console.error('❌ [API] Error:', err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -1161,8 +1183,8 @@ app.post("/api/account/delete", isAuthenticated, async (req, res) => {
   }
 });
 // ── Search Routes ───────────────────────────────────────────
-app.get("/search", (req, res) => {
-  res.render("search", {
+app.get('/search', (req, res) => {
+  res.render('search', {
     pageScript: null,
     pageScripts: [],
     isAuthenticated: req.session.authenticated || false,
