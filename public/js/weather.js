@@ -1,3 +1,4 @@
+// weather.js
 /* ── Config ───────────────────────────────────────────────────── */
 const LOCATION = {
   lat:   49.2827,
@@ -5,8 +6,8 @@ const LOCATION = {
   label: 'Vancouver, BC',
 };
 
-const AUTO_REFRESH_MS    = 10 * 60 * 1000; // 10 minutes
-const STALE_THRESHOLD_MS = 20 * 60 * 1000; // 20 minutes
+const AUTO_REFRESH_MS    = 10 * 60 * 1000;
+const STALE_THRESHOLD_MS = 20 * 60 * 1000;
 
 /* ── State ────────────────────────────────────────────────────── */
 let currentUnit      = 'C';
@@ -16,32 +17,45 @@ let autoRefreshTimer = null;
 let staleCheckTimer  = null;
 let isRefreshing     = false;
 
-/* ── WMO code map ─────────────────────────────────────────────── */
+/* ── WMO code map  ────────────────────────────────────────────────
+ *  icon: animated wi-* class  |  tiIcon: fallback Tabler class
+ * ───────────────────────────────────────────────────────────────── */
 const WMO_CODES = {
-  0:  { label: 'Clear Sky',     icon: 'ti-sun' },
-  1:  { label: 'Mainly Clear',  icon: 'ti-sun' },
-  2:  { label: 'Partly Cloudy', icon: 'ti-cloud-sun' },
-  3:  { label: 'Overcast',      icon: 'ti-cloud' },
-  45: { label: 'Foggy',         icon: 'ti-cloud-fog' },
-  48: { label: 'Icy Fog',       icon: 'ti-cloud-fog' },
-  51: { label: 'Light Drizzle', icon: 'ti-cloud-drizzle' },
-  53: { label: 'Drizzle',       icon: 'ti-cloud-drizzle' },
-  55: { label: 'Heavy Drizzle', icon: 'ti-cloud-drizzle' },
-  61: { label: 'Light Rain',    icon: 'ti-cloud-rain' },
-  63: { label: 'Rain',          icon: 'ti-cloud-rain' },
-  65: { label: 'Heavy Rain',    icon: 'ti-cloud-rain' },
-  71: { label: 'Light Snow',    icon: 'ti-snowflake' },
-  73: { label: 'Snow',          icon: 'ti-snowflake' },
-  75: { label: 'Heavy Snow',    icon: 'ti-snowflake' },
-  80: { label: 'Showers',       icon: 'ti-cloud-rain' },
-  81: { label: 'Heavy Showers', icon: 'ti-cloud-storm' },
-  95: { label: 'Thunderstorm',  icon: 'ti-cloud-storm' },
-  99: { label: 'Hail Storm',    icon: 'ti-cloud-storm' },
+  0:  { label: 'Clear Sky',     icon: 'wi-sun',          tiIcon: 'ti-sun'          },
+  1:  { label: 'Mainly Clear',  icon: 'wi-sun',          tiIcon: 'ti-sun'          },
+  2:  { label: 'Partly Cloudy', icon: 'wi-cloud-sun',    tiIcon: 'ti-cloud-sun'    },
+  3:  { label: 'Overcast',      icon: 'wi-cloud',        tiIcon: 'ti-cloud'        },
+  45: { label: 'Foggy',         icon: 'wi-cloud-fog',    tiIcon: 'ti-cloud-fog'    },
+  48: { label: 'Icy Fog',       icon: 'wi-cloud-fog',    tiIcon: 'ti-cloud-fog'    },
+  51: { label: 'Light Drizzle', icon: 'wi-cloud-drizzle',tiIcon: 'ti-cloud-drizzle'},
+  53: { label: 'Drizzle',       icon: 'wi-cloud-drizzle',tiIcon: 'ti-cloud-drizzle'},
+  55: { label: 'Heavy Drizzle', icon: 'wi-cloud-drizzle',tiIcon: 'ti-cloud-drizzle'},
+  61: { label: 'Light Rain',    icon: 'wi-cloud-rain',   tiIcon: 'ti-cloud-rain'   },
+  63: { label: 'Rain',          icon: 'wi-cloud-rain',   tiIcon: 'ti-cloud-rain'   },
+  65: { label: 'Heavy Rain',    icon: 'wi-cloud-rain',   tiIcon: 'ti-cloud-rain'   },
+  71: { label: 'Light Snow',    icon: 'wi-snowflake',    tiIcon: 'ti-snowflake'    },
+  73: { label: 'Snow',          icon: 'wi-snowflake',    tiIcon: 'ti-snowflake'    },
+  75: { label: 'Heavy Snow',    icon: 'wi-snowflake',    tiIcon: 'ti-snowflake'    },
+  80: { label: 'Showers',       icon: 'wi-cloud-rain',   tiIcon: 'ti-cloud-rain'   },
+  81: { label: 'Heavy Showers', icon: 'wi-cloud-storm',  tiIcon: 'ti-cloud-storm'  },
+  95: { label: 'Thunderstorm',  icon: 'wi-cloud-storm',  tiIcon: 'ti-cloud-storm'  },
+  99: { label: 'Hail Storm',    icon: 'wi-cloud-storm',  tiIcon: 'ti-cloud-storm'  },
 };
 
 /* ── Helpers: WMO / shade ─────────────────────────────────────── */
 function getWmo(code) {
-  return WMO_CODES[code] ?? { label: 'Unknown', icon: 'ti-cloud' };
+  return WMO_CODES[code] ?? { label: 'Unknown', icon: 'wi-cloud', tiIcon: 'ti-cloud' };
+}
+
+/**
+ * Render an animated weather icon into an element.
+ * el       – the target DOM element (the <i> tag)
+ * wmoEntry – object from WMO_CODES (has .icon and .tiIcon)
+ * size     – optional extra CSS font-size (e.g. '1.5rem')
+ */
+function setAnimatedIcon(el, wmoEntry, size) {
+  el.className = `wi ${wmoEntry.icon}`;
+  if (size) el.style.fontSize = size;
 }
 
 function calcShadeScore(wmoCode, uvIndex) {
@@ -84,6 +98,19 @@ function toF(c)         { return Math.round(c * 9 / 5 + 32); }
 function displayTemp(c) { return currentUnit === 'C' ? Math.round(c) : toF(c); }
 function unitLabel()    { return currentUnit === 'C' ? '°C' : '°F'; }
 
+/* ── Helpers: feels-like descriptor ──────────────────────────────
+ * Returns a human-readable comfort label based on apparent temp   */
+function feelsLikeLabel(apparentC) {
+  if (apparentC <= -10) return 'Dangerously cold';
+  if (apparentC <=   0) return 'Very cold';
+  if (apparentC <=   8) return 'Cold';
+  if (apparentC <=  14) return 'Cool';
+  if (apparentC <=  20) return 'Comfortable';
+  if (apparentC <=  26) return 'Warm';
+  if (apparentC <=  32) return 'Hot';
+  return 'Very hot';
+}
+
 /* ── Helpers: formatting ──────────────────────────────────────── */
 function fmtHour(isoStr) {
   const h = new Date(isoStr).getHours();
@@ -108,12 +135,28 @@ function updateTemperatureDisplays() {
 
   el('temp-display').innerHTML =
     `${displayTemp(cur.temperature_2m)}<sup>${unitLabel()}</sup>`;
-  el('feels-like').textContent =
-    `Feels like ${displayTemp(cur.apparent_temperature)}° · ` +
-    `High ${displayTemp(dly.temperature_2m_max[0])}° · ` +
-    `Low ${displayTemp(dly.temperature_2m_min[0])}°`;
 
+  renderFeelsLike(cur, dly);
   renderHourlyStrip(hrly, times, sliceStart);
+}
+
+/* ── Enhanced feels-like renderer ────────────────────────────────
+ * Shows feels-like temp, comfort label, and daily range           */
+function renderFeelsLike(cur, dly) {
+  const apparentC = cur.apparent_temperature;
+  const label     = feelsLikeLabel(apparentC);
+  const diff      = Math.round(apparentC - cur.temperature_2m);
+  const diffStr   = diff === 0 ? '' : diff > 0 ? ` (+${diff}°)` : ` (${diff}°)`;
+
+  el('feels-like').innerHTML =
+    `Feels like <strong>${displayTemp(apparentC)}°</strong>` +
+    `<span class="feels-label">${label}</span>` +
+    `<span class="feels-diff">${diffStr}</span>` +
+    `<span class="feels-range">` +
+      `↑ ${displayTemp(dly.temperature_2m_max[0])}°` +
+      `<span class="feels-range-sep">·</span>` +
+      `↓ ${displayTemp(dly.temperature_2m_min[0])}°` +
+    `</span>`;
 }
 
 /* ── UI state helpers ─────────────────────────────────────────── */
@@ -159,8 +202,6 @@ function manualRefresh() {
 }
 
 /* ── Fetch weather ────────────────────────────────────────────── */
-// silent: true  — keep existing content, spin the refresh icon
-// silent: false — show full loading screen (first load or retry)
 async function fetchWeather({ silent = false } = {}) {
   if (isRefreshing) return;
   isRefreshing = true;
@@ -212,7 +253,6 @@ async function fetchWeather({ silent = false } = {}) {
 
   try {
     renderWeather(data);
-    fetchAISummary(data.current); // fire-and-forget after render
     lastFetchTime = Date.now();
     markStale(false);
     scheduleAutoRefresh();
@@ -228,17 +268,25 @@ async function fetchWeather({ silent = false } = {}) {
 }
 
 /* ── AI summary ───────────────────────────────────────────────── */
+function requestAISummary() {
+  if (!lastWeatherData) return;
+  fetchAISummary(lastWeatherData.cur);
+}
+
 async function fetchAISummary(cur) {
-  const summaryEl = el('ai-summary');
-  if (!summaryEl) return;
+  const idleEl    = document.getElementById('ai-summary-idle');
+  const loadingEl = document.getElementById('ai-summary-loading');
+  const summaryEl = document.getElementById('ai-summary');
+  const regenEl   = document.getElementById('ai-summary-regen');
+  const btn       = document.getElementById('ai-summary-btn');
 
-  summaryEl.textContent = 'Loading…';
-  el('ai-summary-box').style.display = 'block';
+  idleEl.style.display    = 'none';
+  loadingEl.style.display = 'flex';
+  summaryEl.style.display = 'none';
+  regenEl.style.display   = 'none';
+  if (btn) btn.disabled   = true;
 
-  const wmo = getWmo(cur.weather_code);
-
-  // Rain chance is not in the current-weather block from Open-Meteo;
-  // we approximate from the condition (precipitation codes start at 51).
+  const wmo        = getWmo(cur.weather_code);
   const rainChance = cur.weather_code >= 51 ? 70 : cur.weather_code >= 2 ? 20 : 5;
 
   const params = new URLSearchParams({
@@ -252,12 +300,18 @@ async function fetchAISummary(cur) {
   try {
     const res  = await fetch(`/api/ai-weather-summary?${params}`);
     const data = await res.json();
-
     if (!res.ok || data.error) throw new Error(data.error || 'Unknown error');
-    summaryEl.textContent = data.summary;
+
+    summaryEl.textContent   = data.summary;
+    summaryEl.style.display = 'block';
+    regenEl.style.display   = 'block';
   } catch (err) {
     console.error('AI summary error:', err);
-    summaryEl.textContent = 'AI summary unavailable. Please check the weather details manually.';
+    summaryEl.textContent   = 'AI summary unavailable. Please check the weather details manually.';
+    summaryEl.style.display = 'block';
+    regenEl.style.display   = 'block';
+  } finally {
+    loadingEl.style.display = 'none';
   }
 }
 
@@ -295,13 +349,15 @@ function renderHeroCard(cur, dly) {
   const score = calcShadeScore(cur.weather_code, cur.uv_index ?? 0);
   const cls   = shadeClass(score);
 
-  el('condition-icon').className   = `ti ${wmo.icon}`;
+  /* ── Animated condition icon ── */
+  const iconEl = el('condition-icon');
+  setAnimatedIcon(iconEl, wmo, '1.1rem');
+
   el('condition-text').textContent = wmo.label;
   el('temp-display').innerHTML     = `${displayTemp(cur.temperature_2m)}<sup>${unitLabel()}</sup>`;
-  el('feels-like').textContent     =
-    `Feels like ${displayTemp(cur.apparent_temperature)}° · ` +
-    `High ${displayTemp(dly.temperature_2m_max[0])}° · ` +
-    `Low ${displayTemp(dly.temperature_2m_min[0])}°`;
+
+  /* ── Enhanced feels-like ── */
+  renderFeelsLike(cur, dly);
 
   el('shade-ring').className    = `shade-ring shade-${cls}`;
   el('shade-score').className   = `shade-ring-num shade-${cls}`;
@@ -327,10 +383,11 @@ function renderHourlyStrip(hrly, times, sliceStart) {
     const uvH    = hrly.uv_index?.[idx] ?? 0;
     const shadeH = calcShadeScore(hrly.weather_code[idx], uvH);
 
+    /* Each card gets an <i class="wi wi-*"> for the animated icon */
     strip.innerHTML +=
       `<div class="hour-card${i === 0 ? ' now' : ''}">
         <div class="hour-time">${i === 0 ? 'Now' : fmtHour(t)}</div>
-        <i class="ti ${wmoH.icon}"></i>
+        <i class="wi ${wmoH.icon}"></i>
         <div class="hour-temp">${temp}°</div>
         <div class="hour-shade">${shadeEmoji(shadeH)} ${shadeH}%</div>
       </div>`;
