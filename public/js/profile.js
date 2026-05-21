@@ -110,9 +110,95 @@ saveNicknameBtn.addEventListener('click', async () => {
   }
 });
 
-// ── Allow Enter key to save nickname ──
 nicknameInput.addEventListener('keypress', (e) => {
   if (e.key === 'Enter') {
     saveNicknameBtn.click();
   }
 });
+
+trailSearchInput?.addEventListener('input', handleTrailSearch);
+logTrailBtn?.addEventListener('click', handleTrailLog);
+
+async function handleTrailSearch(e) {
+  const q = e.target.value.trim();
+  selectedTrail = null;
+
+  if (q.length < 2) return clearSuggestions();
+
+  const data = await fetchTrails(q);
+  renderTrailSuggestions(data);
+}
+
+async function fetchTrails(q) {
+  const res = await fetch(`/api/trails/search?q=${encodeURIComponent(q)}`);
+  return await res.json();
+}
+
+function renderTrailSuggestions(data) {
+  trailSuggestions.innerHTML = data.map(renderSuggestion).join('');
+
+  document.querySelectorAll('.trail-suggestion').forEach((el, i) => {
+    el.addEventListener('click', () => selectTrail(data[i]));
+  });
+}
+
+function renderSuggestion(t) {
+  return `<div class="trail-suggestion" data-id="${t.id}">${t.name}</div>`;
+}
+
+function clearSuggestions() {
+  trailSuggestions.innerHTML = '';
+}
+
+function selectTrail(trail) {
+  selectedTrail = trail;
+  trailSearchInput.value = trail.name;
+
+  if (trail.distance_m) {
+    trailDistanceInput.value = (trail.distance_m / 1000).toFixed(1);
+  }
+
+  clearSuggestions();
+}
+
+async function handleTrailLog() {
+  const payload = buildTrailPayload();
+  const result = await submitTrailLog(payload);
+
+  if (!result.ok) {
+    showToast(result.error || 'Failed to log trail', 'error');
+    return;
+  }
+
+  resetTrailForm();
+  showToast('Trail logged successfully! 🥾');
+}
+
+function buildTrailPayload() {
+  const distanceKm = parseFloat(trailDistanceInput.value);
+
+  return selectedTrail
+    ? { trailId: selectedTrail.id, distanceKm }
+    : {
+        trailName: trailSearchInput.value.trim(),
+        distanceKm,
+      };
+}
+
+async function submitTrailLog(payload) {
+  const res = await fetch('/api/trails/log', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  const data = await res.json();
+  return { ok: res.ok, ...data };
+}
+
+function resetTrailForm() {
+  trailSearchInput.value = '';
+  trailDistanceInput.value = '';
+  selectedTrail = null;
+  clearSuggestions();
+}
