@@ -58,24 +58,44 @@ if (container && !container._map) {
   });
 
   // ── Global Custom Event Hook: Fired after 3-second debounces ──────────────────
-  // 1. Maintain a reference to the last successfully requested timestamp
-  let lastRequestedMs = null;
-
-  // ── Global Custom Event Hook: Fired after 3-second debounces ──────────────────
   window.addEventListener("dateTimeTimelineChanged", async (e) => {
-    const targetedISOTime = new Date(e.detail.timestamp).getTime();
+    // Keep the guard based strictly on the raw incoming timestamp so it stays completely stable
+    const rawIncomingMs = new Date(e.detail.timestamp).getTime();
 
     // Deduplication Guard: If this exact millisecond was just processed, abort network request
-    if (lastRequestedMs === targetedISOTime) {
+    if (lastRequestedMs === rawIncomingMs) {
       console.log("🛑 API Request blocked: Duplicate timestamp detected.");
       return;
     }
 
     // Update our pointer immediately to block subsequent simultaneous or debounced echoes
-    lastRequestedMs = targetedISOTime;
+    lastRequestedMs = rawIncomingMs;
 
     try {
-      const response = await fetch(`/api/parkShade?time=${targetedISOTime}`);
+      // 1. Convert the incoming time specifically to Vancouver wall-clock time JUST for the API
+      const incomingDate = new Date(e.detail.timestamp);
+      const vancouverFormatter = new Intl.DateTimeFormat("en-US", {
+        timeZone: "America/Vancouver",
+        year: "numeric",
+        month: "numeric",
+        day: "numeric",
+        hour: "numeric",
+        minute: "numeric",
+        second: "numeric",
+        hour12: false,
+      });
+
+      const parts = vancouverFormatter.formatToParts(incomingDate);
+      const dateMap = Object.fromEntries(parts.map((p) => [p.type, p.value]));
+      const vancouverISOStr = `${dateMap.year}-${dateMap.month.padStart(2, "0")}-${dateMap.day.padStart(2, "0")}T${dateMap.hour.padStart(2, "0")}:${dateMap.minute.padStart(2, "0")}:${dateMap.second.padStart(2, "0")}`;
+
+      // This is the specific adjusted MS value that goes to your backend
+      const targetedVancouverMs = new Date(vancouverISOStr).getTime();
+
+      // Send the Vancouver millisecond timestamp to the backend
+      const response = await fetch(
+        `/api/parkShade?time=${targetedVancouverMs}`,
+      );
 
       if (!response.ok) {
         throw new Error(`Server returned ${response.status}`);
@@ -95,26 +115,15 @@ if (container && !container._map) {
         });
       }
 
-      // 2. Sync Timeline UI
+      // 2. Sync Timeline UI (Using the original raw timestamp to keep guards perfectly matching)
       if (payload && payload.selectedTime) {
-        let formattedTimeStr = payload.selectedTime.replace(
-          / (PDT|PST|UTC|GMT)$/,
-          "",
+        // We pass the raw original incoming date object back out to the UI.
+        // This guarantees that the UI loops back the exact same MS value that our guard expects.
+        window.dispatchEvent(
+          new CustomEvent("syncTimelineUIToTime", {
+            detail: { adjustedTimestamp: incomingDate },
+          }),
         );
-        const parsedMatchedDate = new Date(formattedTimeStr);
-        const matchedDateMs = parsedMatchedDate.getTime();
-
-        if (!isNaN(matchedDateMs)) {
-          // Update our cache with the parsed backend time before triggering the UI sync.
-          // This ensures that when the UI echoes back this exact time, our guard catches it.
-          lastRequestedMs = matchedDateMs;
-
-          window.dispatchEvent(
-            new CustomEvent("syncTimelineUIToTime", {
-              detail: { adjustedTimestamp: parsedMatchedDate },
-            }),
-          );
-        }
       }
 
       // 3. Update Map
