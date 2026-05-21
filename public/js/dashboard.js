@@ -1,18 +1,8 @@
-/**
- * ShadyTrails Dashboard — Client-Side Interactivity
- * Handles dynamic elements, animations, and user interactions
- */
-
 (function () {
   'use strict';
 
-  // Constants
   const VANCOUVER_LAT = 49.2827;
   const VANCOUVER_LON = -123.1207;
-
-  // ──────────────────────────────────────────────────────────
-  // INITIALIZATION
-  // ──────────────────────────────────────────────────────────
 
   document.addEventListener('DOMContentLoaded', function () {
     console.log('Dashboard initializing...');
@@ -23,10 +13,6 @@
     initializeActivityAnimations();
     initializeCardAnimations();
   });
-
-  // ──────────────────────────────────────────────────────────
-  // WEATHER — Using Open-Meteo API (with fallback)
-  // ──────────────────────────────────────────────────────────
 
   async function fetchWeatherData() {
     const loadingEl = document.getElementById('weather-loading');
@@ -54,11 +40,9 @@
         throw new Error('Invalid weather data structure');
       }
 
-      // Parse weather codes to get condition description
       const weatherCondition = getWeatherCondition(data.current.weather_code);
       const weatherIcon = getWeatherIcon(data.current.weather_code);
 
-      // Update DOM elements
       document.getElementById('weather-icon').textContent = weatherIcon;
       document.getElementById('weather-condition').textContent =
         weatherCondition;
@@ -75,7 +59,6 @@
         data.current.uv_index,
       );
 
-      // Show content, hide loading
       if (loadingEl) loadingEl.style.display = 'none';
       if (contentEl) contentEl.style.display = 'grid';
       if (errorEl) errorEl.style.display = 'none';
@@ -83,13 +66,11 @@
       console.log('Weather data loaded successfully');
     } catch (error) {
       console.error('Weather fetch error:', error);
-      // Use fallback data instead of showing error
       showWeatherFallback(loadingEl, contentEl, errorEl);
     }
   }
 
   function showWeatherFallback(loadingEl, contentEl, errorEl) {
-    // Show fallback weather data when API is unavailable
     console.log('Using fallback weather data');
     try {
       document.getElementById('weather-icon').textContent = '🌤️';
@@ -109,7 +90,6 @@
   }
 
   function getWeatherCondition(code) {
-    // WMO Weather interpretation codes
     if (code === 0) return 'Clear';
     if ([1, 2].includes(code)) return 'Partly cloudy';
     if (code === 3) return 'Overcast';
@@ -132,10 +112,6 @@
     if ([80, 81, 82, 95, 96, 99].includes(code)) return '⛈️';
     return '🌤️';
   }
-
-  // ──────────────────────────────────────────────────────────
-  // TRAIL RECOMMENDATION — Fetch from backend API
-  // ──────────────────────────────────────────────────────────
 
   async function fetchTrailRecommendation() {
     const loadingEl = document.getElementById('trail-loading');
@@ -222,18 +198,12 @@
         difficulty.toLowerCase();
     }
 
-    // Update map link
     if (mapLink && trail.id) {
       mapLink.href = '/map?trail=' + trail.id;
     }
 
-    // Store trail ID for next recommendation button
     window.currentTrailId = trail.id;
   }
-
-  // ──────────────────────────────────────────────────────────
-  // TIPS OF THE DAY — Client-side calculation
-  // ──────────────────────────────────────────────────────────
 
   const TIPS = [
     {
@@ -296,10 +266,6 @@
     console.log('Tip loaded:', tip);
   }
 
-  // ──────────────────────────────────────────────────────────
-  // TRAIL RECOMMENDATION - "See Another" Functionality
-  // ──────────────────────────────────────────────────────────
-
   function initializeTrailRecommendation() {
     const nextRecButton = document.getElementById('btn-next-recommendation');
 
@@ -348,10 +314,6 @@
     }, 100);
   }
 
-  // ──────────────────────────────────────────────────────────
-  // ACTIVITY LIST ANIMATIONS
-  // ──────────────────────────────────────────────────────────
-
   function initializeActivityAnimations() {
     const activityItems = document.querySelectorAll('.st-activity-item');
 
@@ -370,10 +332,6 @@
     });
   }
 
-  // ──────────────────────────────────────────────────────────
-  // CARD HOVER EFFECTS
-  // ──────────────────────────────────────────────────────────
-
   function initializeCardAnimations() {
     const cards = document.querySelectorAll('.st-dashboard__card');
 
@@ -388,20 +346,12 @@
     });
   }
 
-  // ──────────────────────────────────────────────────────────
-  // UTILITY: Smooth scroll to section
-  // ──────────────────────────────────────────────────────────
-
   window.scrollToSection = function (sectionId) {
     const section = document.getElementById(sectionId);
     if (section) {
       section.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   };
-
-  // ──────────────────────────────────────────────────────────
-  // LOCAL STORAGE: Remember user preferences (optional)
-  // ──────────────────────────────────────────────────────────
 
   window.saveDashboardPreference = function (key, value) {
     try {
@@ -420,10 +370,6 @@
       return defaultValue;
     }
   };
-
-  // ──────────────────────────────────────────────────────────
-  // QUICK STAT UPDATES
-  // ──────────────────────────────────────────────────────────
 
   window.updateStatCard = function (icon, number, label) {
     const statCards = document.querySelectorAll('.st-stat-card');
