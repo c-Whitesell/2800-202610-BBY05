@@ -178,37 +178,20 @@ app.get('/', async (req, res) => {
 
 app.get('/dashboard', isAuthenticated, async (req, res) => {
   try {
-    const user = await users.findOne({ email: req.session.email });
-    if (!user)
-      return res
-        .status(404)
-        .render('404', { pageScripts: [], pageScript: null });
+    const user = await getUserByEmail(req.session.email);
 
-    const userStats = {
-      username: user.username || user.email.split('@')[0],
-      trailsExplored: user.trailsExplored || 0,
-      totalDistance: user.totalDistance || 0,
-      lastActivityDays: calculateDaysSinceLastActivity(user.lastActivityDate),
-    };
-
-    let recentActivity = [];
-    try {
-      const activityCollection = client.db().collection('activity');
-      const raw = await activityCollection
-        .find({ email: req.session.email })
-        .sort({ createdAt: -1 })
-        .limit(5)
-        .toArray();
-
-      recentActivity = raw.map((a) => ({
-        ...a,
-        timeAgo: getRelativeTime(a.createdAt),
-      }));
-    } catch (err) {
-      console.warn('Activity collection not available:', err.message);
+    if (!user) {
+      return res.status(404).render('404', {
+        pageScripts: [],
+        pageScript: null,
+      });
     }
 
-    res.render('dashboard', {
+    const recentActivity = await getRecentActivity(req.session.email);
+    const lastActivityDate = getLastActivityDate(user, recentActivity);
+    const userStats = buildUserStats(user, lastActivityDate);
+
+    return res.render('dashboard', {
       pageScript: 'dashboard',
       pageScripts: [],
       user: userStats,
@@ -217,13 +200,52 @@ app.get('/dashboard', isAuthenticated, async (req, res) => {
     });
   } catch (error) {
     console.error('Dashboard route error:', error);
-    res.status(500).render('error', {
+    return res.status(500).render('error', {
       pageScripts: [],
       pageScript: null,
       message: 'Error loading dashboard',
     });
   }
 });
+
+async function getUserByEmail(email) {
+  return await users.findOne({ email });
+}
+
+async function getRecentActivity(email) {
+  try {
+    const activityCollection = client.db().collection('activity');
+
+    const raw = await activityCollection
+      .find({ email })
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .toArray();
+
+    return raw.map((a) => ({
+      ...a,
+      timeAgo: getRelativeTime(a.createdAt),
+    }));
+  } catch (err) {
+    console.warn('Activity collection not available:', err.message);
+    return [];
+  }
+}
+
+function getLastActivityDate(user, recentActivity) {
+  return recentActivity?.[0]?.createdAt ?? user.lastActivityDate ?? null;
+}
+
+function buildUserStats(user, lastActivityDate) {
+  return {
+    username: user.username || user.name || user.email.split('@')[0],
+    trailsExplored: Number(user.trailsExplored || 0),
+    totalDistance: Number(user.totalDistance || 0),
+    lastActivityDays: lastActivityDate
+      ? calculateDaysSinceLastActivity(lastActivityDate)
+      : '—',
+  };
+}
 
 app.get('/api/recommended-trail', isAuthenticated, async (req, res) => {
   try {
