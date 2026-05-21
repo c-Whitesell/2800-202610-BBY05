@@ -106,7 +106,16 @@
     color: #ffffff;
   }
 
-  .st-time-focus,
+  /* Modified to display inline using flexbox */
+  .st-time-focus {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 12px; /* Space between emoji and time */
+    pointer-events: auto;
+  }
+
   .date-navigator,
   .now-btn {
     pointer-events: auto;
@@ -129,7 +138,6 @@
     align-items: center;
   }
 
-  /* Note: Removed mask-image styling block to prevent layout clipping problems on the card container layout elements */
   .timeline-axis::-webkit-scrollbar {
     display: none;
   }
@@ -157,8 +165,17 @@
     justify-content: center;
     min-height: 24px;
   }
+
+  #celestialTop {
+    font-size: 2.8rem; /* Matches time font closely */
+    line-height: 1;
+    pointer-events: none;
+    user-drag: none;
+    -webkit-user-drag: none;
+  }
+
   .current-time-display {
-    font-size: 3.2rem; /* Sized down slightly for elegant spacing within the card layout container */
+    font-size: 3.2rem;
     margin: 0;
     font-weight: 800;
     font-variant-numeric: tabular-nums;
@@ -170,6 +187,31 @@
     gap: 20px;
     margin-bottom: 10px;
   }
+
+  .nav-arrow {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    color: var(--text-main);
+  }
+
+  .date-input-wrapper {
+    position: relative;
+    font-weight: bold;
+    color: var(--text-main);
+  }
+
+  #hiddenDatePicker {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+  }
+
   .now-btn {
     background: var(--accent);
     color: white;
@@ -195,11 +237,47 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  .marker-icon,
-  #celestialTop {
-    pointer-events: none;
-    user-drag: none;
-    -webkit-user-drag: none;
+  /* --- MOBILE MEDIA QUERY (Significantly Smaller) --- */
+  @media (max-width: 768px) {
+    .st-content-header {
+      padding: 8px 16px; /* Tighter padding overall */
+      border-radius: 12px; /* Smaller rounding to match */
+      width: max-content; /* Hug the internal elements instead of stretching to 85% */
+      max-width: 90%;
+      top: 152px;
+    }
+
+    .st-time-focus {
+      gap: 6px; /* Tighter gap between emoji and time */
+    }
+
+    .current-time-display {
+      font-size: 1.6rem; /* Much smaller time text */
+    }
+
+    #celestialTop {
+      font-size: 1.4rem; /* Scaled down emoji to match time */
+    }
+
+    .date-navigator {
+      gap: 10px; /* Bring arrows closer to the date */
+      margin-bottom: 4px;
+      font-size: 0.85rem; /* Smaller date font */
+    }
+
+    .nav-arrow {
+      font-size: 0.85rem; /* Smaller arrows */
+    }
+
+    #timezoneLabel {
+      font-size: 0.65rem; /* Very small timezone font */
+    }
+
+    .now-btn {
+      padding: 4px 12px; /* Much smaller button area */
+      font-size: 0.65rem; /* Tiny text for the button */
+      margin-top: 4px;
+    }
   }
 </style>
 

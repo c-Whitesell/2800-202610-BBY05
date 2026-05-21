@@ -9,8 +9,7 @@
 <div class="bookmarks-wrapper">
 <main class="container bookmarks-page">
 
-    <!-- Page header -->
-    <div class="p-4 p-md-5 mb-4 bg-body-tertiary rounded-3">
+    <div class="st-page-header p-4 p-md-5 mb-4 rounded-3">
         <div class="container-fluid py-3">
             <h1 class="display-6 fw-bold mb-2">My Bookmarks</h1>
             <p class="col-md-8 fs-5 mb-0">
@@ -18,8 +17,7 @@
             </p>
         </div>
     </div>
-
-    <% if (isAuthenticated) { %>
+       <% if (isAuthenticated) { %>
 
         <!-- Loading state -->
         <div id="bookmarksLoading" class="text-center py-5">
