@@ -96,6 +96,16 @@ img {
   box-shadow: none;
 }
 
+#st-navbar,
+#st-navbar .navbar-collapse {
+  position: relative;
+  z-index: 2000;
+}
+
+.navbar-collapse.show {
+  z-index: 2000;
+}
+
 .st-navbar.scrolled {
   background: rgba(20, 26, 14, 0.95);
   border-bottom-color: rgba(138, 171, 94, 0.15);
@@ -649,6 +659,22 @@ img {
   padding: 0.85rem 2.5rem;
   font-size: 1rem;
   border-radius: 50px;
+}
+
+.st-page-header {
+  background: rgba(37, 45, 26, 0.55); /* matches your panels */
+  border: 1px solid rgba(138, 171, 94, 0.15);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  color: var(--cream);
+}
+
+.st-page-header h1 {
+  color: var(--warm-white);
+}
+
+.st-page-header p {
+  color: rgba(245, 240, 232, 0.65);
 }
 
 /* =========================================
