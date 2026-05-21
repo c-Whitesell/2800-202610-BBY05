@@ -95,7 +95,7 @@ function trailEmoji(t) {
 function renderCard(t) {
     const badge = difficultyBadge(t.difficulty);
     const isSaved = savedIds.includes(t._id);
-    const distStr = t.distance ? `${t.distance} km` : (t.length ? `${t.length} km` : '');
+    const distStr = t.distance ? `${t.distance.toFixed(2)} km` : (t.length ? `${t.length} km` : '');
     const durStr = t.duration ? `${t.duration}` : '';
     const elevStr = t.elevation ? `${t.elevation}m gain` : '';
     const hasCoords = t.lat && t.lng;
@@ -205,11 +205,11 @@ async function loadBookmarks() {
     try {
         const res = await fetch('/api/bookmarks');
 
-       if (res.status === 401) {
-    savedIds = [];
-    showToast("Log in to save bookmarks");
-    return;
-}
+        if (res.status === 401) {
+            savedIds = [];
+            showToast("Log in to save bookmarks");
+            return;
+        }
 
         if (!res.ok) {
             savedIds = [];
@@ -343,8 +343,8 @@ async function init() {
     renderSpotlight();
 
     if (isLoggedIn) {
-    loadBookmarks();
-}
+        loadBookmarks();
+    }
     await loadTrails();
 }
 
