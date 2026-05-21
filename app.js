@@ -30,18 +30,20 @@ let feedback;
 let paths;
 let parks;
 let trails;
+let parkshade;
 
 async function connectDB() {
   try {
     await client.connect();
     const db = client.db();
 
-    users = db.collection('users');
-    pageAnalytics = db.collection('pageAnalytics');
-    feedback = db.collection('feedback');
-    paths = db.collection('paths');
-    parks = db.collection('parks');
-    trails = db.collection('trails');
+    users = db.collection("users");
+    pageAnalytics = db.collection("pageAnalytics");
+    feedback = db.collection("feedback");
+    paths = db.collection("paths");
+    parks = db.collection("parks");
+    trails = db.collection("trails");
+    parkshade = db.collection("parkShade");
 
     console.log('Connected to MongoDB and initialized collections');
   } catch (error) {
@@ -934,6 +936,83 @@ app.get('/api/trails/search', async (req, res) => {
   } catch (err) {
     console.error('Trail search error:', err);
     res.status(500).json([]);
+  }
+});
+
+app.get("/api/parkShade", async (req, res) => {
+  try {
+    const { time } = req.query;
+    const targetDate = new Date(parseInt(time));
+    console.log("---");
+    console.log("🟢 [API] Incoming Request Time:", targetDate.toISOString());
+
+    // 1. Check if the database has data
+    const totalDocs = await parkshade.countDocuments();
+    console.log("DEBUG: Total documents in parkshade collection:", totalDocs);
+
+    if (totalDocs === 0) {
+      console.log("❌ ERROR: parkshade collection is completely empty!");
+      return res.json({ shadeData: [] });
+    }
+
+    // 2. Print a sample document to verify field names
+    const sampleDoc = await parkshade.findOne();
+    console.log("DEBUG: Sample document 'time' field:", sampleDoc.time);
+
+    // 3. Get distinct times
+    const distinctTimes = await parkshade.distinct("time");
+    console.log(
+      `DEBUG: Found ${distinctTimes.length} unique time strings in DB.`,
+    );
+
+    let closestTime = null;
+    let minDiff = Infinity;
+    const targetMs = targetDate.getTime();
+
+    // 4. Safely parse and find closest
+    distinctTimes.forEach((timeStr) => {
+      if (!timeStr) return; // Skip if timeStr is undefined/null
+
+      // Clean string: Remove " PDT", and replace the space between date and time with "T" for safe parsing
+      // "2026-05-20 19:00:00 PDT" -> "2026-05-20T19:00:00"
+      const cleanStr = timeStr
+        .replace(/ (PDT|PST|UTC|GMT)$/, "")
+        .replace(" ", "T");
+      const dbDateMs = new Date(cleanStr).getTime();
+
+      if (isNaN(dbDateMs)) {
+        console.log(
+          `⚠️ WARNING: Failed to parse time string: "${timeStr}" (Cleaned: "${cleanStr}")`,
+        );
+        return;
+      }
+
+      const diff = Math.abs(dbDateMs - targetMs);
+
+      if (diff < minDiff) {
+        minDiff = diff;
+        closestTime = timeStr;
+      }
+    });
+
+    console.log("🔵 [API] Closest Time found in DB:", closestTime);
+
+    if (!closestTime) {
+      return res.json({ data: [] });
+    }
+
+    const shadingDocs = await parkshade.find({ time: closestTime }).toArray();
+    console.log(
+      `🟡 [API] Documents found for ${closestTime}: ${shadingDocs.length}`,
+    );
+
+    res.json({
+      selectedTime: closestTime,
+      data: shadingDocs,
+    });
+  } catch (err) {
+    console.error("❌ [API] Error:", err);
+    res.status(500).json({ error: err.message });
   }
 });
 

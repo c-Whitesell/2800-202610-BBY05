@@ -6,7 +6,7 @@
   </div>
 </nav>
 
-<!-- 2. The Information Section (Stays white) -->
+<!-- 2. The Information Section (Frosted Glass Card Active) -->
 <div class="st-content-header">
   <div class="st-time-focus">
     <div id="celestialTop"></div>
@@ -39,11 +39,10 @@
     padding: 0;
     width: 100%;
     height: 100%;
-    overflow: hidden; /* Prevents scrollbars over the map */
+    overflow: hidden;
     font-family: sans-serif;
   }
 
-  /* Map Container */
   #map {
     position: absolute;
     top: 0;
@@ -52,57 +51,50 @@
     z-index: 0;
   }
 
-  /* Navbar with Glassmorphism */
   .st-time-navbar {
     position: fixed;
-    top: 68px; /* Height of your st-navbar */
+    top: 68px;
     left: 0;
     width: 100%;
     height: 75px;
-    z-index: 999; /* Slightly lower than global nav (1000) */
+    z-index: 999;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: all 0.8s ease;
-
-    /* Glass Effect */
     background: rgba(255, 255, 255, 0.2);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid rgba(255, 255, 255, 0.2);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-
-    pointer-events: none; /* Let clicks pass through to the map */
+    pointer-events: none;
   }
 
-  /* Info Section as a Floating Glass Card */
+  /* Modified Information Card Section with Active Frosted Glass Properties */
   .st-content-header {
     position: absolute;
-    /* (68px global nav) + (75px time scroller) + (20px margin) */
     top: 163px;
     left: 50%;
     transform: translateX(-50%);
-    z-index: 500;
+    z-index: 999; /* Boosted so it lays over all map interaction layer panels safely */
     text-align: center;
     display: flex;
     flex-direction: column;
     align-items: center;
 
-    /* Card Glassmorphism */
-    /*background: rgba(255, 255, 255, 0);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    padding: 20px 40px;
+    /* Active Frosted Glass Card Design Styles */
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(16px) saturate(120%);
+    -webkit-backdrop-filter: blur(16px) saturate(120%);
+    padding: 16px 32px;
     border-radius: 24px;
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);*/
-
-    pointer-events: none; /* Let clicks pass through the "empty" areas of the card */
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 10px 32px rgba(15, 23, 42, 0.15);
+    pointer-events: none;
   }
 
-  /* Text and UI styling */
   .st-time-navbar.dark-mode {
-    background: rgba(15, 23, 42, 0.6); /* Transparent dark for glass */
+    background: rgba(15, 23, 42, 0.6);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   }
 
@@ -114,26 +106,22 @@
     color: #ffffff;
   }
 
-  /* Re-enable clicks for the actual UI elements inside the card */
   .st-time-focus,
   .date-navigator,
   .now-btn {
     pointer-events: auto;
   }
 
-  /* ... keep your existing Scroller UI & Button CSS below ... */
-  /* Update this to fill the entire screen width */
   .timeline-wrapper {
     position: relative;
-    width: 100%; /* Changed from max-width: 800px */
-    max-width: 100%; /* Ensure no caps */
+    width: 100%;
+    max-width: 100%;
     pointer-events: auto;
   }
 
-  /* Ensure the axis takes up all available space */
   .timeline-axis {
     display: flex;
-    width: 100%; /* Fill the wrapper */
+    width: 100%;
     overflow-x: auto;
     scrollbar-width: none;
     cursor: grab;
@@ -141,24 +129,7 @@
     align-items: center;
   }
 
-  /* Optional: Add a mask effect so the time markers fade out at the edges */
-  .st-time-navbar {
-    /* ... your existing styles ... */
-    mask-image: linear-gradient(
-      to right,
-      transparent,
-      black 15%,
-      black 85%,
-      transparent
-    );
-    -webkit-mask-image: linear-gradient(
-      to right,
-      transparent,
-      black 15%,
-      black 85%,
-      transparent
-    );
-  }
+  /* Note: Removed mask-image styling block to prevent layout clipping problems on the card container layout elements */
   .timeline-axis::-webkit-scrollbar {
     display: none;
   }
@@ -171,18 +142,15 @@
     font-weight: bold;
     color: var(--text-muted);
   }
-  /* Force the SVG icons to be visible and sized correctly */
   .marker-icon svg {
     width: 24px;
     height: 24px;
     fill: none;
-    stroke: currentColor; /* Uses the text color (var(--text-muted) or white in dark mode) */
+    stroke: currentColor;
     stroke-width: 2;
     stroke-linecap: round;
     stroke-linejoin: round;
   }
-
-  /* Ensure the SVG doesn't shrink inside the flex container */
   .marker-icon {
     display: flex;
     align-items: center;
@@ -190,7 +158,7 @@
     min-height: 24px;
   }
   .current-time-display {
-    font-size: 4rem;
+    font-size: 3.2rem; /* Sized down slightly for elegant spacing within the card layout container */
     margin: 0;
     font-weight: 800;
     font-variant-numeric: tabular-nums;
@@ -210,25 +178,23 @@
     border-radius: 30px;
     font-weight: bold;
     cursor: pointer;
+    margin-top: 5px;
   }
 
-  /* Prevents text/icon selection in the specific UI areas */
   .st-time-navbar,
   .st-content-header {
-    -webkit-user-select: none; /* Safari */
-    -moz-user-select: none; /* Firefox */
-    -ms-user-select: none; /* IE10+/Edge */
-    user-select: none; /* Standard */
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
   }
 
-  /* Also prevents the "blue highlight" on mobile tap */
   .nav-arrow,
   .now-btn,
   .timeline-axis {
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* Specifically stops images/icons from being "dragged" like ghost images */
   .marker-icon,
   #celestialTop {
     pointer-events: none;
@@ -253,6 +219,9 @@
   let currentSelectedDate = new Date();
   let lastHourIndex = -1;
 
+  // ── Debouncer Logic Variables ───────────────────────────
+  let shadeDebounceTimeout = null;
+
   const SVGS = {
     sunrise: `<svg viewBox="0 0 24 24"><path d="M17 18a5 5 0 0 0-10 0M12 2v7M4.22 10.22l1.42 1.42M1 18h2M21 18h2M18.36 11.64l1.42-1.42M23 22H1M8 6l4-4 4 4"/></svg>`,
     sunset: `<svg viewBox="0 0 24 24"><path d="M17 18a5 5 0 0 0-10 0M12 9V2M4.22 10.22l1.42 1.42M1 18h2M21 18h2M18.36 11.64l1.42-1.42M23 22H1M16 5l-4 4-4-4"/></svg>`,
@@ -275,25 +244,21 @@
 
   function updateNavbarPalette(decimalHour) {
     const { sunrise, sunset, moon } = getCelestialData(currentSelectedDate);
-    let bg = "rgba(255, 255, 255, 0.2)"; // Default Light Glass
+    let bg = "rgba(255, 255, 255, 0.2)";
     let isDay = decimalHour >= sunrise && decimalHour <= sunset;
 
     navbar.classList.remove("dark-mode");
 
     if (decimalHour > sunrise - 1 && decimalHour < sunrise + 1) {
-      // Dawn: Semi-transparent orange/pink
       bg =
         "linear-gradient(to right, rgba(255, 126, 95, 0.6), rgba(254, 180, 123, 0.6))";
     } else if (decimalHour >= sunrise + 1 && decimalHour <= sunset - 1) {
-      // Day: Semi-transparent sky blue
       bg = "rgba(125, 211, 252, 0.4)";
     } else if (decimalHour > sunset - 1 && decimalHour < sunset + 1) {
-      // Dusk: Semi-transparent sunset
       bg =
         "linear-gradient(to right, rgba(249, 115, 22, 0.6), rgba(76, 29, 149, 0.6))";
       navbar.classList.add("dark-mode");
     } else if (!isDay) {
-      // Night: Deep transparent navy
       bg = "rgba(15, 23, 42, 0.7)";
       navbar.classList.add("dark-mode");
     }
@@ -331,6 +296,41 @@
       d = String(currentSelectedDate.getDate()).padStart(2, "0");
     dateInput.value = `${y}-${m}-${d}`;
     refreshTimeline();
+    triggerShadeCalculationDebounce(); // Update shade when date skips
+  }
+
+  // Extract precise state values from UI components
+  function getSelectedDateTimeObject() {
+    const textStr = timeDisplay.textContent; // Format Example "7:20 PM" or "12:00 AM"
+    const match = textStr.match(/(\d+):(\d+)\s+(AM|PM)/i);
+    let hoursVal = 12;
+    let minutesVal = 0;
+
+    if (match) {
+      hoursVal = parseInt(match[1], 10);
+      minutesVal = parseInt(match[2], 10);
+      const ampm = match[3].toUpperCase();
+      if (ampm === "PM" && hoursVal < 12) hoursVal += 12;
+      if (ampm === "AM" && hoursVal === 12) hoursVal = 0;
+    }
+
+    const combinedDate = new Date(currentSelectedDate);
+    combinedDate.setHours(hoursVal, minutesVal, 0, 0);
+    return combinedDate;
+  }
+
+  // 3-Second Delay Debouncer Action Handler
+  function triggerShadeCalculationDebounce() {
+    clearTimeout(shadeDebounceTimeout);
+    shadeDebounceTimeout = setTimeout(async () => {
+      const activeDateTime = getSelectedDateTimeObject();
+
+      // Dispatch Event to map framework script listener
+      const event = new CustomEvent("dateTimeTimelineChanged", {
+        detail: { timestamp: activeDateTime.toISOString() },
+      });
+      window.dispatchEvent(event);
+    }, 3000);
   }
 
   timeline.addEventListener("scroll", () => {
@@ -358,15 +358,51 @@
       }
     }
     lastHourIndex = h;
+
     const now = new Date();
     btnNow.style.display =
       currentSelectedDate.toDateString() !== now.toDateString() ||
       Math.abs(decimal - (now.getHours() + now.getMinutes() / 60)) > 0.5
         ? "block"
         : "none";
+
+    triggerShadeCalculationDebounce(); // Trigger debounce timer on wheel scroll interactions
   });
 
-  // Interactions
+  // Handle Event Responses from DB syncing the closest timestamp back to slider UI
+  window.addEventListener("syncTimelineUIToTime", (e) => {
+    const synchronizedDate = new Date(e.detail.adjustedTimestamp);
+    currentSelectedDate = new Date(
+      synchronizedDate.getFullYear(),
+      synchronizedDate.getMonth(),
+      synchronizedDate.getDate(),
+    );
+
+    // Lock updating display loops securely
+    dateLabel.textContent = currentSelectedDate.toLocaleDateString(undefined, {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+    const y = synchronizedDate.getFullYear(),
+      m = String(synchronizedDate.getMonth() + 1).padStart(2, "0"),
+      d = String(synchronizedDate.getDate()).padStart(2, "0");
+    dateInput.value = `${y}-${m}-${d}`;
+    refreshTimeline();
+
+    const h = synchronizedDate.getHours();
+    const mins = synchronizedDate.getMinutes();
+    timeDisplay.textContent = `${h % 12 || 12}:${String(mins).padStart(2, "0")} ${h < 12 ? "AM" : "PM"}`;
+
+    // Reposition scroll coordinate context smoothly matching exact match tracking index positions
+    const decimalTarget = h + mins / 60;
+    timeline.scrollLeft =
+      totalWidth + decimalTarget * markerWidth - timeline.offsetWidth / 2;
+    updateNavbarPalette(decimalTarget);
+    lastHourIndex = h;
+  });
+
+  // Drag Interactivity handlers
   let isDown = false,
     startX,
     scrollL;
@@ -408,14 +444,11 @@
   };
 
   // Init
-  // Inside your init code at the bottom:
   const init = new Date();
   updateDisplay();
-
-  // Center the current time based on the FULL width of the screen
   timeline.scrollLeft =
     totalWidth +
     (init.getHours() + init.getMinutes() / 60) * markerWidth -
-    window.innerWidth / 2; // Centers it perfectly on the screen
+    window.innerWidth / 2;
   timezoneLabel.textContent = `${Intl.DateTimeFormat().resolvedOptions().timeZone} (UTC${-init.getTimezoneOffset() / 60 >= 0 ? "+" : ""}${-init.getTimezoneOffset() / 60})`;
 </script>
