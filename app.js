@@ -521,9 +521,6 @@ app.get('/weather', async (req, res) => {
   });
 });
 
-app.get('/search', (req, res) => {
-  res.render('search', { pageScript: null, pageScripts: [] });
-});
 
 // ── Admin routes ──────────────────────────────────────────
 app.get('/admin', isAdmin, async (req, res) => {
@@ -967,7 +964,7 @@ app.post('/bookmark/:trailId', isAuthenticated, async (req, res) => {
       email: req.session.email,
     });
 
-    if (!user) {
+    if (!user) {a
       return res.status(404).json({
         error: 'User not found',
       });
@@ -1059,6 +1056,15 @@ app.post('/api/account/delete', isAuthenticated, async (req, res) => {
     res.status(500).json({ error: 'Failed to delete account' });
   }
 });
+// ── Search Routes ───────────────────────────────────────────
+app.get("/search", (req, res) => {
+  res.render("search", {
+    pageScript: null,
+    pageScripts: [],
+    isAuthenticated: req.session.authenticated || false,
+  });
+});
+
 
 // ── 404 Handler ───────────────────────────────────────────
 app.use((req, res) => {
