@@ -854,14 +854,16 @@ app.get("/api/parkShade", async (req, res) => {
     const targetMs = targetDate.getTime();
 
     // 4. Safely parse and find closest
-    distinctTimes.forEach((timeStr) => {
-      if (!timeStr) return; // Skip if timeStr is undefined/null
+    // ── UPDATE THIS BLOCK IN YOUR APP.JS ─────────────────────────────────────────
 
-      // Clean string: Remove " PDT", and replace the space between date and time with "T" for safe parsing
-      // "2026-05-20 19:00:00 PDT" -> "2026-05-20T19:00:00"
-      const cleanStr = timeStr
-        .replace(/ (PDT|PST|UTC|GMT)$/, "")
-        .replace(" ", "T");
+    distinctTimes.forEach((timeStr) => {
+      if (!timeStr) return;
+
+      // 1. Strip the timezone text out completely
+      const cleanStr = timeStr.replace(/ (PDT|PST|UTC|GMT)$/, "");
+
+      // 2. Parse directly without adding a "T".
+      // "2026-05-21 16:30:00" will evaluate directly against the local system clock
       const dbDateMs = new Date(cleanStr).getTime();
 
       if (isNaN(dbDateMs)) {

@@ -1,5 +1,9 @@
 const container = document.getElementById("map");
 let storedParksGeoJSON = null; // Cache map reference features natively
+// 1. Create a global or module-scoped guard flag
+let isSyncingTimelineUI = false;
+// 1. Maintain a reference to the last successfully requested timestamp
+let lastRequestedMs = null;
 
 if (container && !container._map) {
   function setMapDimensions() {
@@ -54,8 +58,21 @@ if (container && !container._map) {
   });
 
   // ── Global Custom Event Hook: Fired after 3-second debounces ──────────────────
+  // 1. Maintain a reference to the last successfully requested timestamp
+  let lastRequestedMs = null;
+
+  // ── Global Custom Event Hook: Fired after 3-second debounces ──────────────────
   window.addEventListener("dateTimeTimelineChanged", async (e) => {
     const targetedISOTime = new Date(e.detail.timestamp).getTime();
+
+    // Deduplication Guard: If this exact millisecond was just processed, abort network request
+    if (lastRequestedMs === targetedISOTime) {
+      console.log("🛑 API Request blocked: Duplicate timestamp detected.");
+      return;
+    }
+
+    // Update our pointer immediately to block subsequent simultaneous or debounced echoes
+    lastRequestedMs = targetedISOTime;
 
     try {
       const response = await fetch(`/api/parkShade?time=${targetedISOTime}`);
@@ -85,8 +102,13 @@ if (container && !container._map) {
           "",
         );
         const parsedMatchedDate = new Date(formattedTimeStr);
+        const matchedDateMs = parsedMatchedDate.getTime();
 
-        if (!isNaN(parsedMatchedDate.getTime())) {
+        if (!isNaN(matchedDateMs)) {
+          // Update our cache with the parsed backend time before triggering the UI sync.
+          // This ensures that when the UI echoes back this exact time, our guard catches it.
+          lastRequestedMs = matchedDateMs;
+
           window.dispatchEvent(
             new CustomEvent("syncTimelineUIToTime", {
               detail: { adjustedTimestamp: parsedMatchedDate },
@@ -121,7 +143,8 @@ if (container && !container._map) {
       }
     } catch (err) {
       console.error("❌ Failed handling spatial dynamic updates:", err);
-      // ... (Keep your existing Error catch block logic)
+      // Clear out cache on error to allow the user to retry clicking/dragging the timeline
+      lastRequestedMs = null;
     }
   });
 }
