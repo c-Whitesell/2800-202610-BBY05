@@ -95,15 +95,29 @@ function trailEmoji(t) {
 function renderCard(t) {
     const badge = difficultyBadge(t.difficulty);
     const isSaved = savedIds.includes(t._id);
-    const distStr = t.distance ? `${t.distance} km` : (t.length ? `${t.length} km` : '');
+    const distStr = t.distance ? `${t.distance.toFixed(2)} km` : (t.length ? `${t.length} km` : '');
     const durStr = t.duration ? `${t.duration}` : '';
     const elevStr = t.elevation ? `${t.elevation}m gain` : '';
     const hasCoords = t.lat && t.lng;
-
+    const natureIds = [15, 17, 28, 29, 33, 37, 39, 42, 43, 48, 56, 57, 63, 65, 67];
+    const trailPhotos = [
+        'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&h=200&fit=crop',
+        'https://images.unsplash.com/photo-1448375240586-882707db888b?w=400&h=200&fit=crop',
+        'https://images.unsplash.com/photo-1542202229-7d93c33f5d07?w=400&h=200&fit=crop',
+        'https://images.unsplash.com/photo-1511497584788-876760111969?w=400&h=200&fit=crop',
+        'https://images.unsplash.com/photo-1forest518338?w=400&h=200&fit=crop',
+        'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400&h=200&fit=crop',
+        'https://images.unsplash.com/photo-1426604966848-d7adac402bff?w=400&h=200&fit=crop',
+        'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=400&h=200&fit=crop',
+        'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=400&h=200&fit=crop',
+        'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=400&h=200&fit=crop',
+    ];
+    const photoIdx = Math.abs(t.name.split('').reduce((a, c) => a + c.charCodeAt(0), 0)) % trailPhotos.length;
+    const photoUrl = trailPhotos[photoIdx];
     return `
       <div class="trail-card" data-id="${t._id}" data-difficulty="${t.difficulty}" data-distance="${t.distance || t.length || 0}" data-length="${t.length || t.distance || 0}">
         <div class="trail-card__img">
-          <div class="trail-card__img-placeholder">${trailEmoji(t)}</div>
+         <div class="trail-card__img-placeholder" style="background-image:url('${photoUrl}'); background-size:cover; background-position:center;"></div>
           <button class="trail-card__bookmark ${isSaved ? 'saved' : ''}" onclick="toggleBookmark('${t._id}', this)" title="${isSaved ? 'Remove bookmark' : 'Save trail'}">
             ${isSaved ? '🔖' : '🏷️'}
           </button>
@@ -191,11 +205,11 @@ async function loadBookmarks() {
     try {
         const res = await fetch('/api/bookmarks');
 
-       if (res.status === 401) {
-    savedIds = [];
-    showToast("Log in to save bookmarks");
-    return;
-}
+        if (res.status === 401) {
+            savedIds = [];
+            showToast("Log in to save bookmarks");
+            return;
+        }
 
         if (!res.ok) {
             savedIds = [];
@@ -329,8 +343,8 @@ async function init() {
     renderSpotlight();
 
     if (isLoggedIn) {
-    loadBookmarks();
-}
+        loadBookmarks();
+    }
     await loadTrails();
 }
 

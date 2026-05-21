@@ -1025,6 +1025,37 @@ app.get('/api/bookmarks', isAuthenticated, async (req, res) => {
   }
 });
 
+// ── Settings Routes ───────────────────────────────────────
+app.get('/api/settings', isAuthenticated, async (req, res) => {
+  try {
+    const user = await users.findOne({ email: req.session.email });
+    res.json(user?.settings || {});
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to load settings' });
+  }
+});
+
+app.post('/api/settings', isAuthenticated, async (req, res) => {
+  try {
+    await users.updateOne(
+      { email: req.session.email },
+      { $set: { settings: req.body } }
+    );
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to save settings' });
+  }
+});
+
+app.post('/api/account/delete', isAuthenticated, async (req, res) => {
+  try {
+    await users.deleteOne({ email: req.session.email });
+    req.session.destroy();
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete account' });
+  }
+});
 // ── Search Routes ───────────────────────────────────────────
 app.get("/search", (req, res) => {
   res.render("search", {
