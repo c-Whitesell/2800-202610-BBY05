@@ -49,7 +49,7 @@ Database
 
 MongoDB Atlas — cloud-hosted NoSQL database
 
-Collections: users, parks, paths, trails, feedback, pageAnalytics
+Collections: users, parks, paths, trails, feedback, pageAnalytics, activity, pageAnalytics, sessions
 
 
 
@@ -58,6 +58,7 @@ External APIs & Services
 Google Gemini AI — trail descriptions and weather summaries
 MapLibre GL JS — https://unpkg.com/maplibre-gl@5.23.0/dist/maplibre-gl.js
 Google Fonts — Syne, DM Sans typefaces
+Open-Meteo - weather forecast
 
 
 File Structure
@@ -87,14 +88,7 @@ shadytrails/
 │       ├── bookmarks.ejs
 │       ├── dashboard.ejs
 │       ├── index.ejs
-│       ├── login.ejs
-│       ├── map.ejs
-│       ├── profile.ejs
-│       ├── recommendations.ejs
-│       ├── search.ejs
-│       ├── settings.ejs
-│       ├── signup.ejs
-│       └── weather.ejs
+│       ├── ...
 ├── .env                  <= NOT committed to repo
 ├── .gitignore
 ├── package.json
@@ -224,8 +218,13 @@ bcrypt
 connect-mongo
 How to Write a Good README
 
-
 Contact
-NameRoleGitHubConnor WhitesellDeveloper—Harshpal SinghDeveloper—Yasas RajapakseDeveloper—Amit KahlonDeveloper—Bhagat TakharDeveloper—
+Connor Whitesell Developer— cwhitesell@my.bcit.ca
 
-For access credentials (admin login, test accounts, DB connection), see passwords.txt — submitted separately via D2L dropbox. Do not add this file to the repository.
+Harshpal Singh Developer— hsingh746@my.bcit.ca
+
+Yasas Rajapakse Developer—  srajapakse1@my.bcit.ca
+
+Amit Kahlon Developer— akahlon23@my.bcit.ca
+
+Bhagat Takhar Developer— btakhar7@my.bcit.ca
