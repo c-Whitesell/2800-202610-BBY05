@@ -1,3 +1,11 @@
+<!-- Fullscreen Halloween Jump Scare Overlay Container -->
+<div id="halloweenScareOverlay" class="scare-overlay">
+  <img
+    src="https://mediaproxy.tvtropes.org/width/1200/https://static.tvtropes.org/pmwiki/pub/images/reganmacneil.png"
+    alt="Scare"
+  />
+</div>
+
 <!-- 1. The Scroller Navbar (Changes color) -->
 <nav class="st-time-navbar" id="navbar">
   <div class="timeline-wrapper">
@@ -279,6 +287,29 @@
       margin-top: 4px;
     }
   }
+
+  /* Fullscreen fixed jump scare layer overlay properties */
+  .scare-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: #000000;
+    z-index: 999999; /* Higher than map layers and time navbar controls */
+    display: none; /* Hidden by default until triggered */
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .scare-overlay img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Forces the image to completely fill the screen viewport dimensions */
+    user-select: none;
+    -webkit-user-drag: none;
+  }
 </style>
 
 <script>
@@ -375,6 +406,43 @@
     dateInput.value = `${y}-${m}-${d}`;
     refreshTimeline();
     triggerShadeCalculationDebounce(); // Update shade when date skips
+
+    //Jumpscare
+    if (
+      currentSelectedDate.getMonth() === 9 &&
+      currentSelectedDate.getDate() === 31
+    ) {
+      const scareTriggeredBefore = localStorage.getItem(
+        "halloweenScareEncountered",
+      );
+
+      if (!scareTriggeredBefore) {
+        // Save flag right away to prevent secondary loops if scrolling rapidly
+        localStorage.setItem("halloweenScareEncountered", "true");
+
+        const overlay = document.getElementById("halloweenScareOverlay");
+
+        // Load and play the horror audio stream track safely
+        const scareAudio = new Audio(
+          "https://audio.com/gutali-jgpt/audio/scary-maze-game-scream-sound-quicksoundscom",
+        );
+        scareAudio.volume = 1.0; // Play at maximum volume
+        scareAudio
+          .play()
+          .catch((err) =>
+            console.log("Audio autoplay prevented by browser policies:", err),
+          );
+
+        // Show the fullscreen image container layout
+        overlay.style.display = "flex";
+
+        // Dismiss the overlay layout structure after exactly 3 seconds (3000ms)
+        setTimeout(() => {
+          overlay.style.display = "none";
+          scareAudio.pause(); // Kill the sound if it outlasts the 3-second display duration
+        }, 3000);
+      }
+    }
   }
 
   // Extract precise state values from UI components
