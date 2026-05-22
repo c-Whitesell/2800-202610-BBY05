@@ -1,52 +1,75 @@
+/**
+ * Manages the tutorial overlay system for authentication pages (login/signup).
+ */
 class TutorialSystemAuth {
+  /**
+   * Initializes the tutorial system.
+   * @param {boolean} initialTutorialMode - Whether the tutorial is enabled by default.
+   */
   constructor(initialTutorialMode = true) {
     this.tutorialMode = initialTutorialMode;
-    this.hintShown = sessionStorage.getItem('authHintShown') === 'true';
+    this.hintShown = sessionStorage.getItem("authHintShown") === "true";
     this.pageType = this.detectPageType();
   }
 
+  /**
+   * Determines if the current page is for signup or login.
+   * @returns {string} - 'signup' or 'login'.
+   */
   detectPageType() {
-    return window.location.pathname.includes('/signup') ? 'signup' : 'login';
+    return window.location.pathname.includes("/signup") ? "signup" : "login";
   }
 
+  /**
+   * Initializes the hint display if tutorial mode is active.
+   */
   init() {
     if (this.tutorialMode && !this.hintShown) {
       this.showTutorialHint();
-      sessionStorage.setItem('authHintShown', 'true');
+      sessionStorage.setItem("authHintShown", "true");
     }
   }
 
+  /**
+   * Displays the initial tutorial hint bubble.
+   */
   showTutorialHint() {
-    const hint = document.getElementById('tutorial-hint');
+    const hint = document.getElementById("tutorial-hint");
     if (hint) {
-      hint.style.display = 'flex';
+      hint.style.display = "flex";
       setTimeout(() => {
-        hint.classList.add('hint-show');
+        hint.classList.add("hint-show");
       }, 100);
     }
   }
 
+  /**
+   * Hides the tutorial hint bubble with a transition.
+   */
   closeTutorialHint() {
-    const hint = document.getElementById('tutorial-hint');
+    const hint = document.getElementById("tutorial-hint");
     if (hint) {
-      hint.classList.remove('hint-show');
+      hint.classList.remove("hint-show");
       setTimeout(() => {
-        hint.style.display = 'none';
+        hint.style.display = "none";
       }, 300);
     }
   }
 
+  /**
+   * Creates and displays the full-screen tutorial modal.
+   */
   startTutorial() {
-    const isSignup = this.pageType === 'signup';
+    const isSignup = this.pageType === "signup";
 
-    const modal = document.createElement('div');
-    modal.className = 'tutorial-modal-auth';
+    const modal = document.createElement("div");
+    modal.className = "tutorial-modal-auth";
     modal.innerHTML = `
       <div class="tutorial-modal-content-auth">
         <button class="modal-close" onclick="tutorialSystemAuth.closeModal()">×</button>
         <div class="modal-header">
-          <h2>${isSignup ? '🎉 Getting Started' : '👋 Welcome Back'}</h2>
-          <p>${isSignup ? 'Start your hiking journey' : 'Access your saved trails'}</p>
+          <h2>${isSignup ? "🎉 Getting Started" : "👋 Welcome Back"}</h2>
+          <p>${isSignup ? "Start your hiking journey" : "Access your saved trails"}</p>
         </div>
         <div class="modal-body">
           ${isSignup ? this.signupSteps() : this.loginSteps()}
@@ -60,6 +83,10 @@ class TutorialSystemAuth {
     document.body.appendChild(modal);
   }
 
+  /**
+   * Generates HTML content for signup tutorial steps.
+   * @returns {string} - HTML string of steps.
+   */
   signupSteps() {
     return `
       <div class="tutorial-step">
@@ -86,6 +113,10 @@ class TutorialSystemAuth {
     `;
   }
 
+  /**
+   * Generates HTML content for login tutorial steps.
+   * @returns {string} - HTML string of steps.
+   */
   loginSteps() {
     return `
       <div class="tutorial-step">
@@ -112,37 +143,44 @@ class TutorialSystemAuth {
     `;
   }
 
+  /**
+   * Closes the active modal and removes it from the DOM.
+   */
   closeModal() {
-    const modal = document.querySelector('.tutorial-modal-auth');
+    const modal = document.querySelector(".tutorial-modal-auth");
     if (modal) {
-      modal.classList.add('fade-out');
+      modal.classList.add("fade-out");
       setTimeout(() => modal.remove(), 300);
     }
   }
 
+  /**
+   * Toggles the user's tutorial preference via API call.
+   */
   toggleTutorialMode() {
     this.tutorialMode = !this.tutorialMode;
 
-    fetch('/toggle-tutorial', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    fetch("/toggle-tutorial", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ tutorialMode: this.tutorialMode }),
     })
       .then((res) => res.json())
-      .then((data) => {
+      .then(() => {
         this.closeModal();
         if (!this.tutorialMode) {
-          alert('Tips turned off. You can enable them in Settings.');
+          alert("Tips turned off. You can enable them in Settings.");
         }
       })
-      .catch((err) => console.error('Error toggling tutorial:', err));
+      .catch((err) => console.error("Error toggling tutorial:", err));
   }
 }
 
+// Global initialization
 const tutorialSystemAuth = new TutorialSystemAuth(
-  typeof window.TUTORIAL_MODE !== 'undefined' ? window.TUTORIAL_MODE : true,
+  typeof window.TUTORIAL_MODE !== "undefined" ? window.TUTORIAL_MODE : true,
 );
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", () => {
   tutorialSystemAuth.init();
 });
