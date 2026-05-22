@@ -1,39 +1,58 @@
+/**
+ * Manages the user tutorial walkthrough for the Weather/Shade page.
+ * Handles hint visibility, modal interactions, and persistent settings.
+ */
 class TutorialSystemWeather {
+  /**
+   * @param {boolean} [initialTutorialMode=true] - Whether the tutorial is enabled by default.
+   */
   constructor(initialTutorialMode = true) {
     this.tutorialMode = initialTutorialMode;
-    this.hintShown = sessionStorage.getItem('weatherHintShown') === 'true';
+    this.hintShown = sessionStorage.getItem("weatherHintShown") === "true";
   }
 
+  /**
+   * Initializes the tutorial state and displays hints if conditions are met.
+   */
   init() {
     if (this.tutorialMode && !this.hintShown) {
       this.showTutorialHint();
-      sessionStorage.setItem('weatherHintShown', 'true');
+      sessionStorage.setItem("weatherHintShown", "true");
     }
   }
 
+  /**
+   * Displays the non-intrusive tutorial hint element.
+   */
   showTutorialHint() {
-    const hint = document.getElementById('tutorial-hint');
+    const hint = document.getElementById("tutorial-hint");
     if (hint) {
-      hint.style.display = 'flex';
+      hint.style.display = "flex";
       setTimeout(() => {
-        hint.classList.add('hint-show');
+        hint.classList.add("hint-show");
       }, 100);
     }
   }
 
+  /**
+   * Hides the tutorial hint element.
+   */
   closeTutorialHint() {
-    const hint = document.getElementById('tutorial-hint');
+    const hint = document.getElementById("tutorial-hint");
     if (hint) {
-      hint.classList.remove('hint-show');
+      hint.classList.remove("hint-show");
       setTimeout(() => {
-        hint.style.display = 'none';
+        hint.style.display = "none";
       }, 300);
     }
   }
 
+  /**
+   * Creates and appends the full tutorial modal to the document body.
+   */
   startTutorial() {
-    const modal = document.createElement('div');
-    modal.className = 'tutorial-modal-weather';
+    const modal = document.createElement("div");
+    modal.className = "tutorial-modal-weather";
     modal.innerHTML = `
       <div class="tutorial-modal-content-weather">
         <button class="modal-close" onclick="tutorialSystemWeather.closeModal()">×</button>
@@ -80,37 +99,43 @@ class TutorialSystemWeather {
     document.body.appendChild(modal);
   }
 
+  /**
+   * Closes the tutorial modal with a fade-out animation.
+   */
   closeModal() {
-    const modal = document.querySelector('.tutorial-modal-weather');
+    const modal = document.querySelector(".tutorial-modal-weather");
     if (modal) {
-      modal.classList.add('fade-out');
+      modal.classList.add("fade-out");
       setTimeout(() => modal.remove(), 300);
     }
   }
 
+  /**
+   * Toggles the tutorial mode preference via API and updates UI.
+   */
   toggleTutorialMode() {
     this.tutorialMode = !this.tutorialMode;
 
-    fetch('/toggle-tutorial', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    fetch("/toggle-tutorial", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ tutorialMode: this.tutorialMode }),
     })
       .then((res) => res.json())
       .then(() => {
         this.closeModal();
         if (!this.tutorialMode) {
-          alert('Tips turned off. You can enable them in Settings.');
+          alert("Tips turned off. You can enable them in Settings.");
         }
       })
-      .catch((err) => console.error('Error toggling tutorial:', err));
+      .catch((err) => console.error("Error toggling tutorial:", err));
   }
 }
 
 const tutorialSystemWeather = new TutorialSystemWeather(
-  typeof window.TUTORIAL_MODE !== 'undefined' ? window.TUTORIAL_MODE : true,
+  typeof window.TUTORIAL_MODE !== "undefined" ? window.TUTORIAL_MODE : true,
 );
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", () => {
   tutorialSystemWeather.init();
 });
