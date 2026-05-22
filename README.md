@@ -192,7 +192,17 @@ bashnpm install -g nodemon
 nodemon server.js
 
 Features
-FeatureAccessInteractive map with parks and pathsEveryoneSearch parks and paths by nameEveryoneFilter and browse trail recommendationsEveryoneAI-powered trail descriptionsEveryoneReal-time weather advisory (AI)EveryoneBookmark/save trailsLogged-in usersSearch historyLogged-in usersUser profile and nicknameLogged-in usersDashboard with activityLogged-in usersAdmin panel (users, analytics, feedback)Admin users only
+Feature                                           Access
+Interactive map with parks and paths             Everyone
+Search parks and paths by name                   Everyone
+Filter and browse trail recommendations          Everyone     
+AI-powered trail descriptions                    Everyone 
+Real-time weather advisory (AI)                  Everyone
+Bookmark/save trails                          Logged-in users
+Search history                                Logged-in users
+User profile and nickname                     Logged-in users
+Dashboard with activity                       Logged-in users
+Admin panel (users, analytics, feedback)      Admin users only
 
 AI & API Usage
 Google Gemini AI (aiService.js)
