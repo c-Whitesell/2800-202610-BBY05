@@ -254,7 +254,7 @@ function addParkLabelsLayer(map) {
       "text-field": [
         "concat",
         ["to-string", ["get", "park_name"]],
-        "\n",
+        "\nShade: ",
         ["get", "effective_shading_string"],
       ],
       "text-size": ["interpolate", ["linear"], ["zoom"], 10, 11, 15, 16],
