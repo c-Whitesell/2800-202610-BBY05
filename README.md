@@ -317,7 +317,7 @@ Create an API key under **Get API Key**.
 Start the server:
 
 ```bash
-node server.js
+node app.js
 ```
 
 Expected console output:
@@ -346,7 +346,7 @@ npm install -g nodemon
 Run with auto-restart:
 
 ```bash
-nodemon server.js
+nodemon node.js
 ```
 
 ---
