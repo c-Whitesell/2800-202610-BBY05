@@ -1,13 +1,17 @@
-let distanceUnit = "km"; // default
+let distanceUnit = "km";
 
+/**
+ * @description Read: Fetches and sets the user's preferred distance unit from the settings API.
+ * @returns {Promise<void>}
+ */
 async function loadUserSettings() {
   try {
-    const res = await fetch("/api/settings");
-    if (!res.ok) return;
-    const s = await res.json();
-    if (s.distanceUnits) distanceUnit = s.distanceUnits;
-  } catch (e) {
-    console.log("Could not load user settings");
+    const response = await fetch("/api/settings");
+    if (!response.ok) return;
+    const settings = await response.json();
+    if (settings.distanceUnits) distanceUnit = settings.distanceUnits;
+  } catch (error) {
+    console.error("Could not load user settings");
   }
 }
 
@@ -16,7 +20,6 @@ let savedIds = [];
 let activeFilter = "all";
 let activeSort = "default";
 
-// ── Spotlight Stories (static curated content) ────────
 const STORIES = [
   {
     emoji: "🌲",
@@ -68,38 +71,53 @@ const STORIES = [
   },
 ];
 
+/**
+ * @description Renders the static spotlight story cards to the UI.
+ * @returns {void}
+ */
 function renderSpotlight() {
   const strip = document.getElementById("spotlight-strip");
   strip.innerHTML = STORIES.map(
-    (s) => `
+    (story) => `
       <div class="spotlight-card">
         <div class="spotlight-card__img">
-          ${s.emoji}
-          <span class="spotlight-card__category">${s.category}</span>
+          ${story.emoji}
+          <span class="spotlight-card__category">${story.category}</span>
         </div>
         <div class="spotlight-card__body">
-          <div class="spotlight-card__title">${s.title}</div>
-          <div class="spotlight-card__excerpt">${s.excerpt}</div>
-          <div class="spotlight-card__meta">${s.meta}</div>
+          <div class="spotlight-card__title">${story.title}</div>
+          <div class="spotlight-card__excerpt">${story.excerpt}</div>
+          <div class="spotlight-card__meta">${story.meta}</div>
         </div>
       </div>
     `,
   ).join("");
 }
 
-// ── Data helpers ──────────────────────────────────────
+/**
+ * @description Helper function to retrieve the first non-empty/null value from an object key list.
+ * @param {Object} obj - The object to search.
+ * @param {...string} keys - The keys to check.
+ * @returns {*} The found value or null.
+ */
 function getField(obj, ...keys) {
-  for (const k of keys) {
-    if (obj[k] !== undefined && obj[k] !== null && obj[k] !== "") return obj[k];
+  for (const key of keys) {
+    if (obj[key] !== undefined && obj[key] !== null && obj[key] !== "")
+      return obj[key];
   }
   return null;
 }
 
+/**
+ * @description Normalizes GeoJSON-style trail data into a standard application format.
+ * @param {Object} raw - The raw trail data.
+ * @param {string} source - The source identifier.
+ * @returns {Object} The normalized trail object.
+ */
 function normaliseTrail(raw, source) {
   const props = raw.properties || {};
   const coords = raw.geometry?.coordinates;
 
-  // Get center coordinate
   let lat = 0,
     lng = 0;
   if (raw.geometry?.type === "LineString" && coords?.length) {
@@ -133,9 +151,13 @@ function normaliseTrail(raw, source) {
   };
 }
 
+/**
+ * @description Normalizes database trail records into a standard application format.
+ * @param {Object} raw - The raw trail record from the database.
+ * @param {string} source - The source identifier.
+ * @returns {Object} The normalized trail object.
+ */
 function normaliseTrail2(raw, source) {
-  // Extract the decimal number from MongoDB's $numberDecimal format if it exists,
-  // otherwise fallback to a standard number or 0.
   let lengthMeters = 0;
   if (raw.length_meters) {
     lengthMeters = parseFloat(
@@ -143,7 +165,6 @@ function normaliseTrail2(raw, source) {
     );
   }
 
-  // Handle location naming using your associated_parks array
   let locationText = "Vancouver";
   if (Array.isArray(raw.associated_parks) && raw.associated_parks.length > 0) {
     locationText = raw.associated_parks.join(", ");
@@ -159,18 +180,19 @@ function normaliseTrail2(raw, source) {
     location: locationText,
     duration: raw.duration || "",
     elevation: raw.elevation || "",
-    image_url: raw.image_url || "", // Preserves the Pixabay urls synced earlier
-
-    // Explicitly reading the flat coordinate columns from the updated document.
-    // Falls back to 0 if they haven't been populated yet.
+    image_url: raw.image_url || "",
     lat: parseFloat(raw.lat) || 0,
     lng: parseFloat(raw.lng) || 0,
-
     source: source || raw.source || "Database",
-    raw: raw.raw || raw, // Keep a reference to the original data if nesting it
+    raw: raw.raw || raw,
   };
 }
 
+/**
+ * @description Determines the badge style and label based on difficulty level.
+ * @param {string} d - The difficulty string.
+ * @returns {Object|null} The badge configuration.
+ */
 function difficultyBadge(d) {
   const dl = (d || "").toLowerCase();
   if (dl.includes("easy") || dl === "low")
@@ -183,6 +205,11 @@ function difficultyBadge(d) {
   return null;
 }
 
+/**
+ * @description Generates an emoji representing the trail type based on its name and location.
+ * @param {Object} t - The trail object.
+ * @returns {string} An emoji string.
+ */
 function trailEmoji(t) {
   const n = (t.name + t.location).toLowerCase();
   if (n.includes("lake") || n.includes("pond")) return "🏞️";
@@ -194,7 +221,11 @@ function trailEmoji(t) {
   return "🥾";
 }
 
-// ── Render trail card ─────────────────────────────────
+/**
+ * @description Generates the HTML for a single trail recommendation card.
+ * @param {Object} t - The trail object.
+ * @returns {string} The HTML card component.
+ */
 function renderCard(t) {
   const badge = difficultyBadge(t.difficulty);
   const isSaved = savedIds.includes(t._id);
@@ -202,14 +233,10 @@ function renderCard(t) {
   let distStr = "";
 
   if (rawDist) {
-    // 1. Check if the source is a park
     if (t.source === "park") {
-      // Always display as hectares, ignoring distanceUnit
       distStr = `${t.length.toFixed(3)} ha`;
     } else {
-      // 2. Default Fallback (Distance/Length Calculation)
       const km = rawDist / 1000;
-
       if (distanceUnit === "mi") {
         const miles = km * 0.621371;
         distStr = `${miles.toFixed(3)} mi`;
@@ -221,15 +248,12 @@ function renderCard(t) {
   const durStr = t.duration ? `${t.duration}` : "";
   const elevStr = t.elevation ? `${t.elevation}m gain` : "";
   const hasCoords = t.lat && t.lng;
-  const natureIds = [
-    15, 17, 28, 29, 33, 37, 39, 42, 43, 48, 56, 57, 63, 65, 67,
-  ];
+
   const trailPhotos = [
     "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&h=200&fit=crop",
     "https://images.unsplash.com/photo-1448375240586-882707db888b?w=400&h=200&fit=crop",
     "https://images.unsplash.com/photo-1542202229-7d93c33f5d07?w=400&h=200&fit=crop",
     "https://images.unsplash.com/photo-1511497584788-876760111969?w=400&h=200&fit=crop",
-    //"https://images.unsplash.com/photo-1forest518338?w=400&h=200&fit=crop",
     "https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400&h=200&fit=crop",
     "https://images.unsplash.com/photo-1426604966848-d7adac402bff?w=400&h=200&fit=crop",
     "https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=400&h=200&fit=crop",
@@ -240,6 +264,7 @@ function renderCard(t) {
     Math.abs(t.name.split("").reduce((a, c) => a + c.charCodeAt(0), 0)) %
     trailPhotos.length;
   const photoUrl = t.image_url || trailPhotos[photoIdx];
+
   return `
       <div class="trail-card" data-id="${t._id}" data-difficulty="${t.difficulty}" data-distance="${t.distance || t.length || 0}" data-length="${t.length || t.distance || 0}">
         <div class="trail-card__img">
@@ -275,11 +300,13 @@ function renderCard(t) {
     `;
 }
 
-// ── Filter + Sort + Render ────────────────────────────
+/**
+ * @description Filters the full trail list by criteria and applies selected sorting.
+ * @returns {Array<Object>} The processed list of trails.
+ */
 function getFiltered() {
   let list = [...allTrails];
 
-  // Filter
   if (activeFilter !== "all") {
     list = list.filter((t) => {
       const raw = t.raw?.properties || t.raw || {};
@@ -289,7 +316,6 @@ function getFiltered() {
     });
   }
 
-  // Sort
   switch (activeSort) {
     case "name":
       list.sort((a, b) => a.name.localeCompare(b.name));
@@ -319,6 +345,10 @@ function getFiltered() {
   return list;
 }
 
+/**
+ * @description Renders the grid display of trail cards.
+ * @returns {void}
+ */
 function renderGrid() {
   const list = getFiltered();
   const grid = document.getElementById("rec-grid");
@@ -335,22 +365,23 @@ function renderGrid() {
     grid.innerHTML = list.map(renderCard).join("");
   }
 }
-// ── Bookmark ──────────────────────────────────────────
+
+/**
+ * @description Read: Fetches the user's bookmarked trails from the API.
+ * @returns {Promise<void>}
+ */
 async function loadBookmarks() {
   try {
     const res = await fetch("/api/bookmarks");
-
     if (res.status === 401) {
       savedIds = [];
       showToast("Log in to save bookmarks");
       return;
     }
-
     if (!res.ok) {
       savedIds = [];
       return;
     }
-
     const data = await res.json();
     savedIds = data.bookmarks || [];
   } catch (err) {
@@ -359,26 +390,24 @@ async function loadBookmarks() {
   }
 }
 
+/**
+ * @description Write: Toggles the bookmark status of a trail via the API.
+ * @param {string} id - The trail ID.
+ * @returns {Promise<void>}
+ */
 async function toggleBookmark(id) {
   try {
-    const res = await fetch(`/bookmark/${id}`, {
-      method: "POST",
-    });
-
+    const res = await fetch(`/bookmark/${id}`, { method: "POST" });
     if (res.status === 401 || res.redirected) {
       showToast("Please log in first");
       return;
     }
-
     const contentType = res.headers.get("content-type");
-
     if (!contentType || !contentType.includes("application/json")) {
       showToast("Please log in first");
       return;
     }
-
     const data = await res.json();
-
     if (data.saved) {
       if (!savedIds.includes(id)) savedIds.push(id);
       showToast("🔖 Trail saved");
@@ -386,7 +415,6 @@ async function toggleBookmark(id) {
       savedIds = savedIds.filter((x) => x !== id);
       showToast("Removed from bookmarks");
     }
-
     renderGrid();
   } catch (err) {
     console.error(err);
@@ -394,17 +422,26 @@ async function toggleBookmark(id) {
   }
 }
 
-// ── View on Map ───────────────────────────────────────
+/**
+ * @description Redirects the user to the map view for a specific location.
+ * @param {number|null} lat - Latitude.
+ * @param {number|null} lng - Longitude.
+ * @param {string} name - Trail name.
+ * @returns {void}
+ */
 function viewOnMap(lat, lng, name) {
   if (lat && lng) {
-    //window.location.href = `/map?lat=${lat}&lng=${lng}&name=${encodeURIComponent(name)}`;
     window.location.href = `/map?zoom=17&lat=${lat}&lng=${lng}`;
   } else {
     window.location.href = `/map?search=${encodeURIComponent(name)}`;
   }
 }
 
-// ── Toast ─────────────────────────────────────────────
+/**
+ * @description Displays a temporary toast notification message.
+ * @param {string} msg - The message to display.
+ * @returns {void}
+ */
 function showToast(msg) {
   const t = document.getElementById("rec-toast");
   t.textContent = msg;
@@ -412,7 +449,10 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove("show"), 2500);
 }
 
-// ── Fetch data ────────────────────────────────────────
+/**
+ * @description Read: Fetches and consolidates trail data from multiple endpoints.
+ * @returns {Promise<void>}
+ */
 async function loadTrails() {
   try {
     const [parksRes, pathsRes, trailsRes] = await Promise.all([
@@ -422,26 +462,20 @@ async function loadTrails() {
     ]);
 
     const parks = parksRes.ok ? await parksRes.json() : [];
-    const paths = pathsRes.ok ? await pathsRes.json() : [];
     const trails = trailsRes.ok ? await trailsRes.json() : [];
 
     const normParks = (Array.isArray(parks) ? parks : []).map((p) =>
       normaliseTrail(p, "park"),
     );
-    // const normPaths = (Array.isArray(paths) ? paths : []).map((p) =>
-    //   normaliseTrail(p, "path"),
-    // );
     const normPaths = (Array.isArray(trails) ? trails : [])
       .filter((p) => p && p.trail_name && !p.trail_name.endsWith(" Trails"))
       .map((p) => normaliseTrail2(p, "path"));
 
-    console.log(normPaths);
     allTrails = [...normParks, ...normPaths];
     allTrails = Array.from(
       new Map(allTrails.map((item) => [item.name, item])).values(),
     );
 
-    // If DB is empty, show sample Vancouver trails
     if (allTrails.length === 0) {
       allTrails = getSampleTrails();
     }
@@ -454,7 +488,10 @@ async function loadTrails() {
   renderGrid();
 }
 
-// ── Sample trails (fallback if DB empty) ──────────────
+/**
+ * @description Returns hardcoded sample trails for fallback purposes.
+ * @returns {Array<Object>} List of sample trails.
+ */
 function getSampleTrails() {
   return [
     {
@@ -595,7 +632,6 @@ function getSampleTrails() {
   ];
 }
 
-// ── Event listeners ───────────────────────────────────
 document.querySelectorAll(".rec-filter-btn").forEach((btn) => {
   btn.addEventListener("click", function () {
     document
@@ -612,14 +648,15 @@ document.getElementById("sort-select").addEventListener("change", function () {
   renderGrid();
 });
 
-// ── Init ──────────────────────────────────────────────
+/**
+ * @description Initializes application state, UI components, and data loading.
+ * @returns {Promise<void>}
+ */
 async function init() {
   renderSpotlight();
-
   if (isLoggedIn) {
     loadBookmarks();
   }
-
   await loadUserSettings();
   await loadTrails();
 }

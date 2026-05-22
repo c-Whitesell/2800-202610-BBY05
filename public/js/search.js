@@ -1,4 +1,6 @@
-// ── State ─────────────────────────────────────────────
+/**
+ * State Management
+ */
 let allItems = [];
 let activeType = "all";
 let debounceTimer = null;
@@ -6,7 +8,9 @@ let debounceTimer = null;
 const HISTORY_KEY = "search_history";
 const MAX_HISTORY = 10;
 
-// ── DOM refs ──────────────────────────────────────────
+/**
+ * DOM References
+ */
 const input = document.getElementById("searchInput");
 const clearBtn = document.getElementById("clearBtn");
 const dropdown = document.getElementById("searchDropdown");
@@ -19,7 +23,11 @@ const historyList = document.getElementById("historyList");
 const historyEmpty = document.getElementById("historyEmpty");
 const clearHistoryBtn = document.getElementById("clearHistoryBtn");
 
-// ── Normalise helpers ──────────────────────────────────
+/**
+ * Normalizes raw park data into a consistent object structure.
+ * @param {Object} raw - The raw park data from API.
+ * @returns {Object} - Normalized park object with id, name, type, and location.
+ */
 function normalisePark(raw) {
   const props = raw.properties || {};
   let lat = 0,
@@ -47,6 +55,11 @@ function normalisePark(raw) {
   };
 }
 
+/**
+ * Normalizes raw path data into a consistent object structure.
+ * @param {Object} raw - The raw path data from API.
+ * @returns {Object} - Normalized path object with id, name, type, and location.
+ */
 function normalisePath(raw) {
   const props = raw.properties || {};
   const coords = raw.geometry?.coordinates;
@@ -73,6 +86,11 @@ function normalisePath(raw) {
   };
 }
 
+/**
+ * Determines the emoji representation for a search item based on its attributes.
+ * @param {Object} item - The item to categorize.
+ * @returns {string} - Emoji string.
+ */
 function itemEmoji(item) {
   const n = (item.name + item.location).toLowerCase();
   if (n.includes("lake") || n.includes("pond")) return "🏞️";
@@ -84,7 +102,11 @@ function itemEmoji(item) {
   return "🥾";
 }
 
-// ── Filter ────────────────────────────────────────────
+/**
+ * Filters the master items list based on query string and active category.
+ * @param {string} query - The search string.
+ * @returns {Array} - Filtered list of items.
+ */
 function filterItems(query) {
   const q = query.trim().toLowerCase();
   return allItems.filter((item) => {
@@ -97,7 +119,11 @@ function filterItems(query) {
   });
 }
 
-// ── Result card ───────────────────────────────────────
+/**
+ * Generates HTML for a search result card.
+ * @param {Object} item - The item to render.
+ * @returns {string} - HTML string of the card.
+ */
 function renderResultCard(item) {
   const hasCoords = item.lat && item.lng;
   const onclick = hasCoords
@@ -124,7 +150,10 @@ function renderResultCard(item) {
     `;
 }
 
-// ── Show results ──────────────────────────────────────
+/**
+ * Displays search results in the main results grid.
+ * @param {string} query - The search string.
+ */
 function showResults(query) {
   const results = filterItems(query);
   dropdown.innerHTML = "";
@@ -151,7 +180,10 @@ function showResults(query) {
   resultsGrid.innerHTML = results.map(renderResultCard).join("");
 }
 
-// ── Live dropdown ─────────────────────────────────────
+/**
+ * Displays the live search dropdown.
+ * @param {string} query - The search string.
+ */
 function showDropdown(query) {
   if (!query.trim()) {
     closeDropdown();
@@ -182,6 +214,12 @@ function closeDropdown() {
   dropdown.classList.remove("open");
 }
 
+/**
+ * Wraps matching characters in a mark tag.
+ * @param {string} text - The full text.
+ * @param {string} query - The substring to highlight.
+ * @returns {string} - HTML string with marked highlights.
+ */
 function highlightMatch(text, query) {
   if (!query) return text;
   const idx = text.toLowerCase().indexOf(query.toLowerCase());
@@ -201,18 +239,25 @@ function pickDropdownItem(id, name, lat, lng) {
   viewOnMap(lat || null, lng || null, name);
 }
 
-// ── Map navigation ────────────────────────────────────
+/**
+ * Handles map redirection with coordinates or search term.
+ * @param {number|null} lat - Latitude.
+ * @param {number|null} lng - Longitude.
+ * @param {string} name - The item name for search fallback.
+ */
 function viewOnMap(lat, lng, name) {
   saveHistory(name);
   if (lat && lng) {
-    //window.location.href = `/map?lat=${lat}&lng=${lng}&name=${encodeURIComponent(name)}`;
     window.location.href = `/map?zoom=17&lat=${lat}&lng=${lng}`;
   } else {
     window.location.href = `/map?search=${encodeURIComponent(name)}`;
   }
 }
 
-// ── Search history (logged-in only) ───────────────────
+/**
+ * Retrieves search history from localStorage.
+ * @returns {Array} - List of search terms.
+ */
 function getHistory() {
   if (!IS_LOGGED_IN) return [];
   try {
@@ -222,6 +267,10 @@ function getHistory() {
   }
 }
 
+/**
+ * Adds a term to history and updates localStorage.
+ * @param {string} term - The search term.
+ */
 function saveHistory(term) {
   if (!IS_LOGGED_IN || !term?.trim()) return;
   let h = getHistory().filter((x) => x.toLowerCase() !== term.toLowerCase());
@@ -242,6 +291,9 @@ function clearHistory() {
   renderHistory();
 }
 
+/**
+ * Renders the search history list into the DOM.
+ */
 function renderHistory() {
   if (!historyList) return;
   const h = getHistory();
@@ -273,7 +325,9 @@ function applyHistory(term) {
   if (historySection) historySection.style.display = "none";
 }
 
-// ── Event listeners ───────────────────────────────────
+/**
+ * Event Listeners
+ */
 input.addEventListener("input", () => {
   const q = input.value;
   clearBtn.style.display = q ? "flex" : "none";
@@ -329,13 +383,15 @@ document.querySelectorAll(".search-pill").forEach((pill) => {
 
 clearHistoryBtn?.addEventListener("click", clearHistory);
 
-// ── Load data ─────────────────────────────────────────
+/**
+ * Fetches parks and paths data from API.
+ */
 async function loadData() {
   try {
     const [parksRes, pathsRes] = await Promise.all([
       fetch("/api/parks").catch(() => ({ ok: false })),
       fetch("/api/paths").catch(() => ({ ok: false })),
-    ]);
+    ];
     const parks = parksRes.ok ? await parksRes.json() : [];
     const paths = pathsRes.ok ? await pathsRes.json() : [];
 
@@ -355,11 +411,12 @@ async function loadData() {
   }
 }
 
-// ── Init ──────────────────────────────────────────────
+/**
+ * Initializes app state, loads data, and checks URL parameters.
+ */
 async function init() {
   await loadData();
   renderHistory();
-  // Handle ?q= param
   const params = new URLSearchParams(window.location.search);
   const q = params.get("q");
   if (q) {

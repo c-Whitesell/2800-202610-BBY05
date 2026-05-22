@@ -1,18 +1,16 @@
-/* ── weather-trail-recs.js ────────────────────────────────────────
- * Weather-based trail recommendations for the weather page.
- * Fetches live trail data from /api/parks and /api/paths
- * (same endpoints as discover.js), with a static fallback.
- *
- * Depends on:
- *   - lastWeatherData  (set by weather.js after fetch)
- * ─────────────────────────────────────────────────────────────── */
-
-/* ── State ────────────────────────────────────────────────────── */
+/**
+ * State Management
+ */
 let wtrTrailPool = [];
 let wtrPoolReady = false;
 let wtrPendingRender = false;
 
-/* ── Normalise trail from API (mirrors discover.js) ───────────── */
+/**
+ * Normalizes raw API trail/park data into a unified object structure.
+ * @param {Object} raw - The raw GeoJSON or API data object.
+ * @param {string} source - The source type ('park' or 'path').
+ * @returns {Object} - Normalized trail object.
+ */
 function wtrNormalise(raw, source) {
   const props = raw.properties || {};
   const coords = raw.geometry?.coordinates;
@@ -67,7 +65,11 @@ function wtrNormalise(raw, source) {
   };
 }
 
-/* ── Infer weather-scoring tags from trail properties ─────────── */
+/**
+ * Infers weather-relevant tags from trail properties for scoring logic.
+ * @param {Object} data - Contains trail properties like name, difficulty, etc.
+ * @returns {Array<string>} - Array of categorized tags.
+ */
 function wtrInferTags({
   name,
   difficulty,
@@ -81,7 +83,6 @@ function wtrInferTags({
   const tags = [];
   const n = (name + " " + location).toLowerCase();
 
-  // Terrain type from name / location
   if (n.match(/forest|wood|cedar|fir|grove|canopy|rainforest/))
     tags.push("forest", "canopy");
   if (n.match(/creek|river|stream|riparian|waterway/)) tags.push("river");
@@ -94,30 +95,24 @@ function wtrInferTags({
   if (n.match(/wetland|marsh|bog|swamp/)) tags.push("wetland", "marsh");
   if (n.match(/park|garden|urban|greenway/)) tags.push("urban");
 
-  // Surface type
   if (surface.match(/gravel|dirt|unpaved|ground/)) tags.push("unpaved");
   if (surface.match(/paved|asphalt|concrete/)) tags.push("paved");
 
-  // Elevation-based
   if (elevation > 800) tags.push("alpine", "exposed");
   else if (elevation > 300) tags.push("summit");
   else if (elevation <= 80) tags.push("flat");
 
-  // Difficulty-based
   const dl = (difficulty || "").toLowerCase();
   if (dl.match(/easy|low/)) tags.push("flat");
   if (dl.match(/hard|difficult|high|strenuous/)) tags.push("exposed");
 
-  // Highway type (OSM paths data)
   if (highway === "footway" || highway === "path") tags.push("forest");
   if (highway === "cycleway" || highway === "pedestrian")
     tags.push("paved", "urban");
 
-  // Deduplicate
   return [...new Set(tags)];
 }
 
-/* ── Fallback pool (used if both API endpoints fail) ─────────── */
 const WTR_FALLBACK = [
   {
     _id: "f1",
@@ -199,7 +194,9 @@ const WTR_FALLBACK = [
   },
 ];
 
-/* ── Fetch trails from API ────────────────────────────────────── */
+/**
+ * Fetches and initializes the pool of trail data.
+ */
 async function wtrLoadTrailPool() {
   try {
     const [parksRes, pathsRes] = await Promise.all([
@@ -219,7 +216,6 @@ async function wtrLoadTrailPool() {
 
     wtrTrailPool = [...normParks, ...normPaths];
 
-    // Fall back to static pool if DB is empty
     if (wtrTrailPool.length === 0) wtrTrailPool = WTR_FALLBACK;
   } catch (e) {
     console.warn("wtr: API fetch failed, using fallback pool", e);
@@ -228,14 +224,18 @@ async function wtrLoadTrailPool() {
 
   wtrPoolReady = true;
 
-  // If weather data arrived before trails, render now
   if (wtrPendingRender) {
     wtrPendingRender = false;
     renderWeatherTrailRecs();
   }
 }
 
-/* ── Scoring engine ───────────────────────────────────────────── */
+/**
+ * Scores a trail based on current weather conditions.
+ * @param {Object} trail - The normalized trail object.
+ * @param {Object} wx - Current weather condition object.
+ * @returns {Object} - Scoring details, badge info, and warnings.
+ */
 function scoreTrailForWeather(trail, wx) {
   const { apparentC, uvIndex, windKmh, isRaining, isStorming, isSnowing } = wx;
   const tags = trail.tags || [];
@@ -243,7 +243,6 @@ function scoreTrailForWeather(trail, wx) {
   const reasons = [];
   const warnings = [];
 
-  // Rain / drizzle
   if (isRaining) {
     if (
       tags.some((t) => ["canopy", "forest", "shelter", "valley"].includes(t))
@@ -262,7 +261,6 @@ function scoreTrailForWeather(trail, wx) {
     }
   }
 
-  // Storm
   if (isStorming) {
     if (tags.some((t) => ["alpine", "summit", "exposed"].includes(t))) {
       score -= 50;
@@ -275,7 +273,6 @@ function scoreTrailForWeather(trail, wx) {
     }
   }
 
-  // Snow
   if (isSnowing) {
     if (trail.elevation > 300) {
       score -= 35;
@@ -291,7 +288,6 @@ function scoreTrailForWeather(trail, wx) {
     }
   }
 
-  // UV / sun
   if (!isRaining && !isStorming) {
     if (uvIndex >= 8) {
       if (tags.some((t) => ["canopy", "forest", "shelter"].includes(t))) {
@@ -316,7 +312,6 @@ function scoreTrailForWeather(trail, wx) {
     }
   }
 
-  // Temperature
   if (apparentC < 0) {
     score -= 15;
     warnings.push("Feels below freezing");
@@ -336,7 +331,6 @@ function scoreTrailForWeather(trail, wx) {
     }
   }
 
-  // Wind
   if (windKmh > 50) {
     if (tags.some((t) => ["alpine", "summit", "exposed"].includes(t))) {
       score -= 35;
@@ -387,7 +381,11 @@ function scoreTrailForWeather(trail, wx) {
   return { score, badge, badgeClass, reason, warnings };
 }
 
-/* ── Parse weather conditions ─────────────────────────────────── */
+/**
+ * Parses weather raw data into a structured format.
+ * @param {Object} cur - The weather data object.
+ * @returns {Object} - Parsed weather metrics.
+ */
 function parseWxConditions(cur) {
   const code = cur.weather_code;
   return {
@@ -402,7 +400,11 @@ function parseWxConditions(cur) {
   };
 }
 
-/* ── Context headline ─────────────────────────────────────────── */
+/**
+ * Returns a context-appropriate headline for current weather.
+ * @param {Object} wx - The parsed weather metrics.
+ * @returns {Object} - Headline icon and text string.
+ */
 function getWeatherContextHeadline(wx) {
   if (wx.isStorming)
     return { icon: "⛈️", text: "Storm warning — sheltered trails only" };
@@ -423,12 +425,13 @@ function getWeatherContextHeadline(wx) {
   return { icon: "🥾", text: "Good hiking weather today" };
 }
 
-/* ── Render ───────────────────────────────────────────────────── */
+/**
+ * Renders the weather-based trail recommendations to the DOM.
+ */
 function renderWeatherTrailRecs() {
   const section = document.getElementById("weather-trail-recs");
   if (!section) return;
 
-  // If trails not ready yet, defer until they are
   if (!wtrPoolReady) {
     wtrPendingRender = true;
     section.innerHTML = `<p class="wtr-note">Loading trail data…</p>`;
@@ -441,7 +444,6 @@ function renderWeatherTrailRecs() {
   }
 
   const wx = parseWxConditions(lastWeatherData.cur);
-
   const scored = wtrTrailPool
     .map((t) => ({ trail: t, ...scoreTrailForWeather(t, wx) }))
     .sort((a, b) => b.score - a.score);
@@ -471,6 +473,12 @@ function renderWeatherTrailRecs() {
   });
 }
 
+/**
+ * Renders a specific trail recommendation card.
+ * @param {Object} s - The scored trail object.
+ * @param {number} rank - Rank index for display.
+ * @returns {string} - HTML string of the card.
+ */
 function renderRecCard(s, rank) {
   const { trail, score, badge, badgeClass, reason, warnings } = s;
   const diffColors = { easy: "#3b6d11", moderate: "#ba7517", hard: "#aa2222" };
@@ -523,17 +531,23 @@ function renderRecCard(s, rank) {
   `;
 }
 
-/* ── Navigate to map ──────────────────────────────────────────── */
+/**
+ * Navigates to the map page for a selected trail.
+ * @param {number} lat - Latitude coordinate.
+ * @param {number} lng - Longitude coordinate.
+ * @param {string} name - The trail name for search fallback.
+ */
 function viewTrailOnMap(lat, lng, name) {
   if (lat && lng) {
-    //window.location.href = `/map?lat=${lat}&lng=${lng}&name=${encodeURIComponent(name)}`;
     window.location.href = `/map?zoom=17&lat=${lat}&lng=${lng}`;
   } else {
     window.location.href = `/map?search=${encodeURIComponent(name)}`;
   }
 }
 
-/* ── Hook into weather.js render cycle ───────────────────────── */
+/**
+ * Hooks into existing weather rendering cycles or initializes via event listener.
+ */
 const _origRenderWeather =
   typeof renderWeather === "function" ? renderWeather : null;
 if (_origRenderWeather) {
@@ -545,5 +559,4 @@ if (_origRenderWeather) {
   document.addEventListener("weatherDataReady", renderWeatherTrailRecs);
 }
 
-/* ── Kick off trail fetch immediately on script load ─────────── */
 wtrLoadTrailPool();

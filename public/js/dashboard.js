@@ -1,9 +1,19 @@
+/**
+ * @description Immediately Invoked Function Expression (IIFE) to encapsulate
+ * dashboard logic and prevent polluting the global namespace.
+ * @returns {void}
+ */
 (function () {
   "use strict";
 
   const VANCOUVER_LAT = 49.2827;
   const VANCOUVER_LON = -123.1207;
 
+  /**
+   * @description Main initialization function triggered when the HTML document is fully loaded.
+   * Boots up the dashboard by fetching initial data (weather, trails) and binding UI events/animations.
+   * @returns {void}
+   */
   document.addEventListener("DOMContentLoaded", function () {
     console.log("Dashboard initializing...");
     fetchWeatherData();
@@ -12,12 +22,17 @@
     initializeTrailRecommendation();
     initializeActivityAnimations();
     initializeCardAnimations();
+
     const loadMoreBtn = document.getElementById("load-more-activity");
     if (loadMoreBtn) {
       loadMoreBtn.addEventListener("click", loadMoreActivity);
     }
   });
 
+  /**
+   * @description Fetches current weather data for Vancouver from the Open-Meteo API.
+   * @returns {Promise<void>} Updates DOM elements asynchronously.
+   */
   async function fetchWeatherData() {
     const loadingEl = document.getElementById("weather-loading");
     const contentEl = document.getElementById("weather-content");
@@ -31,6 +46,8 @@
         `&timezone=auto`;
 
       console.log("Fetching weather from Open-Meteo...");
+
+      // Read: Fetch external weather data (GET)
       const response = await fetch(url);
 
       if (!response.ok) {
@@ -74,6 +91,13 @@
     }
   }
 
+  /**
+   * @description Displays hardcoded fallback weather data if the API request fails.
+   * @param {HTMLElement} loadingEl - The loading DOM element.
+   * @param {HTMLElement} contentEl - The content DOM element.
+   * @param {HTMLElement} errorEl - The error DOM element.
+   * @returns {void}
+   */
   function showWeatherFallback(loadingEl, contentEl, errorEl) {
     console.log("Using fallback weather data");
     try {
@@ -93,6 +117,11 @@
     }
   }
 
+  /**
+   * @description Maps Open-Meteo WMO weather codes to readable text conditions.
+   * @param {number} code - The WMO weather code.
+   * @returns {string} Readable weather condition.
+   */
   function getWeatherCondition(code) {
     if (code === 0) return "Clear";
     if ([1, 2].includes(code)) return "Partly cloudy";
@@ -105,6 +134,11 @@
     return "Cloudy";
   }
 
+  /**
+   * @description Maps Open-Meteo WMO weather codes to appropriate emojis.
+   * @param {number} code - The WMO weather code.
+   * @returns {string} Emoji representing the weather.
+   */
   function getWeatherIcon(code) {
     if (code === 0) return "☀️";
     if ([1, 2].includes(code)) return "🌤️";
@@ -117,6 +151,10 @@
     return "🌤️";
   }
 
+  /**
+   * @description Fetches the daily trail recommendation from the internal API.
+   * @returns {Promise<void>} Updates DOM asynchronously.
+   */
   async function fetchTrailRecommendation() {
     const loadingEl = document.getElementById("trail-loading");
     const contentEl = document.getElementById("trail-content");
@@ -126,8 +164,9 @@
       console.log(
         "Fetching trail recommendation from /api/recommended-trail...",
       );
-      const response = await fetch("/api/recommended-trail");
 
+      // Read: Fetch standard trail recommendation from internal API
+      const response = await fetch("/api/recommended-trail");
       console.log("Trail API response status:", response.status);
 
       if (!response.ok) {
@@ -159,18 +198,22 @@
     }
   }
 
+  /**
+   * @description Populates the DOM with the provided trail object data.
+   * @param {Object} trail - The trail data object to display.
+   * @returns {void}
+   */
   function updateTrailDisplay(trail) {
     console.log("Updating trail display with:", trail);
 
-    // Generate stars
     let stars = "";
     const parsedRating = parseFloat(trail.rating);
     const rating = isNaN(parsedRating) ? 0 : parsedRating;
+
     for (let i = 0; i < 5; i++) {
       stars += i < Math.floor(rating) ? "★" : "☆";
     }
 
-    // Update DOM
     const nameEl = document.getElementById("trail-name");
     const starsEl = document.getElementById("trail-stars");
     const ratingEl = document.getElementById("trail-rating");
@@ -184,14 +227,15 @@
     if (starsEl) starsEl.textContent = stars;
     if (ratingEl)
       ratingEl.textContent = !isNaN(rating) ? rating.toFixed(1) : "—";
+
     if (descEl) {
       const cleanDescription = (trail.description || "—")
         .replace(/\*\*/g, "")
         .replace(/Trail:|Name:|Distance:|Difficulty:/gi, "")
         .trim();
-
       descEl.textContent = cleanDescription;
     }
+
     if (distanceEl) distanceEl.textContent = (trail.distance || "—") + " m";
     if (durationEl) durationEl.textContent = trail.duration || "—";
 
@@ -204,8 +248,6 @@
     }
 
     if (mapLink) {
-      //} && trail.lat && trail.lng) {
-      //mapLink.href = '/map?trail=' + trail.id;
       mapLink.href = `/map?zoom=17&lat=${trail.lat}&lng=${trail.lng}`;
     }
 
@@ -254,9 +296,14 @@
     },
   ];
 
+  /**
+   * @description Calculates and displays a daily hiking tip based on the current day of the year.
+   * @returns {void}
+   */
   function loadTipOfDay() {
     console.log("Loading tip of the day...");
-    // Calculate day of year for consistent daily tips
+
+    // Algorithm: Calculate current day of the year to loop through tips sequentially
     const now = new Date();
     const dayOfYear = Math.floor(
       (now - new Date(now.getFullYear(), 0, 0)) / 86400000,
@@ -273,6 +320,10 @@
     console.log("Tip loaded:", tip);
   }
 
+  /**
+   * @description Attaches event listeners for the "next recommendation" button.
+   * @returns {void}
+   */
   function initializeTrailRecommendation() {
     const nextRecButton = document.getElementById("btn-next-recommendation");
 
@@ -285,10 +336,15 @@
     }
   }
 
+  /**
+   * @description Fetches an AI-generated trail recommendation and updates the UI.
+   * @returns {Promise<void>} Updates DOM asynchronously.
+   */
   async function fetchNextRecommendation() {
     try {
       console.log("Fetching next AI recommendation...");
 
+      // Read: Fetch AI trail recommendation from internal endpoint
       const response = await fetch("/api/recommended-trail/ai");
 
       if (!response.ok) {
@@ -311,6 +367,11 @@
     }
   }
 
+  /**
+   * @description Applies a quick scale and opacity animation to a given dashboard card.
+   * @param {HTMLElement} card - The DOM element to animate.
+   * @returns {void}
+   */
   function animateCardUpdate(card) {
     card.style.opacity = "0.7";
     card.style.transform = "scale(0.98)";
@@ -321,6 +382,10 @@
     }, 100);
   }
 
+  /**
+   * @description Staggers the entry animation for items in the activity list.
+   * @returns {void}
+   */
   function initializeActivityAnimations() {
     const activityItems = document.querySelectorAll(".st-activity-item");
 
@@ -339,6 +404,10 @@
     });
   }
 
+  /**
+   * @description Binds hover animations for all dashboard cards.
+   * @returns {void}
+   */
   function initializeCardAnimations() {
     const cards = document.querySelectorAll(".st-dashboard__card");
 
@@ -356,8 +425,13 @@
   let activityOffset = 5;
   const ACTIVITY_LIMIT = 5;
 
+  /**
+   * @description Fetches the next batch of user activities and appends them to the list.
+   * @returns {Promise<void>} Updates DOM asynchronously.
+   */
   async function loadMoreActivity() {
     try {
+      // Read: Fetch paginated user activity data
       const res = await fetch(
         `/api/activity?limit=${ACTIVITY_LIMIT}&skip=${activityOffset}`,
       );
@@ -376,6 +450,11 @@
     }
   }
 
+  /**
+   * @description Creates DOM elements for new activity items and appends them to the container.
+   * @param {Array<Object>} items - List of activity objects to append.
+   * @returns {void}
+   */
   function appendActivityItems(items) {
     const container = document.querySelector(".st-activity-list");
     if (!container) return;
@@ -396,6 +475,11 @@
     });
   }
 
+  /**
+   * @description Returns the corresponding icon for a specific activity type.
+   * @param {string} type - The type of activity (e.g., "trail_completed").
+   * @returns {string} Icon character/emoji.
+   */
   function getActivityIcon(type) {
     if (type === "trail_completed") return "✓";
     if (type === "trail_bookmarked") return "♡";
@@ -403,6 +487,11 @@
     return "•";
   }
 
+  /**
+   * @description Scrolls the window smoothly to the specified section ID.
+   * @param {string} sectionId - The ID of the DOM element to scroll to.
+   * @returns {void}
+   */
   window.scrollToSection = function (sectionId) {
     const section = document.getElementById(sectionId);
     if (section) {
@@ -410,16 +499,30 @@
     }
   };
 
+  /**
+   * @description Saves a dashboard preference to the browser's local storage.
+   * @param {string} key - LocalStorage key suffix.
+   * @param {*} value - Data to store.
+   * @returns {void}
+   */
   window.saveDashboardPreference = function (key, value) {
     try {
+      // Write: Save data to client local storage
       localStorage.setItem("dashboard_" + key, JSON.stringify(value));
     } catch (e) {
       console.warn("LocalStorage not available:", e);
     }
   };
 
+  /**
+   * @description Retrieves a dashboard preference from the browser's local storage.
+   * @param {string} key - LocalStorage key suffix.
+   * @param {*} defaultValue - Fallback value if key doesn't exist.
+   * @returns {*} The parsed JSON value from storage, or the default value.
+   */
   window.getDashboardPreference = function (key, defaultValue) {
     try {
+      // Read: Retrieve data from client local storage
       const item = localStorage.getItem("dashboard_" + key);
       return item ? JSON.parse(item) : defaultValue;
     } catch (e) {
@@ -428,6 +531,13 @@
     }
   };
 
+  /**
+   * @description Updates a specific dashboard statistics card with new data and applies a flash animation.
+   * @param {string} icon - The emoji or text icon to display.
+   * @param {number|string} number - The stat value to display.
+   * @param {string} label - The text label identifying the specific card to target.
+   * @returns {void}
+   */
   window.updateStatCard = function (icon, number, label) {
     const statCards = document.querySelectorAll(".st-stat-card");
 
@@ -440,7 +550,6 @@
         if (numberEl) numberEl.textContent = number;
         if (iconEl) iconEl.textContent = icon;
 
-        // Highlight with animation
         card.style.background = "rgba(138, 171, 94, 0.15)";
         setTimeout(() => {
           card.style.background = "var(--glass-bg)";

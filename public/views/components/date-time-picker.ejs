@@ -313,6 +313,12 @@
 </style>
 
 <script>
+  /**
+   * timeline.js
+   * Manages the interactive date-time timeline, celestial-based UI themes,
+   * and date navigation for the application.
+   */
+
   const timeline = document.getElementById("timeline");
   const timeDisplay = document.getElementById("currentTimeDisplay");
   const dateLabel = document.getElementById("dateLabel");
@@ -325,10 +331,9 @@
   const hours = 24,
     markerWidth = 120,
     totalWidth = hours * markerWidth;
+
   let currentSelectedDate = new Date();
   let lastHourIndex = -1;
-
-  // ── Debouncer Logic Variables ───────────────────────────
   let shadeDebounceTimeout = null;
 
   const SVGS = {
@@ -337,6 +342,11 @@
     moons: ["🌑", "🌒", "🌓", "🌔", "🌕", "🌖", "🌗", "🌘"],
   };
 
+  /**
+   * Calculates sunrise, sunset, and lunar phase for a given date.
+   * @param {Date} date - The date to calculate celestial data for.
+   * @returns {Object} Sunrise hour, sunset hour, and moon icon.
+   */
   function getCelestialData(date) {
     const dayOfYear = Math.floor(
       (date - new Date(date.getFullYear(), 0, 0)) / 86400000,
@@ -351,6 +361,10 @@
     return { sunrise, sunset, moon: SVGS.moons[phaseIndex] };
   }
 
+  /**
+   * Updates navbar background and celestial icon based on time of day.
+   * @param {number} decimalHour - The current hour as a decimal.
+   */
   function updateNavbarPalette(decimalHour) {
     const { sunrise, sunset, moon } = getCelestialData(currentSelectedDate);
     let bg = "rgba(255, 255, 255, 0.2)";
@@ -376,6 +390,9 @@
     celestialTop.innerHTML = isDay ? "☀️" : moon;
   }
 
+  /**
+   * Regenerates the timeline UI markers based on the selected date.
+   */
   function refreshTimeline() {
     timeline.innerHTML = "";
     const { sunrise, sunset, moon } = getCelestialData(currentSelectedDate);
@@ -394,6 +411,9 @@
     }
   }
 
+  /**
+   * Updates UI labels and triggers external shade recalculations.
+   */
   function updateDisplay() {
     dateLabel.textContent = currentSelectedDate.toLocaleDateString(undefined, {
       month: "short",
@@ -405,9 +425,8 @@
       d = String(currentSelectedDate.getDate()).padStart(2, "0");
     dateInput.value = `${y}-${m}-${d}`;
     refreshTimeline();
-    triggerShadeCalculationDebounce(); // Update shade when date skips
+    triggerShadeCalculationDebounce();
 
-    //Jumpscare
     if (
       currentSelectedDate.getMonth() === 9 &&
       currentSelectedDate.getDate() === 31
@@ -417,37 +436,30 @@
       );
 
       if (!scareTriggeredBefore) {
-        // Save flag right away to prevent secondary loops if scrolling rapidly
         localStorage.setItem("halloweenScareEncountered", "true");
-
         const overlay = document.getElementById("halloweenScareOverlay");
-
-        // Load and play the horror audio stream track safely
         const scareAudio = new Audio(
           "https://audio.com/gutali-jgpt/audio/scary-maze-game-scream-sound-quicksoundscom",
         );
-        scareAudio.volume = 1.0; // Play at maximum volume
+        scareAudio.volume = 1.0;
         scareAudio
           .play()
-          .catch((err) =>
-            console.log("Audio autoplay prevented by browser policies:", err),
-          );
-
-        // Show the fullscreen image container layout
+          .catch((err) => console.log("Audio autoplay prevented:", err));
         overlay.style.display = "flex";
-
-        // Dismiss the overlay layout structure after exactly 3 seconds (3000ms)
         setTimeout(() => {
           overlay.style.display = "none";
-          scareAudio.pause(); // Kill the sound if it outlasts the 3-second display duration
+          scareAudio.pause();
         }, 3000);
       }
     }
   }
 
-  // Extract precise state values from UI components
+  /**
+   * Parses the current time text display into a Date object.
+   * @returns {Date} Date object reflecting the selected timeline time.
+   */
   function getSelectedDateTimeObject() {
-    const textStr = timeDisplay.textContent; // Format Example "7:20 PM" or "12:00 AM"
+    const textStr = timeDisplay.textContent;
     const match = textStr.match(/(\d+):(\d+)\s+(AM|PM)/i);
     let hoursVal = 12;
     let minutesVal = 0;
@@ -465,13 +477,13 @@
     return combinedDate;
   }
 
-  // 3-Second Delay Debouncer Action Handler
+  /**
+   * Debounces shade calculation event dispatching to optimize performance.
+   */
   function triggerShadeCalculationDebounce() {
     clearTimeout(shadeDebounceTimeout);
     shadeDebounceTimeout = setTimeout(async () => {
       const activeDateTime = getSelectedDateTimeObject();
-
-      // Dispatch Event to map framework script listener
       const event = new CustomEvent("dateTimeTimelineChanged", {
         detail: { timestamp: activeDateTime.toISOString() },
       });
@@ -479,6 +491,7 @@
     }, 3000);
   }
 
+  // Event Listeners for UI interaction
   timeline.addEventListener("scroll", () => {
     if (timeline.scrollLeft >= totalWidth * 2)
       timeline.scrollLeft -= totalWidth;
@@ -512,43 +525,9 @@
         ? "block"
         : "none";
 
-    triggerShadeCalculationDebounce(); // Trigger debounce timer on wheel scroll interactions
+    triggerShadeCalculationDebounce();
   });
 
-  // Handle Event Responses from DB syncing the closest timestamp back to slider UI
-  // window.addEventListener("syncTimelineUIToTime", (e) => {
-  //   const synchronizedDate = new Date(e.detail.adjustedTimestamp);
-  //   currentSelectedDate = new Date(
-  //     synchronizedDate.getFullYear(),
-  //     synchronizedDate.getMonth(),
-  //     synchronizedDate.getDate(),
-  //   );
-
-  //   // Lock updating display loops securely
-  //   dateLabel.textContent = currentSelectedDate.toLocaleDateString(undefined, {
-  //     month: "short",
-  //     day: "numeric",
-  //     year: "numeric",
-  //   });
-  //   const y = synchronizedDate.getFullYear(),
-  //     m = String(synchronizedDate.getMonth() + 1).padStart(2, "0"),
-  //     d = String(synchronizedDate.getDate()).padStart(2, "0");
-  //   dateInput.value = `${y}-${m}-${d}`;
-  //   refreshTimeline();
-
-  //   const h = synchronizedDate.getHours();
-  //   const mins = synchronizedDate.getMinutes();
-  //   timeDisplay.textContent = `${h % 12 || 12}:${String(mins).padStart(2, "0")} ${h < 12 ? "AM" : "PM"}`;
-
-  //   // Reposition scroll coordinate context smoothly matching exact match tracking index positions
-  //   const decimalTarget = h + mins / 60;
-  //   timeline.scrollLeft =
-  //     totalWidth + decimalTarget * markerWidth - timeline.offsetWidth / 2;
-  //   updateNavbarPalette(decimalTarget);
-  //   lastHourIndex = h;
-  // });
-
-  // Drag Interactivity handlers
   let isDown = false,
     startX,
     scrollL;
@@ -574,10 +553,6 @@
   };
   btnNow.onclick = () => {
     const n = new Date();
-
-    // 1. Update the state to today, preserving local time if needed
-
-    // 2. Scroll to the current time position
     const decimalNow = n.getHours() + n.getMinutes() / 60;
     timeline.scrollTo({
       left: totalWidth + decimalNow * markerWidth - timeline.offsetWidth / 2,
@@ -590,16 +565,12 @@
         n.getMonth(),
         n.getDate(),
       );
-
-      // 3. Update the display without the broken 's'
       updateDisplay();
-
-      // 4. Force hide the button immediately after clicking
       btnNow.style.display = "none";
     }, 1000);
   };
 
-  // Init
+  // Initial state setup
   const init = new Date();
   updateDisplay();
   timeline.scrollLeft =
