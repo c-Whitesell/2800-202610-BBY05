@@ -127,7 +127,7 @@ shadytrails/
 ├── .gitignore
 ├── package.json
 ├── package-lock.json
-└── server.js
+└── app.js
 ```
 
 ---
@@ -187,7 +187,7 @@ See the [Environment Variables](#environment-variables) section below.
 ## 5. Run the App
 
 ```bash
-node server.js
+node app.js
 ```
 
 Open:
@@ -239,7 +239,7 @@ See the section below.
 ## 6. Run the App
 
 ```bash
-node server.js
+node app.js
 ```
 
 Open:
