@@ -1,73 +1,107 @@
-🌲 ShadyTrails
+# 🌲 ShadyTrails
 
-ShadyTrails helps you discover parks, trails, and green spaces based on your ideal level of shade, so you can find the perfect outdoor experience no matter the weather or season.
+ShadyTrails helps users discover parks, trails, and green spaces based on their ideal level of shade, making it easier to enjoy the outdoors in any weather or season.
 
+---
 
-Table of Contents
+## 📚 Table of Contents
 
-Project Description
-Technologies Used
-File Structure
-Setup & Installation
+- [Project Description](#-project-description)
+- [Technologies Used](#-technologies-used)
+- [File Structure](#-file-structure)
+- [Setup & Installation](#-setup--installation)
+  - [Prerequisites](#prerequisites)
+  - [Windows Setup](#windows-setup)
+  - [macOS Setup](#macos-setup)
+  - [Environment Variables](#environment-variables)
+  - [Running the App](#running-the-app)
+- [Features](#-features)
+- [AI & API Usage](#-ai--api-usage)
+- [Credits & References](#-credits--references)
+- [Contact](#-contact)
 
-Prerequisites
-Windows Setup
-macOS Setup
-Environment Variables
-Running the App
+---
 
+# 📖 Project Description
 
-Features
-AI & API Usage
-Credits & References
-Contact
+ShadyTrails is a web application that recommends trails and parks based on user shade preferences and current weather conditions.
 
+Whether users prefer sunny open trails or cool forest cover, ShadyTrails helps them find the ideal outdoor experience through:
 
-Project Description
-ShadyTrails is a web app that matches users with personalized trail and park recommendations based on shade preferences and current weather. Whether you want full sun or deep forest cover, ShadyTrails helps you find the perfect outdoor spot. Users can explore an interactive map, save bookmarks, search for parks and paths, and get AI-powered trail summaries and weather advisories.
+- Interactive maps
+- Personalized trail recommendations
+- AI-generated trail summaries
+- Weather advisories
+- Bookmarking and search history
 
-Technologies Used
-Frontend
+---
 
-EJS — server-side HTML templating
-Bootstrap 5 — responsive layout and UI components
-Bootstrap Icons — icon library
-MapLibre GL JS — interactive map rendering
-JavaScript — client-side interactivity
+# 🛠 Technologies Used
 
-Backend
+## Frontend
 
-Node.js — runtime environment
-Express.js — web framework and routing
-express-session — session management
-connect-mongo — MongoDB-backed session store
-bcrypt — password hashing
-Joi — input validation
-dotenv — environment variable management
+- **EJS** — Server-side HTML templating
+- **Bootstrap 5** — Responsive layouts and UI components
+- **Bootstrap Icons** — Icon library
+- **MapLibre GL JS** — Interactive map rendering
+- **JavaScript** — Client-side interactivity
 
-Database
+## Backend
 
-MongoDB Atlas — cloud-hosted NoSQL database
+- **Node.js** — Runtime environment
+- **Express.js** — Web framework and routing
+- **express-session** — Session management
+- **connect-mongo** — MongoDB-backed session storage
+- **bcrypt** — Password hashing
+- **Joi** — Input validation
+- **dotenv** — Environment variable management
 
-Collections: users, parks, paths, trails, feedback, pageAnalytics, activity, pageAnalytics, sessions
+## Database
 
+- **MongoDB Atlas** — Cloud-hosted NoSQL database
 
+### Collections
 
-External APIs & Services
+- users
+- parks
+- paths
+- trails
+- feedback
+- pageAnalytics
+- activity
+- sessions
 
-Google Gemini AI — trail descriptions and weather summaries
-MapLibre GL JS — https://unpkg.com/maplibre-gl@5.23.0/dist/maplibre-gl.js
-Google Fonts — Syne, DM Sans typefaces
-Open-Meteo - weather forecast
+---
 
+# 🌐 External APIs & Services
 
-File Structure
-Run the following to generate this yourself:
-Windows:
-bashtree /f
-macOS:
-bashbrew install tree
+- **Google Gemini AI** — Trail descriptions and weather summaries
+- **MapLibre GL JS** — https://unpkg.com/maplibre-gl@5.23.0/dist/maplibre-gl.js
+- **Google Fonts** — Syne & DM Sans typefaces
+- **Open-Meteo** — Weather forecasts
+
+---
+
+# 📁 File Structure
+
+Generate this yourself using:
+
+## Windows
+
+```bash
+tree /f
+```
+
+## macOS
+
+```bash
+brew install tree
 tree
+```
+
+## Project Structure
+
+```bash
 shadytrails/
 ├── public/
 │   ├── css/
@@ -88,153 +122,345 @@ shadytrails/
 │       ├── bookmarks.ejs
 │       ├── dashboard.ejs
 │       ├── index.ejs
-│       ├── ...
-├── .env                  <= NOT committed to repo
+│       └── ...
+├── .env
 ├── .gitignore
 ├── package.json
 ├── package-lock.json
 └── server.js
+```
 
-Setup & Installation
-Prerequisites
-Make sure the following are installed before you begin:
-ToolVersionDownloadNode.jsv18 or higherhttps://nodejs.orgnpmComes with Node.js—GitLatesthttps://git-scm.comVS Code (recommended)Latesthttps://code.visualstudio.com
+---
+
+# ⚙️ Setup & Installation
+
+## Prerequisites
+
+Install the following before starting:
+
+| Tool | Version | Download |
+|------|------|------|
+| Node.js | v18+ | https://nodejs.org |
+| npm | Included with Node.js | — |
+| Git | Latest | https://git-scm.com |
+| VS Code (recommended) | Latest | https://code.visualstudio.com |
+
 You will also need:
 
-A MongoDB Atlas account and cluster — https://www.mongodb.com/atlas
-A Google Gemini API key — https://aistudio.google.com
+- A MongoDB Atlas account and cluster
+- A Google Gemini API key
 
+---
 
-Windows Setup
+# 🪟 Windows Setup
 
-Clone the repository
+## 1. Clone the Repository
 
-bash   git clone https://github.com/your-org/shadytrails.git
-   cd shadytrails
+```bash
+git clone https://github.com/your-org/shadytrails.git
+cd shadytrails
+```
 
-Install Node.js
-Download and run the installer from https://nodejs.org. Choose the LTS version.
+## 2. Install Node.js
+
+Download the LTS installer from:
+
+https://nodejs.org
+
 Verify installation:
 
-bash   node -v
-   npm -v
+```bash
+node -v
+npm -v
+```
 
-Install project dependencies
+## 3. Install Dependencies
 
-bash   npm install
+```bash
+npm install
+```
 
-Create your .env file (see Environment Variables below)
-Run the app
+## 4. Create Your `.env` File
 
-bash   node server.js
-Then open http://localhost:3000 in your browser.
+See the [Environment Variables](#environment-variables) section below.
 
-macOS Setup
+## 5. Run the App
 
-Install Homebrew (if not already installed)
+```bash
+node server.js
+```
 
-bash   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+Open:
 
-Install Node.js
+```text
+http://localhost:3000
+```
 
-bash   brew install node
+---
+
+# 🍎 macOS Setup
+
+## 1. Install Homebrew (if needed)
+
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+## 2. Install Node.js
+
+```bash
+brew install node
+```
+
 Verify installation:
-bash   node -v
-   npm -v
 
-Clone the repository
+```bash
+node -v
+npm -v
+```
 
-bash   git clone https://github.com/your-org/shadytrails.git
-   cd shadytrails
+## 3. Clone the Repository
 
-Install project dependencies
+```bash
+git clone https://github.com/your-org/shadytrails.git
+cd shadytrails
+```
 
-bash   npm install
+## 4. Install Dependencies
 
-Create your .env file (see Environment Variables below)
-Run the app
+```bash
+npm install
+```
 
-bash   node server.js
-Then open http://localhost:3000 in your browser.
+## 5. Create Your `.env` File
 
-Environment Variables
-Create a file named .env in the root of the project. Do not commit this file to Git — it is already listed in .gitignore.
-env# MongoDB
+See the section below.
+
+## 6. Run the App
+
+```bash
+node server.js
+```
+
+Open:
+
+```text
+http://localhost:3000
+```
+
+---
+
+# 🔐 Environment Variables
+
+Create a `.env` file in the root directory.
+
+⚠️ Do NOT commit this file to GitHub.
+
+```env
+# MongoDB
 MONGO_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/<dbname>?retryWrites=true&w=majority
 
-# Session secrets (generate two long random strings)
+# Session secrets
 NODE_SESSION_SECRET=your_node_session_secret_here
 MONGODB_SESSION_SECRET=your_mongodb_session_secret_here
 
 # Google Gemini AI
 GEMINI_API_KEY=your_gemini_api_key_here
 
-# Server port (optional, defaults to 3000)
+# Server Port
 PORT=3000
-How to get each value:
+```
 
-MONGO_URI — In MongoDB Atlas, go to your cluster → Connect → Drivers → copy the connection string. Replace <username>, <password>, and <dbname> with your credentials.
-NODE_SESSION_SECRET / MONGODB_SESSION_SECRET — Generate two separate random strings. You can use:
+## How to Get Each Value
 
-bash  node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+### MongoDB URI
 
-GEMINI_API_KEY — Visit https://aistudio.google.com, sign in, and create an API key under "Get API Key".
+In MongoDB Atlas:
 
+1. Open your cluster
+2. Click **Connect**
+3. Select **Drivers**
+4. Copy the connection string
 
-Running the App
-bashnode server.js
-You should see:
+Replace:
+
+- `<username>`
+- `<password>`
+- `<dbname>`
+
+with your own values.
+
+---
+
+### Session Secrets
+
+Generate secure random strings:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+---
+
+### Gemini API Key
+
+Visit:
+
+https://aistudio.google.com
+
+Create an API key under **Get API Key**.
+
+---
+
+# ▶️ Running the App
+
+Start the server:
+
+```bash
+node server.js
+```
+
+Expected console output:
+
+```bash
 Server is running at port 3000
 Connected to MongoDB and initialized collections
-Open http://localhost:3000 in your browser.
-To auto-restart on file changes during development, use nodemon:
-bashnpm install -g nodemon
+```
+
+Open in browser:
+
+```text
+http://localhost:3000
+```
+
+---
+
+## 🔄 Development Mode (Optional)
+
+Install Nodemon:
+
+```bash
+npm install -g nodemon
+```
+
+Run with auto-restart:
+
+```bash
 nodemon server.js
+```
 
-Features
-Feature                                           Access
-Interactive map with parks and paths             Everyone
-Search parks and paths by name                   Everyone
-Filter and browse trail recommendations          Everyone     
-AI-powered trail descriptions                    Everyone 
-Real-time weather advisory (AI)                  Everyone
-Bookmark/save trails                          Logged-in users
-Search history                                Logged-in users
-User profile and nickname                     Logged-in users
-Dashboard with activity                       Logged-in users
-Admin panel (users, analytics, feedback)      Admin users only
+---
 
-AI & API Usage
-Google Gemini AI (aiService.js)
-ShadyTrails uses the Google Gemini API for two features:
+# ✨ Features
 
-Trail descriptions — When a user requests a recommended trail on the dashboard, the app sends a prompt to Gemini containing the trail name, distance, and difficulty. Gemini returns a friendly 1–2 paragraph description focused on shade, comfort, and who the trail is best suited for.
-Weather advisories — On the weather page, the client fetches current conditions (temperature, rain chance, wind speed, UV index, sky conditions) and sends them to /api/ai-weather-summary. The server constructs a prompt and Gemini returns a 2–4 sentence hiking advisory with gear suggestions and timing recommendations.
+| Feature | Access |
+|---|---|
+| Interactive map with parks and paths | Everyone |
+| Search parks and trails by name | Everyone |
+| Filter and browse recommendations | Everyone |
+| AI-powered trail descriptions | Everyone |
+| Real-time weather advisories | Everyone |
+| Bookmark/save trails | Logged-in users |
+| Search history | Logged-in users |
+| User profiles and nicknames | Logged-in users |
+| Dashboard activity tracking | Logged-in users |
+| Admin analytics & feedback tools | Admin users only |
 
-MapLibre GL JS
-Used to render the interactive trail map. Loaded via CDN (unpkg.com/maplibre-gl@5.23.0). The map displays park and path data fetched from the MongoDB collections and supports navigating to a specific location via URL query parameters (?lat=, ?lng=, ?name=).
-MongoDB Atlas
-All user data, bookmarks, trail/park/path geodata, feedback, and page analytics are stored in MongoDB Atlas. The app connects via the official mongodb Node.js driver using the MONGO_URI environment variable.
+---
 
-Credits & References
+# 🤖 AI & API Usage
 
-Express.js Documentation
-MongoDB Node.js Driver
-MapLibre GL JS
-Bootstrap 5
-Google Gemini AI
-Joi Validation
-bcrypt
-connect-mongo
-How to Write a Good README
+## Google Gemini AI (`aiService.js`)
 
-Contact
-Connor Whitesell Developer— cwhitesell@my.bcit.ca
+ShadyTrails uses Gemini AI for:
 
-Harshpal Singh Developer— hsingh746@my.bcit.ca
+### Trail Descriptions
 
-Yasas Rajapakse Developer—  srajapakse1@my.bcit.ca
+When users request trail recommendations, the app sends:
 
-Amit Kahlon Developer— akahlon23@my.bcit.ca
+- Trail name
+- Distance
+- Difficulty
 
-Bhagat Takhar Developer— btakhar7@my.bcit.ca
+Gemini generates a friendly 1–2 paragraph summary focused on:
+
+- Shade coverage
+- Comfort level
+- Ideal hikers
+
+---
+
+### Weather Advisories
+
+The app fetches:
+
+- Temperature
+- Rain chance
+- Wind speed
+- UV index
+- Sky conditions
+
+This data is sent to `/api/ai-weather-summary`.
+
+Gemini returns:
+
+- Hiking recommendations
+- Gear suggestions
+- Best hiking times
+
+---
+
+## MapLibre GL JS
+
+Used for rendering the interactive map.
+
+Features include:
+
+- Park/path markers
+- Dynamic navigation
+- Query parameter navigation:
+
+```text
+?lat=
+?lng=
+?name=
+```
+
+---
+
+## MongoDB Atlas
+
+Stores:
+
+- User accounts
+- Bookmarks
+- Trail data
+- Park/path geodata
+- Feedback
+- Analytics
+
+---
+
+# 🙌 Credits & References
+
+- Express.js Documentation
+- MongoDB Node.js Driver
+- MapLibre GL JS
+- Bootstrap 5
+- Google Gemini AI
+- Joi Validation
+- bcrypt
+- connect-mongo
+- How to Write a Good README
+
+---
+
+# 📬 Contact
+
+| Developer | Email |
+|---|---|
+| Connor Whitesell | cwhitesell@my.bcit.ca |
+| Harshpal Singh | hsingh746@my.bcit.ca |
+| Yasas Rajapakse | srajapakse1@my.bcit.ca |
+| Amit Kahlon | akahlon23@my.bcit.ca |
+| Bhagat Takhar | btakhar7@my.bcit.ca |
