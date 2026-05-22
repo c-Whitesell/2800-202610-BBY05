@@ -3,17 +3,226 @@
     display: flex;
     flex-direction: column;
 }
-
+ 
 .bookmarks-page {
     flex: 1;
     padding-top: 120px;
+    padding-bottom: 60px;
     font-family: var(--font-body);
-    flex: 1;
-    padding-top: 120px;
-    padding-bottom: 40px;
     color: white;
 }
-
-.bookmarks-container {
-    min-height: 60vh;
+ 
+/* ── Grid ─────────────────────────────────────────── */
+.rec-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+ 
+/* ── Trail Card ───────────────────────────────────── */
+.trail-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+ 
+.trail-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+}
+ 
+/* ── Card image area ──────────────────────────────── */
+.trail-card__img {
+    position: relative;
+    height: 140px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+ 
+.trail-card__img-placeholder {
+    font-size: 3.5rem;
+    line-height: 1;
+    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.4));
+}
+ 
+/* ── Bookmark button ──────────────────────────────── */
+.trail-card__bookmark {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.5);
+    border: none;
+    border-radius: 8px;
+    padding: 4px 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.15s;
+    line-height: 1;
+}
+ 
+.trail-card__bookmark:hover {
+    background: rgba(0, 0, 0, 0.75);
+}
+ 
+/* ── Type badge (Park / Path) ─────────────────────── */
+.trail-card__type-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(0, 0, 0, 0.55);
+    color: rgba(255,255,255,0.85);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 6px;
+    backdrop-filter: blur(4px);
+}
+ 
+/* ── Card body ────────────────────────────────────── */
+.trail-card__body {
+    padding: 1rem 1.1rem 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    flex: 1;
+}
+ 
+.trail-card__top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+ 
+.trail-card__name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: white;
+    line-height: 1.3;
+    flex: 1;
+}
+ 
+/* ── Difficulty badges ────────────────────────────── */
+.trail-card__badge {
+    font-size: 0.68rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 999px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+ 
+.badge--easy     { background: rgba(52,199,89,0.2);  color: #4ade80; border: 1px solid rgba(52,199,89,0.35); }
+.badge--moderate { background: rgba(255,159,10,0.2); color: #fbbf24; border: 1px solid rgba(255,159,10,0.35); }
+.badge--hard     { background: rgba(255,69,58,0.2);  color: #f87171; border: 1px solid rgba(255,69,58,0.35); }
+.badge--default  { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.7); border: 1px solid rgba(255,255,255,0.15); }
+ 
+/* ── Meta row ─────────────────────────────────────── */
+.trail-card__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 0.8rem;
+}
+ 
+.trail-card__meta-item {
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.6);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+ 
+/* ── Description ──────────────────────────────────── */
+.trail-card__desc {
+    font-size: 0.82rem;
+    color: rgba(255, 255, 255, 0.55);
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+ 
+/* ── Actions ──────────────────────────────────────── */
+.trail-card__actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: auto;
+    padding-top: 0.4rem;
+}
+ 
+.trail-card__btn {
+    flex: 1;
+    padding: 0.45rem 0.75rem;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.07);
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    white-space: nowrap;
+}
+ 
+.trail-card__btn:hover {
+    background: rgba(255, 255, 255, 0.13);
+    border-color: rgba(255, 255, 255, 0.25);
+}
+ 
+.trail-card__btn--primary {
+    background: rgba(99, 179, 237, 0.15);
+    border-color: rgba(99, 179, 237, 0.35);
+    color: #90cdf4;
+}
+ 
+.trail-card__btn--primary:hover {
+    background: rgba(99, 179, 237, 0.25);
+    border-color: rgba(99, 179, 237, 0.5);
+}
+ 
+.trail-card__btn--remove {
+    background: rgba(255, 99, 99, 0.1);
+    border-color: rgba(255, 99, 99, 0.25);
+    color: #fca5a5;
+}
+ 
+.trail-card__btn--remove:hover {
+    background: rgba(255, 99, 99, 0.2);
+    border-color: rgba(255, 99, 99, 0.45);
+}
+ 
+/* ── Toast ────────────────────────────────────────── */
+.bm-toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(16px);
+    background: rgba(30, 30, 30, 0.95);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 999px;
+    font-size: 0.875rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s, transform 0.2s;
+    z-index: 9999;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.1);
+}
+ 
+.bm-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
 }

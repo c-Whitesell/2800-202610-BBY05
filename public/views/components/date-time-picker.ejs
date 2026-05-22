@@ -1,3 +1,11 @@
+<!-- Fullscreen Halloween Jump Scare Overlay Container -->
+<div id="halloweenScareOverlay" class="scare-overlay">
+  <img
+    src="https://mediaproxy.tvtropes.org/width/1200/https://static.tvtropes.org/pmwiki/pub/images/reganmacneil.png"
+    alt="Scare"
+  />
+</div>
+
 <!-- 1. The Scroller Navbar (Changes color) -->
 <nav class="st-time-navbar" id="navbar">
   <div class="timeline-wrapper">
@@ -6,7 +14,7 @@
   </div>
 </nav>
 
-<!-- 2. The Information Section (Stays white) -->
+<!-- 2. The Information Section (Frosted Glass Card Active) -->
 <div class="st-content-header">
   <div class="st-time-focus">
     <div id="celestialTop"></div>
@@ -39,11 +47,10 @@
     padding: 0;
     width: 100%;
     height: 100%;
-    overflow: hidden; /* Prevents scrollbars over the map */
+    overflow: hidden;
     font-family: sans-serif;
   }
 
-  /* Map Container */
   #map {
     position: absolute;
     top: 0;
@@ -52,57 +59,50 @@
     z-index: 0;
   }
 
-  /* Navbar with Glassmorphism */
   .st-time-navbar {
     position: fixed;
-    top: 68px; /* Height of your st-navbar */
+    top: 68px;
     left: 0;
     width: 100%;
     height: 75px;
-    z-index: 999; /* Slightly lower than global nav (1000) */
+    z-index: 999;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: all 0.8s ease;
-
-    /* Glass Effect */
     background: rgba(255, 255, 255, 0.2);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid rgba(255, 255, 255, 0.2);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-
-    pointer-events: none; /* Let clicks pass through to the map */
+    pointer-events: none;
   }
 
-  /* Info Section as a Floating Glass Card */
+  /* Modified Information Card Section with Active Frosted Glass Properties */
   .st-content-header {
     position: absolute;
-    /* (68px global nav) + (75px time scroller) + (20px margin) */
     top: 163px;
     left: 50%;
     transform: translateX(-50%);
-    z-index: 500;
+    z-index: 999; /* Boosted so it lays over all map interaction layer panels safely */
     text-align: center;
     display: flex;
     flex-direction: column;
     align-items: center;
 
-    /* Card Glassmorphism */
-    /*background: rgba(255, 255, 255, 0);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    padding: 20px 40px;
+    /* Active Frosted Glass Card Design Styles */
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(16px) saturate(120%);
+    -webkit-backdrop-filter: blur(16px) saturate(120%);
+    padding: 16px 32px;
     border-radius: 24px;
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);*/
-
-    pointer-events: none; /* Let clicks pass through the "empty" areas of the card */
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 10px 32px rgba(15, 23, 42, 0.15);
+    pointer-events: none;
   }
 
-  /* Text and UI styling */
   .st-time-navbar.dark-mode {
-    background: rgba(15, 23, 42, 0.6); /* Transparent dark for glass */
+    background: rgba(15, 23, 42, 0.6);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   }
 
@@ -114,26 +114,31 @@
     color: #ffffff;
   }
 
-  /* Re-enable clicks for the actual UI elements inside the card */
-  .st-time-focus,
+  /* Modified to display inline using flexbox */
+  .st-time-focus {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 12px; /* Space between emoji and time */
+    pointer-events: auto;
+  }
+
   .date-navigator,
   .now-btn {
     pointer-events: auto;
   }
 
-  /* ... keep your existing Scroller UI & Button CSS below ... */
-  /* Update this to fill the entire screen width */
   .timeline-wrapper {
     position: relative;
-    width: 100%; /* Changed from max-width: 800px */
-    max-width: 100%; /* Ensure no caps */
+    width: 100%;
+    max-width: 100%;
     pointer-events: auto;
   }
 
-  /* Ensure the axis takes up all available space */
   .timeline-axis {
     display: flex;
-    width: 100%; /* Fill the wrapper */
+    width: 100%;
     overflow-x: auto;
     scrollbar-width: none;
     cursor: grab;
@@ -141,24 +146,6 @@
     align-items: center;
   }
 
-  /* Optional: Add a mask effect so the time markers fade out at the edges */
-  .st-time-navbar {
-    /* ... your existing styles ... */
-    mask-image: linear-gradient(
-      to right,
-      transparent,
-      black 15%,
-      black 85%,
-      transparent
-    );
-    -webkit-mask-image: linear-gradient(
-      to right,
-      transparent,
-      black 15%,
-      black 85%,
-      transparent
-    );
-  }
   .timeline-axis::-webkit-scrollbar {
     display: none;
   }
@@ -171,26 +158,32 @@
     font-weight: bold;
     color: var(--text-muted);
   }
-  /* Force the SVG icons to be visible and sized correctly */
   .marker-icon svg {
     width: 24px;
     height: 24px;
     fill: none;
-    stroke: currentColor; /* Uses the text color (var(--text-muted) or white in dark mode) */
+    stroke: currentColor;
     stroke-width: 2;
     stroke-linecap: round;
     stroke-linejoin: round;
   }
-
-  /* Ensure the SVG doesn't shrink inside the flex container */
   .marker-icon {
     display: flex;
     align-items: center;
     justify-content: center;
     min-height: 24px;
   }
+
+  #celestialTop {
+    font-size: 2.8rem; /* Matches time font closely */
+    line-height: 1;
+    pointer-events: none;
+    user-drag: none;
+    -webkit-user-drag: none;
+  }
+
   .current-time-display {
-    font-size: 4rem;
+    font-size: 3.2rem;
     margin: 0;
     font-weight: 800;
     font-variant-numeric: tabular-nums;
@@ -202,6 +195,31 @@
     gap: 20px;
     margin-bottom: 10px;
   }
+
+  .nav-arrow {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    color: var(--text-main);
+  }
+
+  .date-input-wrapper {
+    position: relative;
+    font-weight: bold;
+    color: var(--text-main);
+  }
+
+  #hiddenDatePicker {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+  }
+
   .now-btn {
     background: var(--accent);
     color: white;
@@ -210,34 +228,97 @@
     border-radius: 30px;
     font-weight: bold;
     cursor: pointer;
+    margin-top: 5px;
   }
 
-  /* Prevents text/icon selection in the specific UI areas */
   .st-time-navbar,
   .st-content-header {
-    -webkit-user-select: none; /* Safari */
-    -moz-user-select: none; /* Firefox */
-    -ms-user-select: none; /* IE10+/Edge */
-    user-select: none; /* Standard */
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
   }
 
-  /* Also prevents the "blue highlight" on mobile tap */
   .nav-arrow,
   .now-btn,
   .timeline-axis {
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* Specifically stops images/icons from being "dragged" like ghost images */
-  .marker-icon,
-  #celestialTop {
-    pointer-events: none;
-    user-drag: none;
+  /* --- MOBILE MEDIA QUERY (Significantly Smaller) --- */
+  @media (max-width: 768px) {
+    .st-content-header {
+      padding: 8px 16px; /* Tighter padding overall */
+      border-radius: 12px; /* Smaller rounding to match */
+      width: max-content; /* Hug the internal elements instead of stretching to 85% */
+      max-width: 90%;
+      top: 152px;
+    }
+
+    .st-time-focus {
+      gap: 6px; /* Tighter gap between emoji and time */
+    }
+
+    .current-time-display {
+      font-size: 1.6rem; /* Much smaller time text */
+    }
+
+    #celestialTop {
+      font-size: 1.4rem; /* Scaled down emoji to match time */
+    }
+
+    .date-navigator {
+      gap: 10px; /* Bring arrows closer to the date */
+      margin-bottom: 4px;
+      font-size: 0.85rem; /* Smaller date font */
+    }
+
+    .nav-arrow {
+      font-size: 0.85rem; /* Smaller arrows */
+    }
+
+    #timezoneLabel {
+      font-size: 0.65rem; /* Very small timezone font */
+    }
+
+    .now-btn {
+      padding: 4px 12px; /* Much smaller button area */
+      font-size: 0.65rem; /* Tiny text for the button */
+      margin-top: 4px;
+    }
+  }
+
+  /* Fullscreen fixed jump scare layer overlay properties */
+  .scare-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: #000000;
+    z-index: 999999; /* Higher than map layers and time navbar controls */
+    display: none; /* Hidden by default until triggered */
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .scare-overlay img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Forces the image to completely fill the screen viewport dimensions */
+    user-select: none;
     -webkit-user-drag: none;
   }
 </style>
 
 <script>
+  /**
+   * timeline.js
+   * Manages the interactive date-time timeline, celestial-based UI themes,
+   * and date navigation for the application.
+   */
+
   const timeline = document.getElementById("timeline");
   const timeDisplay = document.getElementById("currentTimeDisplay");
   const dateLabel = document.getElementById("dateLabel");
@@ -250,8 +331,10 @@
   const hours = 24,
     markerWidth = 120,
     totalWidth = hours * markerWidth;
+
   let currentSelectedDate = new Date();
   let lastHourIndex = -1;
+  let shadeDebounceTimeout = null;
 
   const SVGS = {
     sunrise: `<svg viewBox="0 0 24 24"><path d="M17 18a5 5 0 0 0-10 0M12 2v7M4.22 10.22l1.42 1.42M1 18h2M21 18h2M18.36 11.64l1.42-1.42M23 22H1M8 6l4-4 4 4"/></svg>`,
@@ -259,6 +342,11 @@
     moons: ["🌑", "🌒", "🌓", "🌔", "🌕", "🌖", "🌗", "🌘"],
   };
 
+  /**
+   * Calculates sunrise, sunset, and lunar phase for a given date.
+   * @param {Date} date - The date to calculate celestial data for.
+   * @returns {Object} Sunrise hour, sunset hour, and moon icon.
+   */
   function getCelestialData(date) {
     const dayOfYear = Math.floor(
       (date - new Date(date.getFullYear(), 0, 0)) / 86400000,
@@ -273,27 +361,27 @@
     return { sunrise, sunset, moon: SVGS.moons[phaseIndex] };
   }
 
+  /**
+   * Updates navbar background and celestial icon based on time of day.
+   * @param {number} decimalHour - The current hour as a decimal.
+   */
   function updateNavbarPalette(decimalHour) {
     const { sunrise, sunset, moon } = getCelestialData(currentSelectedDate);
-    let bg = "rgba(255, 255, 255, 0.2)"; // Default Light Glass
+    let bg = "rgba(255, 255, 255, 0.2)";
     let isDay = decimalHour >= sunrise && decimalHour <= sunset;
 
     navbar.classList.remove("dark-mode");
 
     if (decimalHour > sunrise - 1 && decimalHour < sunrise + 1) {
-      // Dawn: Semi-transparent orange/pink
       bg =
         "linear-gradient(to right, rgba(255, 126, 95, 0.6), rgba(254, 180, 123, 0.6))";
     } else if (decimalHour >= sunrise + 1 && decimalHour <= sunset - 1) {
-      // Day: Semi-transparent sky blue
       bg = "rgba(125, 211, 252, 0.4)";
     } else if (decimalHour > sunset - 1 && decimalHour < sunset + 1) {
-      // Dusk: Semi-transparent sunset
       bg =
         "linear-gradient(to right, rgba(249, 115, 22, 0.6), rgba(76, 29, 149, 0.6))";
       navbar.classList.add("dark-mode");
     } else if (!isDay) {
-      // Night: Deep transparent navy
       bg = "rgba(15, 23, 42, 0.7)";
       navbar.classList.add("dark-mode");
     }
@@ -302,6 +390,9 @@
     celestialTop.innerHTML = isDay ? "☀️" : moon;
   }
 
+  /**
+   * Regenerates the timeline UI markers based on the selected date.
+   */
   function refreshTimeline() {
     timeline.innerHTML = "";
     const { sunrise, sunset, moon } = getCelestialData(currentSelectedDate);
@@ -320,6 +411,9 @@
     }
   }
 
+  /**
+   * Updates UI labels and triggers external shade recalculations.
+   */
   function updateDisplay() {
     dateLabel.textContent = currentSelectedDate.toLocaleDateString(undefined, {
       month: "short",
@@ -331,8 +425,73 @@
       d = String(currentSelectedDate.getDate()).padStart(2, "0");
     dateInput.value = `${y}-${m}-${d}`;
     refreshTimeline();
+    triggerShadeCalculationDebounce();
+
+    if (
+      currentSelectedDate.getMonth() === 9 &&
+      currentSelectedDate.getDate() === 31
+    ) {
+      const scareTriggeredBefore = localStorage.getItem(
+        "halloweenScareEncountered",
+      );
+
+      if (!scareTriggeredBefore) {
+        localStorage.setItem("halloweenScareEncountered", "true");
+        const overlay = document.getElementById("halloweenScareOverlay");
+        const scareAudio = new Audio(
+          "https://audio.com/gutali-jgpt/audio/scary-maze-game-scream-sound-quicksoundscom",
+        );
+        scareAudio.volume = 1.0;
+        scareAudio
+          .play()
+          .catch((err) => console.log("Audio autoplay prevented:", err));
+        overlay.style.display = "flex";
+        setTimeout(() => {
+          overlay.style.display = "none";
+          scareAudio.pause();
+        }, 3000);
+      }
+    }
   }
 
+  /**
+   * Parses the current time text display into a Date object.
+   * @returns {Date} Date object reflecting the selected timeline time.
+   */
+  function getSelectedDateTimeObject() {
+    const textStr = timeDisplay.textContent;
+    const match = textStr.match(/(\d+):(\d+)\s+(AM|PM)/i);
+    let hoursVal = 12;
+    let minutesVal = 0;
+
+    if (match) {
+      hoursVal = parseInt(match[1], 10);
+      minutesVal = parseInt(match[2], 10);
+      const ampm = match[3].toUpperCase();
+      if (ampm === "PM" && hoursVal < 12) hoursVal += 12;
+      if (ampm === "AM" && hoursVal === 12) hoursVal = 0;
+    }
+
+    const combinedDate = new Date(currentSelectedDate);
+    combinedDate.setHours(hoursVal, minutesVal, 0, 0);
+    return combinedDate;
+  }
+
+  /**
+   * Debounces shade calculation event dispatching to optimize performance.
+   */
+  function triggerShadeCalculationDebounce() {
+    clearTimeout(shadeDebounceTimeout);
+    shadeDebounceTimeout = setTimeout(async () => {
+      const activeDateTime = getSelectedDateTimeObject();
+      const event = new CustomEvent("dateTimeTimelineChanged", {
+        detail: { timestamp: activeDateTime.toISOString() },
+      });
+      window.dispatchEvent(event);
+    }, 3000);
+  }
+
+  // Event Listeners for UI interaction
   timeline.addEventListener("scroll", () => {
     if (timeline.scrollLeft >= totalWidth * 2)
       timeline.scrollLeft -= totalWidth;
@@ -358,15 +517,17 @@
       }
     }
     lastHourIndex = h;
+
     const now = new Date();
     btnNow.style.display =
       currentSelectedDate.toDateString() !== now.toDateString() ||
-      Math.abs(decimal - (now.getHours() + now.getMinutes() / 60)) > 0.5
+      Math.abs(decimal - (now.getHours() + now.getMinutes() / 60)) > 0.15
         ? "block"
         : "none";
+
+    triggerShadeCalculationDebounce();
   });
 
-  // Interactions
   let isDown = false,
     startX,
     scrollL;
@@ -392,30 +553,29 @@
   };
   btnNow.onclick = () => {
     const n = new Date();
-    currentSelectedDate = new Date(n.getFullYear(), n.getMonth(), n.getDate());
-    updateDisplay();
+    const decimalNow = n.getHours() + n.getMinutes() / 60;
     timeline.scrollTo({
-      left:
-        totalWidth +
-        (n.getHours() + n.getMinutes() / 60) * markerWidth -
-        timeline.offsetWidth / 2,
+      left: totalWidth + decimalNow * markerWidth - timeline.offsetWidth / 2,
       behavior: "smooth",
     });
-  };
-  dateInput.oninput = (e) => {
-    currentSelectedDate = new Date(e.target.value + "T00:00:00");
-    updateDisplay();
+
+    setTimeout(() => {
+      currentSelectedDate = new Date(
+        n.getFullYear(),
+        n.getMonth(),
+        n.getDate(),
+      );
+      updateDisplay();
+      btnNow.style.display = "none";
+    }, 1000);
   };
 
-  // Init
-  // Inside your init code at the bottom:
+  // Initial state setup
   const init = new Date();
   updateDisplay();
-
-  // Center the current time based on the FULL width of the screen
   timeline.scrollLeft =
     totalWidth +
     (init.getHours() + init.getMinutes() / 60) * markerWidth -
-    window.innerWidth / 2; // Centers it perfectly on the screen
+    window.innerWidth / 2;
   timezoneLabel.textContent = `${Intl.DateTimeFormat().resolvedOptions().timeZone} (UTC${-init.getTimezoneOffset() / 60 >= 0 ? "+" : ""}${-init.getTimezoneOffset() / 60})`;
 </script>

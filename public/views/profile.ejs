@@ -67,6 +67,70 @@
             </div>
             <p class="st-field-hint">This is how your name appears throughout ShadyTrails</p>
           </div>
+          
+          <!-- Trail Logging Section -->
+          <div class="st-profile-section">
+            <h3 class="st-section-title">Log a Trail</h3>
+
+            <input
+              type="text"
+              id="trailSearchInput"
+              class="st-nickname-input"
+              placeholder="Search for a trail..."
+              autocomplete="off"
+            />
+
+            <div id="trailSuggestions" class="st-suggestions"></div>
+
+            <input
+              type="number"
+              id="trailDistanceInput"
+              class="st-nickname-input"
+              placeholder="Distance (km) — optional if trail has data"
+              step="0.1"
+            />
+
+            <button class="st-btn st-btn--save" id="logTrailBtn">
+              Log Trail
+            </button>
+
+            <p class="st-field-hint">
+              Search and log trails you’ve completed. Distance will auto-fill if available.
+            </p>
+          </div>
+
+          <div class="st-profile-section">
+            <h3 class="st-section-title">Your Badges</h3>
+            <div class="st-badges">
+              <% if (user.badges && user.badges.length) { %>
+                <% user.badges.forEach(badge => { %>
+                  <div class="medal-badge">
+                    <div class="medal-icon">
+                      <% if (badge === "10km") { %>🥉<% } %>
+                      <% if (badge === "25km") { %>🥈<% } %>
+                      <% if (badge === "50km") { %>🥇<% } %>
+                    </div>
+
+                    <div class="medal-info">
+                      <div class="medal-title">
+                        <% if (badge === "10km") { %>Trail Starter<% } %>
+                        <% if (badge === "25km") { %>Trail Explorer<% } %>
+                        <% if (badge === "50km") { %>Trail Legend<% } %>
+                      </div>
+
+                      <div class="medal-sub">
+                        <% if (badge === "10km") { %>10km explored<% } %>
+                        <% if (badge === "25km") { %>25km explored<% } %>
+                        <% if (badge === "50km") { %>50km explored<% } %>
+                      </div>
+                    </div>
+                  </div>
+                <% }) %>
+              <% } else { %>
+                <p class="st-field-hint">No badges yet — start exploring! 🌿</p>
+              <% } %>
+            </div>
+          </div>
 
           <!-- Account Info -->
           <div class="st-profile-section">
@@ -145,7 +209,14 @@
   </div>
 </div>
 
-<!-- Toast Notification -->
+<div id="badgeModal" class="st-badge-modal hidden">
+  <div class="st-badge-content">
+    <div class="badge-icon">🏅</div>
+    <h2 id="badgeTitle">New Badge!</h2>
+    <p id="badgeText"></p>
+  </div>
+</div>
+
 <div id="toast" class="st-toast"></div>
 
 <%- include('components/footer') %>

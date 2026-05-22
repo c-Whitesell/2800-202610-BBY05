@@ -1,0 +1,205 @@
+/* ── Weather Trail Recommendations ───────────────────────────────
+ * Append to weather.css
+ * ─────────────────────────────────────────────────────────────── */
+
+/* ── Section wrapper ──────────────────────────────────────────── */
+#weather-trail-recs {
+  margin-bottom: 1.5rem;
+}
+
+/* ── Context pill ─────────────────────────────────────────────── */
+.wtr-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+.wtr-context-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #eaf3de;
+  border: 1px solid #c0dd97;
+  border-radius: 99px;
+  padding: 4px 12px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #3b6d11;
+  letter-spacing: 0.03em;
+}
+
+/* ── Cards ────────────────────────────────────────────────────── */
+.wtr-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wtr-card {
+  background: #ffffff;
+  border: 1px solid #d3d1c7;
+  border-radius: 12px;
+  padding: 0.875rem 1rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.12s;
+  opacity: 0;
+  transform: translateY(6px);
+}
+.wtr-card--enter {
+  animation: wtr-slide-in 0.35s ease forwards;
+}
+@keyframes wtr-slide-in {
+  to { opacity: 1; transform: translateY(0); }
+}
+.wtr-card:hover {
+  border-color: #97c459;
+  box-shadow: 0 2px 10px rgba(59, 109, 17, 0.08);
+  transform: translateY(-1px);
+}
+.wtr-card:active { transform: translateY(0); }
+
+/* Rank number */
+.wtr-card__rank {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #f1efe8;
+  color: #888780;
+  font-size: 0.68rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.wtr-card:first-child .wtr-card__rank {
+  background: #eaf3de;
+  color: #3b6d11;
+}
+
+/* Body */
+.wtr-card__body { flex: 1; min-width: 0; }
+
+.wtr-card__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.wtr-card__name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1a1a18;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Sub-line */
+.wtr-card__sub {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  font-size: 0.72rem;
+  color: #888780;
+  margin-bottom: 6px;
+}
+.wtr-card__dot { color: #d3d1c7; }
+.wtr-card__diff { font-weight: 500; text-transform: capitalize; }
+
+/* Reason text */
+.wtr-card__reason {
+  font-size: 0.78rem;
+  color: #4a7a1e;
+  font-style: italic;
+  margin-bottom: 6px;
+  line-height: 1.4;
+}
+
+/* Warnings */
+.wtr-card__warnings {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+.wtr-warning {
+  font-size: 0.67rem;
+  background: #faeeda;
+  color: #8a4a00;
+  border: 1px solid #fac775;
+  border-radius: 99px;
+  padding: 1px 7px;
+  font-weight: 500;
+}
+
+/* Score bar */
+.wtr-score-bar {
+  height: 3px;
+  background: #e8e6df;
+  border-radius: 99px;
+  overflow: hidden;
+}
+.wtr-score-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.6s ease;
+}
+
+/* Arrow */
+.wtr-card__arrow {
+  font-size: 1.1rem;
+  color: #c8c6be;
+  flex-shrink: 0;
+  align-self: center;
+  margin-left: 2px;
+  transition: color 0.15s, transform 0.15s;
+}
+.wtr-card:hover .wtr-card__arrow {
+  color: #3b6d11;
+  transform: translateX(2px);
+}
+
+/* ── Rec badges ───────────────────────────────────────────────── */
+.wtr-rec-badge {
+  flex-shrink: 0;
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 99px;
+  white-space: nowrap;
+}
+.rec-badge--perfect { background: #eaf3de; color: #27500a; border: 1px solid #c0dd97; }
+.rec-badge--good    { background: #f0f7e8; color: #3b6d11; border: 1px solid #c0dd97; }
+.rec-badge--caution { background: #faeeda; color: #8a4a00; border: 1px solid #fac775; }
+.rec-badge--avoid   { background: #fce8e8; color: #701515; border: 1px solid #f0a0a0; }
+
+/* ── CTA ──────────────────────────────────────────────────────── */
+.wtr-cta {
+  text-align: right;
+  margin-top: 8px;
+}
+.wtr-cta-link {
+  font-size: 0.75rem;
+  color: #3b6d11;
+  text-decoration: none;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  transition: gap 0.15s;
+}
+.wtr-cta-link:hover { text-decoration: underline; gap: 6px; }
+
+/* ── Empty / note state ───────────────────────────────────────── */
+.wtr-note {
+  font-size: 0.8rem;
+  color: #888780;
+  padding: 0.5rem 0;
+}

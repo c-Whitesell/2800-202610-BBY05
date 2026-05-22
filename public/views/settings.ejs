@@ -6,6 +6,12 @@
       Settings</h1>
     <p style="color: rgba(245,240,232,0.5); font-size: 0.875rem; margin-bottom: 2rem;">Manage your preferences</p>
 
+    <!-- Save feedback -->
+    <div id="settings-toast"
+      style="display:none; background:rgba(138,171,94,0.2); border:1px solid rgba(138,171,94,0.4); border-radius: var(--radius-sm); padding:0.6rem 1rem; font-size:0.85rem; color:var(--sage); margin-bottom:1.5rem;">
+      ✓ Settings saved
+    </div>
+
     <!-- Notifications -->
     <div style="margin-bottom: 2rem;">
       <h2
@@ -17,12 +23,14 @@
         <div
           style="display:flex; justify-content:space-between; align-items:center; padding: 1rem 1.25rem; border-bottom: 1px solid rgba(138,171,94,0.08);">
           <span style="font-size:0.9rem; color: var(--cream);">Push Notifications</span>
-          <label class="st-switch"><input type="checkbox" checked /><span class="st-switch__slider"></span></label>
+          <label class="st-switch"><input type="checkbox" id="pushNotifications" /><span
+              class="st-switch__slider"></span></label>
         </div>
 
         <div style="display:flex; justify-content:space-between; align-items:center; padding: 1rem 1.25rem;">
           <span style="font-size:0.9rem; color: var(--cream);">UV Alerts</span>
-          <label class="st-switch"><input type="checkbox" checked /><span class="st-switch__slider"></span></label>
+          <label class="st-switch"><input type="checkbox" id="uvAlerts" /><span
+              class="st-switch__slider"></span></label>
         </div>
 
       </div>
@@ -38,26 +46,20 @@
 
         <div
           style="display:flex; justify-content:space-between; align-items:center; padding: 1rem 1.25rem; border-bottom: 1px solid rgba(138,171,94,0.08);">
-          <span style="font-size:0.9rem; color: var(--cream);">Dark Mode</span>
-          <label class="st-switch"><input type="checkbox" checked /><span class="st-switch__slider"></span></label>
-        </div>
-
-        <div
-          style="display:flex; justify-content:space-between; align-items:center; padding: 1rem 1.25rem; border-bottom: 1px solid rgba(138,171,94,0.08);">
           <span style="font-size:0.9rem; color: var(--cream);">Distance Units</span>
-          <select
+          <select id="distanceUnits"
             style="background: rgba(10,14,7,0.6); border: 1px solid rgba(138,171,94,0.2); border-radius: var(--radius-sm); padding: 0.35rem 0.75rem; color: var(--cream); font-size: 0.875rem; outline: none;">
-            <option>Kilometers</option>
-            <option>Miles</option>
+            <option value="km">Kilometers</option>
+            <option value="mi">Miles</option>
           </select>
         </div>
 
         <div style="display:flex; justify-content:space-between; align-items:center; padding: 1rem 1.25rem;">
           <span style="font-size:0.9rem; color: var(--cream);">Temperature</span>
-          <select
+          <select id="temperature"
             style="background: rgba(10,14,7,0.6); border: 1px solid rgba(138,171,94,0.2); border-radius: var(--radius-sm); padding: 0.35rem 0.75rem; color: var(--cream); font-size: 0.875rem; outline: none;">
-            <option>Celsius °C</option>
-            <option>Fahrenheit °F</option>
+            <option value="c">Celsius °C</option>
+            <option value="f">Fahrenheit °F</option>
           </select>
         </div>
 
@@ -71,14 +73,19 @@
         Privacy</h2>
       <div
         style="background: rgba(37,45,26,0.5); border: 1px solid rgba(138,171,94,0.15); border-radius: var(--radius-md); overflow: hidden;">
-
         <div style="display:flex; justify-content:space-between; align-items:center; padding: 1rem 1.25rem;">
           <span style="font-size:0.9rem; color: var(--cream);">Location Services</span>
-          <label class="st-switch"><input type="checkbox" checked /><span class="st-switch__slider"></span></label>
+          <label class="st-switch"><input type="checkbox" id="locationServices" checked /><span
+              class="st-switch__slider"></span></label>
         </div>
-
       </div>
     </div>
+
+    <!-- Save Button -->
+    <button onclick="saveSettings()" class="st-btn st-btn--primary"
+      style="width:100%; padding:0.75rem; font-size:0.95rem; border-radius: var(--radius-sm); margin-bottom:2rem;">
+      Save Settings
+    </button>
 
     <!-- Account -->
     <div style="margin-bottom: 2rem;">
@@ -94,7 +101,8 @@
           <span style="color: rgba(245,240,232,0.3);">→</span>
         </a>
 
-        <div style="display:flex; justify-content:space-between; align-items:center; padding: 1rem 1.25rem;">
+        <div onclick="deleteAccount()"
+          style="display:flex; justify-content:space-between; align-items:center; padding: 1rem 1.25rem; cursor:pointer;">
           <span style="font-size:0.9rem; color: #e87a6a;">Delete Account</span>
           <span style="color: rgba(245,240,232,0.3);">→</span>
         </div>
@@ -103,5 +111,65 @@
     </div>
 
   </div>
+
+  <script>
+    // Load settings from DB on page load
+    async function loadSettings() {
+      try {
+        const res = await fetch('/api/settings');
+        if (!res.ok) return; // not logged in, use defaults
+        const s = await res.json();
+        if (s.pushNotifications !== undefined) document.getElementById('pushNotifications').checked = s.pushNotifications;
+        if (s.uvAlerts !== undefined) document.getElementById('uvAlerts').checked = s.uvAlerts;
+
+        if (s.distanceUnits) document.getElementById('distanceUnits').value = s.distanceUnits;
+        if (s.temperature) document.getElementById('temperature').value = s.temperature;
+        if (s.locationServices !== undefined) document.getElementById('locationServices').checked = s.locationServices;
+      } catch (e) {
+        console.log('Settings not available — user may not be logged in');
+      }
+    }
+
+    // Save settings to DB
+    async function saveSettings() {
+      const settings = {
+        pushNotifications: document.getElementById('pushNotifications').checked,
+        uvAlerts: document.getElementById('uvAlerts').checked,
+
+        distanceUnits: document.getElementById('distanceUnits').value,
+        temperature: document.getElementById('temperature').value,
+        locationServices: document.getElementById('locationServices').checked,
+      };
+
+      try {
+        const res = await fetch('/api/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(settings),
+        });
+
+        if (res.ok) {
+          const toast = document.getElementById('settings-toast');
+          toast.style.display = 'block';
+          setTimeout(() => { toast.style.display = 'none'; }, 3000);
+        }
+      } catch (e) {
+        alert('Failed to save settings. Please log in first.');
+      }
+    }
+
+    // Delete account
+    async function deleteAccount() {
+      if (!confirm('Are you sure? This cannot be undone.')) return;
+      try {
+        const res = await fetch('/api/account/delete', { method: 'POST' });
+        if (res.ok) window.location.href = '/';
+      } catch (e) {
+        alert('Failed to delete account.');
+      }
+    }
+
+    loadSettings();
+  </script>
 
   <%- include('components/footer') %>
