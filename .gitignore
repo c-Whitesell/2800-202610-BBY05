@@ -2,3 +2,4 @@
 /node_modules
 *.geojson
 package-lock.json
+*-ignore.js

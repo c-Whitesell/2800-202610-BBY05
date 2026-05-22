@@ -12,4 +12,14 @@
     <!-- Include the instruction partial here -->
     <%- include('components/map-tutorial') %>
 
+    <script>
+  // Use EJS tags to inject the values directly into client-side JS
+  window.MAP_CONFIG = {
+    initLat: <%= typeof initLat !== 'undefined' && initLat ? initLat : 49.2827 %>,
+    initLng: <%= typeof initLng !== 'undefined' && initLng ? initLng : -123.1207 %>,
+    initZoom: <%= typeof initZoom !== 'undefined' && initZoom ? initZoom : 11 %>
+  };
+
+</script>
+
 <%- include('components/footer') %>

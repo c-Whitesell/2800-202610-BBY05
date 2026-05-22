@@ -1,13 +1,13 @@
-let distanceUnit = 'km'; // default
+let distanceUnit = "km"; // default
 
 async function loadUserSettings() {
   try {
-    const res = await fetch('/api/settings');
+    const res = await fetch("/api/settings");
     if (!res.ok) return;
     const s = await res.json();
     if (s.distanceUnits) distanceUnit = s.distanceUnits;
   } catch (e) {
-    console.log('Could not load user settings');
+    console.log("Could not load user settings");
   }
 }
 
@@ -125,10 +125,49 @@ function normaliseTrail(raw, source) {
     location: props.park_name || props.area || "",
     duration: props.duration || "",
     elevation: props.elevation || "",
+    image_url: props.image_url || "",
     lat,
     lng,
     source,
     raw,
+  };
+}
+
+function normaliseTrail2(raw, source) {
+  // Extract the decimal number from MongoDB's $numberDecimal format if it exists,
+  // otherwise fallback to a standard number or 0.
+  let lengthMeters = 0;
+  if (raw.length_meters) {
+    lengthMeters = parseFloat(
+      raw.length_meters.$numberDecimal || raw.length_meters || 0,
+    );
+  }
+
+  // Handle location naming using your associated_parks array
+  let locationText = "Vancouver";
+  if (Array.isArray(raw.associated_parks) && raw.associated_parks.length > 0) {
+    locationText = raw.associated_parks.join(", ");
+  }
+
+  return {
+    _id: raw._id,
+    name: raw.trail_name || "Unnamed Trail",
+    difficulty: raw.difficulty || "",
+    distance: lengthMeters,
+    description: raw.highway || raw.surface ? `Surface: ${raw.surface}` : "",
+    surface: raw.surface,
+    location: locationText,
+    duration: raw.duration || "",
+    elevation: raw.elevation || "",
+    image_url: raw.image_url || "", // Preserves the Pixabay urls synced earlier
+
+    // Explicitly reading the flat coordinate columns from the updated document.
+    // Falls back to 0 if they haven't been populated yet.
+    lat: parseFloat(raw.lat) || 0,
+    lng: parseFloat(raw.lng) || 0,
+
+    source: source || raw.source || "Database",
+    raw: raw.raw || raw, // Keep a reference to the original data if nesting it
   };
 }
 
@@ -157,33 +196,51 @@ function trailEmoji(t) {
 
 // ── Render trail card ─────────────────────────────────
 function renderCard(t) {
-    const badge = difficultyBadge(t.difficulty);
-    const isSaved = savedIds.includes(t._id);
-    const rawDist = t.distance || t.length || 0;
-const distStr = rawDist
-  ? distanceUnit === 'mi'
-    ? `${(rawDist * 0.621371).toFixed(1)} mi`
-    : `${rawDist.toFixed(2)} km`
-  : '';
-    const durStr = t.duration ? `${t.duration}` : '';
-    const elevStr = t.elevation ? `${t.elevation}m gain` : '';
-    const hasCoords = t.lat && t.lng;
-    const natureIds = [15, 17, 28, 29, 33, 37, 39, 42, 43, 48, 56, 57, 63, 65, 67];
-    const trailPhotos = [
-        'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&h=200&fit=crop',
-        'https://images.unsplash.com/photo-1448375240586-882707db888b?w=400&h=200&fit=crop',
-        'https://images.unsplash.com/photo-1542202229-7d93c33f5d07?w=400&h=200&fit=crop',
-        'https://images.unsplash.com/photo-1511497584788-876760111969?w=400&h=200&fit=crop',
-        'https://images.unsplash.com/photo-1forest518338?w=400&h=200&fit=crop',
-        'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400&h=200&fit=crop',
-        'https://images.unsplash.com/photo-1426604966848-d7adac402bff?w=400&h=200&fit=crop',
-        'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=400&h=200&fit=crop',
-        'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=400&h=200&fit=crop',
-        'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=400&h=200&fit=crop',
-    ];
-    const photoIdx = Math.abs(t.name.split('').reduce((a, c) => a + c.charCodeAt(0), 0)) % trailPhotos.length;
-    const photoUrl = trailPhotos[photoIdx];
-    return `
+  const badge = difficultyBadge(t.difficulty);
+  const isSaved = savedIds.includes(t._id);
+  const rawDist = t.distance || t.length || 0;
+  let distStr = "";
+
+  if (rawDist) {
+    // 1. Check if the source is a park
+    if (t.source === "park") {
+      // Always display as hectares, ignoring distanceUnit
+      distStr = `${t.length.toFixed(3)} ha`;
+    } else {
+      // 2. Default Fallback (Distance/Length Calculation)
+      const km = rawDist / 1000;
+
+      if (distanceUnit === "mi") {
+        const miles = km * 0.621371;
+        distStr = `${miles.toFixed(3)} mi`;
+      } else {
+        distStr = `${km.toFixed(3)} km`;
+      }
+    }
+  }
+  const durStr = t.duration ? `${t.duration}` : "";
+  const elevStr = t.elevation ? `${t.elevation}m gain` : "";
+  const hasCoords = t.lat && t.lng;
+  const natureIds = [
+    15, 17, 28, 29, 33, 37, 39, 42, 43, 48, 56, 57, 63, 65, 67,
+  ];
+  const trailPhotos = [
+    "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&h=200&fit=crop",
+    "https://images.unsplash.com/photo-1448375240586-882707db888b?w=400&h=200&fit=crop",
+    "https://images.unsplash.com/photo-1542202229-7d93c33f5d07?w=400&h=200&fit=crop",
+    "https://images.unsplash.com/photo-1511497584788-876760111969?w=400&h=200&fit=crop",
+    //"https://images.unsplash.com/photo-1forest518338?w=400&h=200&fit=crop",
+    "https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400&h=200&fit=crop",
+    "https://images.unsplash.com/photo-1426604966848-d7adac402bff?w=400&h=200&fit=crop",
+    "https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=400&h=200&fit=crop",
+    "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=400&h=200&fit=crop",
+    "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=400&h=200&fit=crop",
+  ];
+  const photoIdx =
+    Math.abs(t.name.split("").reduce((a, c) => a + c.charCodeAt(0), 0)) %
+    trailPhotos.length;
+  const photoUrl = t.image_url || trailPhotos[photoIdx];
+  return `
       <div class="trail-card" data-id="${t._id}" data-difficulty="${t.difficulty}" data-distance="${t.distance || t.length || 0}" data-length="${t.length || t.distance || 0}">
         <div class="trail-card__img">
          <div class="trail-card__img-placeholder" style="background-image:url('${photoUrl}'); background-size:cover; background-position:center;"></div>
@@ -225,7 +282,7 @@ function getFiltered() {
   // Filter
   if (activeFilter !== "all") {
     list = list.filter((t) => {
-      const raw = t.raw?.properties || {};
+      const raw = t.raw?.properties || t.raw || {};
       const highway = (raw.highway || "").toLowerCase();
       const classification = (raw.classification || "").toLowerCase();
       return highway === activeFilter || classification === activeFilter;
@@ -340,7 +397,8 @@ async function toggleBookmark(id) {
 // ── View on Map ───────────────────────────────────────
 function viewOnMap(lat, lng, name) {
   if (lat && lng) {
-    window.location.href = `/map?lat=${lat}&lng=${lng}&name=${encodeURIComponent(name)}`;
+    //window.location.href = `/map?lat=${lat}&lng=${lng}&name=${encodeURIComponent(name)}`;
+    window.location.href = `/map?zoom=17&lat=${lat}&lng=${lng}`;
   } else {
     window.location.href = `/map?search=${encodeURIComponent(name)}`;
   }
@@ -357,20 +415,27 @@ function showToast(msg) {
 // ── Fetch data ────────────────────────────────────────
 async function loadTrails() {
   try {
-    const [parksRes, pathsRes] = await Promise.all([
+    const [parksRes, pathsRes, trailsRes] = await Promise.all([
       fetch("/api/parks").catch(() => ({ ok: false })),
       fetch("/api/paths").catch(() => ({ ok: false })),
+      fetch("/api/trails").catch(() => ({ ok: false })),
     ]);
 
     const parks = parksRes.ok ? await parksRes.json() : [];
     const paths = pathsRes.ok ? await pathsRes.json() : [];
+    const trails = trailsRes.ok ? await trailsRes.json() : [];
 
     const normParks = (Array.isArray(parks) ? parks : []).map((p) =>
       normaliseTrail(p, "park"),
     );
-    const normPaths = (Array.isArray(paths) ? paths : []).map((p) =>
-      normaliseTrail(p, "path"),
-    );
+    // const normPaths = (Array.isArray(paths) ? paths : []).map((p) =>
+    //   normaliseTrail(p, "path"),
+    // );
+    const normPaths = (Array.isArray(trails) ? trails : [])
+      .filter((p) => p && p.trail_name && !p.trail_name.endsWith(" Trails"))
+      .map((p) => normaliseTrail2(p, "path"));
+
+    console.log(normPaths);
     allTrails = [...normParks, ...normPaths];
     allTrails = Array.from(
       new Map(allTrails.map((item) => [item.name, item])).values(),
@@ -551,12 +616,12 @@ document.getElementById("sort-select").addEventListener("change", function () {
 async function init() {
   renderSpotlight();
 
-    if (isLoggedIn) {
-        loadBookmarks();
-    }
+  if (isLoggedIn) {
+    loadBookmarks();
+  }
 
-    await loadUserSettings();
-    await loadTrails();
+  await loadUserSettings();
+  await loadTrails();
 }
 
 init();

@@ -1,3 +1,4 @@
+const { initLat, initLng, initZoom } = window.MAP_CONFIG;
 const container = document.getElementById("map");
 let storedParksGeoJSON = null; // Cache map reference features natively
 // 1. Create a global or module-scoped guard flag
@@ -22,8 +23,8 @@ if (container && !container._map) {
     container: "map",
     style:
       "https://api.maptiler.com/maps/streets-v4/style.json?key=2s3sHm0MZZMQLMHyYJLn",
-    center: [-123.1207, 49.2827],
-    zoom: 10,
+    center: [initLng || -123.1207, initLat || 49.2827],
+    zoom: initZoom || 10,
   });
 
   container._map = map;
