@@ -440,7 +440,7 @@
     const now = new Date();
     btnNow.style.display =
       currentSelectedDate.toDateString() !== now.toDateString() ||
-      Math.abs(decimal - (now.getHours() + now.getMinutes() / 60)) > 0.5
+      Math.abs(decimal - (now.getHours() + now.getMinutes() / 60)) > 0.15
         ? "block"
         : "none";
 
@@ -448,37 +448,37 @@
   });
 
   // Handle Event Responses from DB syncing the closest timestamp back to slider UI
-  window.addEventListener("syncTimelineUIToTime", (e) => {
-    const synchronizedDate = new Date(e.detail.adjustedTimestamp);
-    currentSelectedDate = new Date(
-      synchronizedDate.getFullYear(),
-      synchronizedDate.getMonth(),
-      synchronizedDate.getDate(),
-    );
+  // window.addEventListener("syncTimelineUIToTime", (e) => {
+  //   const synchronizedDate = new Date(e.detail.adjustedTimestamp);
+  //   currentSelectedDate = new Date(
+  //     synchronizedDate.getFullYear(),
+  //     synchronizedDate.getMonth(),
+  //     synchronizedDate.getDate(),
+  //   );
 
-    // Lock updating display loops securely
-    dateLabel.textContent = currentSelectedDate.toLocaleDateString(undefined, {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-    const y = synchronizedDate.getFullYear(),
-      m = String(synchronizedDate.getMonth() + 1).padStart(2, "0"),
-      d = String(synchronizedDate.getDate()).padStart(2, "0");
-    dateInput.value = `${y}-${m}-${d}`;
-    refreshTimeline();
+  //   // Lock updating display loops securely
+  //   dateLabel.textContent = currentSelectedDate.toLocaleDateString(undefined, {
+  //     month: "short",
+  //     day: "numeric",
+  //     year: "numeric",
+  //   });
+  //   const y = synchronizedDate.getFullYear(),
+  //     m = String(synchronizedDate.getMonth() + 1).padStart(2, "0"),
+  //     d = String(synchronizedDate.getDate()).padStart(2, "0");
+  //   dateInput.value = `${y}-${m}-${d}`;
+  //   refreshTimeline();
 
-    const h = synchronizedDate.getHours();
-    const mins = synchronizedDate.getMinutes();
-    timeDisplay.textContent = `${h % 12 || 12}:${String(mins).padStart(2, "0")} ${h < 12 ? "AM" : "PM"}`;
+  //   const h = synchronizedDate.getHours();
+  //   const mins = synchronizedDate.getMinutes();
+  //   timeDisplay.textContent = `${h % 12 || 12}:${String(mins).padStart(2, "0")} ${h < 12 ? "AM" : "PM"}`;
 
-    // Reposition scroll coordinate context smoothly matching exact match tracking index positions
-    const decimalTarget = h + mins / 60;
-    timeline.scrollLeft =
-      totalWidth + decimalTarget * markerWidth - timeline.offsetWidth / 2;
-    updateNavbarPalette(decimalTarget);
-    lastHourIndex = h;
-  });
+  //   // Reposition scroll coordinate context smoothly matching exact match tracking index positions
+  //   const decimalTarget = h + mins / 60;
+  //   timeline.scrollLeft =
+  //     totalWidth + decimalTarget * markerWidth - timeline.offsetWidth / 2;
+  //   updateNavbarPalette(decimalTarget);
+  //   lastHourIndex = h;
+  // });
 
   // Drag Interactivity handlers
   let isDown = false,
@@ -506,19 +506,29 @@
   };
   btnNow.onclick = () => {
     const n = new Date();
-    currentSelectedDate = new Date(n.getFullYear(), n.getMonth(), n.getDate());
-    updateDisplay();
+
+    // 1. Update the state to today, preserving local time if needed
+
+    // 2. Scroll to the current time position
+    const decimalNow = n.getHours() + n.getMinutes() / 60;
     timeline.scrollTo({
-      left:
-        totalWidth +
-        (n.getHours() + n.getMinutes() / 60) * markerWidth -
-        timeline.offsetWidth / 2,
+      left: totalWidth + decimalNow * markerWidth - timeline.offsetWidth / 2,
       behavior: "smooth",
     });
-  };
-  dateInput.oninput = (e) => {
-    currentSelectedDate = new Date(e.target.value + "T00:00:00");
-    updateDisplay();
+
+    setTimeout(() => {
+      currentSelectedDate = new Date(
+        n.getFullYear(),
+        n.getMonth(),
+        n.getDate(),
+      );
+
+      // 3. Update the display without the broken 's'
+      updateDisplay();
+
+      // 4. Force hide the button immediately after clicking
+      btnNow.style.display = "none";
+    }, 1000);
   };
 
   // Init
