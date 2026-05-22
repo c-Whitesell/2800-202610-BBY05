@@ -98,6 +98,40 @@
               Search and log trails you’ve completed. Distance will auto-fill if available.
             </p>
           </div>
+
+          <div class="st-profile-section">
+            <h3 class="st-section-title">Your Badges</h3>
+            <div class="st-badges">
+              <% if (user.badges && user.badges.length) { %>
+                <% user.badges.forEach(badge => { %>
+                  <div class="medal-badge">
+                    <div class="medal-icon">
+                      <% if (badge === "10km") { %>🥉<% } %>
+                      <% if (badge === "25km") { %>🥈<% } %>
+                      <% if (badge === "50km") { %>🥇<% } %>
+                    </div>
+
+                    <div class="medal-info">
+                      <div class="medal-title">
+                        <% if (badge === "10km") { %>Trail Starter<% } %>
+                        <% if (badge === "25km") { %>Trail Explorer<% } %>
+                        <% if (badge === "50km") { %>Trail Legend<% } %>
+                      </div>
+
+                      <div class="medal-sub">
+                        <% if (badge === "10km") { %>10km explored<% } %>
+                        <% if (badge === "25km") { %>25km explored<% } %>
+                        <% if (badge === "50km") { %>50km explored<% } %>
+                      </div>
+                    </div>
+                  </div>
+                <% }) %>
+              <% } else { %>
+                <p class="st-field-hint">No badges yet — start exploring! 🌿</p>
+              <% } %>
+            </div>
+          </div>
+
           <!-- Account Info -->
           <div class="st-profile-section">
             <h3 class="st-section-title">Account Details</h3>
@@ -175,7 +209,14 @@
   </div>
 </div>
 
-<!-- Toast Notification -->
+<div id="badgeModal" class="st-badge-modal hidden">
+  <div class="st-badge-content">
+    <div class="badge-icon">🏅</div>
+    <h2 id="badgeTitle">New Badge!</h2>
+    <p id="badgeText"></p>
+  </div>
+</div>
+
 <div id="toast" class="st-toast"></div>
 
 <%- include('components/footer') %>

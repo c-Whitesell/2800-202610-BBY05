@@ -58,7 +58,6 @@ pictureInput.addEventListener('change', async (e) => {
         return;
       }
 
-      // Update the profile picture in the UI
       profilePicture.src = base64;
       showToast('Profile picture updated! 📸');
     } catch (err) {
@@ -170,8 +169,32 @@ async function handleTrailLog() {
     return;
   }
 
+  function triggerBadgeCelebration(badges) {
+    const modal = document.getElementById('badgeModal');
+    const text = document.getElementById('badgeText');
+
+    const badgeMap = {
+      '10km': "You've explored 10km of trails! 🌱",
+      '25km': "25km logged — you're getting serious! 🌲",
+      '50km': "50km!! You're a trail legend 🏔️🔥",
+    };
+
+    const latest = badges[0];
+
+    text.textContent = badgeMap[latest] || 'New achievement unlocked!';
+
+    modal.classList.remove('hidden');
+
+    setTimeout(() => {
+      modal.classList.add('hidden');
+    }, 3500);
+  }
+
   resetTrailForm();
   showToast('Trail logged successfully! 🥾');
+  if (result.earnedBadges?.length) {
+    triggerBadgeCelebration(result.earnedBadges);
+  }
 }
 
 function buildTrailPayload() {
