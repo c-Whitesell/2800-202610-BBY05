@@ -1,22 +1,11 @@
 const { initLat, initLng, initZoom } = window.MAP_CONFIG;
 const container = document.getElementById("map");
-let storedParksGeoJSON = null; // Cache map reference features natively
-// 1. Create a global or module-scoped guard flag
+
+let storedParksGeoJSON = null;
 let isSyncingTimelineUI = false;
-// 1. Maintain a reference to the last successfully requested timestamp
 let lastRequestedMs = null;
 
 if (container && !container._map) {
-  function setMapDimensions() {
-    const navHeight = document.querySelector(".navbar")?.offsetHeight || 0;
-    const footHeight = document.querySelector("footer")?.offsetHeight || 0;
-    const availableHeight = window.innerHeight - navHeight - footHeight;
-
-    container.style.position = "relative";
-    container.style.height = availableHeight + "px";
-    container.style.width = "100%";
-  }
-
   setMapDimensions();
 
   const map = new maplibregl.Map({
@@ -30,23 +19,7 @@ if (container && !container._map) {
   container._map = map;
 
   map.on("load", async function () {
-    // 1. Structural base fills (Wait for database fetch to finish)
-    await addParksToMap(map);
-
-    // 2. Linear trails (Wait for database fetch to finish)
-    await addPathsToMap(map);
-
-    // 3. Labels injected at terminal stage to ride above preceding layer blocks
-    // This now safely runs AFTER "parks-data" has been created
-    addParkLabelsLayer(map);
-
-    // Bootstrap initial database lookup immediately matching system startup times
-    setTimeout(() => {
-      const event = new CustomEvent("dateTimeTimelineChanged", {
-        detail: { timestamp: new Date().toISOString() },
-      });
-      window.dispatchEvent(event);
-    }, 500);
+    await handleMapLoad(map);
   });
 
   let resizeTimeout;
@@ -58,117 +31,188 @@ if (container && !container._map) {
     }, 250);
   });
 
-  // ── Global Custom Event Hook: Fired after 3-second debounces ──────────────────
-  window.addEventListener("dateTimeTimelineChanged", async (e) => {
-    // Keep the guard based strictly on the raw incoming timestamp so it stays completely stable
-    const rawIncomingMs = new Date(e.detail.timestamp).getTime();
-
-    // Deduplication Guard: If this exact millisecond was just processed, abort network request
-    if (lastRequestedMs === rawIncomingMs) {
-      console.log("🛑 API Request blocked: Duplicate timestamp detected.");
-      return;
-    }
-
-    // Update our pointer immediately to block subsequent simultaneous or debounced echoes
-    lastRequestedMs = rawIncomingMs;
-
-    try {
-      // 1. Convert the incoming time specifically to Vancouver wall-clock time JUST for the API
-      const incomingDate = new Date(e.detail.timestamp);
-      const vancouverFormatter = new Intl.DateTimeFormat("en-US", {
-        timeZone: "America/Vancouver",
-        year: "numeric",
-        month: "numeric",
-        day: "numeric",
-        hour: "numeric",
-        minute: "numeric",
-        second: "numeric",
-        hour12: false,
-      });
-
-      const parts = vancouverFormatter.formatToParts(incomingDate);
-      const dateMap = Object.fromEntries(parts.map((p) => [p.type, p.value]));
-      const vancouverISOStr = `${dateMap.year}-${dateMap.month.padStart(2, "0")}-${dateMap.day.padStart(2, "0")}T${dateMap.hour.padStart(2, "0")}:${dateMap.minute.padStart(2, "0")}:${dateMap.second.padStart(2, "0")}`;
-
-      // This is the specific adjusted MS value that goes to your backend
-      const targetedVancouverMs = new Date(vancouverISOStr).getTime();
-
-      // Send the Vancouver millisecond timestamp to the backend
-      const response = await fetch(
-        `/api/parkShade?time=${targetedVancouverMs}`,
-      );
-
-      if (!response.ok) {
-        throw new Error(`Server returned ${response.status}`);
-      }
-
-      const payload = await response.json();
-      console.log("✅ Shade API Response:", payload);
-
-      // 1. Build the shadeMap dynamically from the array received from the server
-      const shadeMap = {};
-      if (payload.data && Array.isArray(payload.data)) {
-        payload.data.forEach((doc) => {
-          const name = (doc.park_name || "").toLowerCase();
-          shadeMap[name] = {
-            effective_shading_percent: doc.effective_shading_percent,
-          };
-        });
-      }
-
-      // 2. Sync Timeline UI (Using the original raw timestamp to keep guards perfectly matching)
-      if (payload && payload.selectedTime) {
-        // We pass the raw original incoming date object back out to the UI.
-        // This guarantees that the UI loops back the exact same MS value that our guard expects.
-        window.dispatchEvent(
-          new CustomEvent("syncTimelineUIToTime", {
-            detail: { adjustedTimestamp: incomingDate },
-          }),
-        );
-      }
-
-      // 3. Update Map
-      if (storedParksGeoJSON && map.getSource("parks-data")) {
-        const updatedFeatures = storedParksGeoJSON.features.map((feature) => {
-          const parkName = (feature.properties.park_name || "").toLowerCase();
-          const liveMetrics = shadeMap[parkName];
-
-          const displayString = liveMetrics
-            ? `${Math.round(liveMetrics.effective_shading_percent)}%`
-            : "0%";
-
-          return {
-            ...feature,
-            properties: {
-              ...feature.properties,
-              effective_shading_string: displayString,
-            },
-          };
-        });
-
-        map.getSource("parks-data").setData({
-          type: "FeatureCollection",
-          features: updatedFeatures,
-        });
-      }
-    } catch (err) {
-      console.error("❌ Failed handling spatial dynamic updates:", err);
-      // Clear out cache on error to allow the user to retry clicking/dragging the timeline
-      lastRequestedMs = null;
-    }
+  window.addEventListener("dateTimeTimelineChanged", async (event) => {
+    await handleTimelineChange(event, map);
   });
 }
 
+/**
+ * @description Calculates and sets the map container dimensions based on viewport height,
+ * subtracting the navbar and footer heights to fit the screen.
+ * @returns {void}
+ */
+function setMapDimensions() {
+  const navHeight = document.querySelector(".navbar")?.offsetHeight || 0;
+  const footHeight = document.querySelector("footer")?.offsetHeight || 0;
+  const availableHeight = window.innerHeight - navHeight - footHeight;
+
+  container.style.position = "relative";
+  container.style.height = availableHeight + "px";
+  container.style.width = "100%";
+}
+
+/**
+ * @description Handles the map 'load' event, initializing all data layers and
+ * triggering the initial timeline synchronization.
+ * @param {Object} map - The maplibregl Map instance.
+ * @returns {Promise<void>}
+ */
+async function handleMapLoad(map) {
+  await addParksToMap(map);
+  await addPathsToMap(map);
+  addParkLabelsLayer(map);
+
+  setTimeout(() => {
+    const timelineEvent = new CustomEvent("dateTimeTimelineChanged", {
+      detail: { timestamp: new Date().toISOString() },
+    });
+    window.dispatchEvent(timelineEvent);
+  }, 500);
+}
+
+/**
+ * @description Processes timeline change events, fetches new shade data for the given timestamp,
+ * and dynamically updates the park labels and shade metrics on the map.
+ * @param {CustomEvent} event - The triggered custom event containing the timestamp payload.
+ * @param {Object} map - The maplibregl Map instance.
+ * @returns {Promise<void>}
+ */
+async function handleTimelineChange(event, map) {
+  const rawIncomingMs = new Date(event.detail.timestamp).getTime();
+
+  if (lastRequestedMs === rawIncomingMs) {
+    console.log("API Request blocked: Duplicate timestamp detected.");
+    return;
+  }
+
+  lastRequestedMs = rawIncomingMs;
+
+  try {
+    const targetedVancouverMs = convertToVancouverTime(event.detail.timestamp);
+
+    // Read: Fetch dynamic shade data from the backend API for a specific timestamp
+    const response = await fetch(`/api/parkShade?time=${targetedVancouverMs}`);
+
+    if (!response.ok) {
+      throw new Error(`Server returned ${response.status}`);
+    }
+
+    const payload = await response.json();
+    console.log("Shade API Response:", payload);
+
+    const shadeMetricsMap = buildShadeMetricsMap(payload.data);
+
+    if (payload && payload.selectedTime) {
+      window.dispatchEvent(
+        new CustomEvent("syncTimelineUIToTime", {
+          detail: { adjustedTimestamp: new Date(event.detail.timestamp) },
+        }),
+      );
+    }
+
+    updateMapShadeFeatures(map, shadeMetricsMap);
+  } catch (error) {
+    console.error("Failed handling spatial dynamic updates:", error);
+    lastRequestedMs = null;
+  }
+}
+
+/**
+ * @description Algorithm: Converts a given ISO string timestamp to Vancouver specific wall-clock
+ * time format to ensure accurate backend shade calculations regardless of the client's local timezone.
+ * @param {string} timestampString - The ISO timestamp string.
+ * @returns {number} The time in milliseconds aligned with Vancouver time.
+ */
+function convertToVancouverTime(timestampString) {
+  const incomingDate = new Date(timestampString);
+  const vancouverFormatter = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Vancouver",
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+    second: "numeric",
+    hour12: false,
+  });
+
+  const parts = vancouverFormatter.formatToParts(incomingDate);
+  const dateMap = Object.fromEntries(
+    parts.map((part) => [part.type, part.value]),
+  );
+  const vancouverISOStr = `${dateMap.year}-${dateMap.month.padStart(2, "0")}-${dateMap.day.padStart(2, "0")}T${dateMap.hour.padStart(2, "0")}:${dateMap.minute.padStart(2, "0")}:${dateMap.second.padStart(2, "0")}`;
+
+  return new Date(vancouverISOStr).getTime();
+}
+
+/**
+ * @description Maps the array of shade data from the API to an object for fast lookups.
+ * @param {Array<Object>} shadeDataArray - The array of park shade data objects.
+ * @returns {Object} A dictionary mapping park names to their shading percentage.
+ */
+function buildShadeMetricsMap(shadeDataArray) {
+  const shadeMetricsMap = {};
+  if (Array.isArray(shadeDataArray)) {
+    shadeDataArray.forEach((document) => {
+      const name = (document.park_name || "").toLowerCase();
+      shadeMetricsMap[name] = {
+        effective_shading_percent: document.effective_shading_percent,
+      };
+    });
+  }
+  return shadeMetricsMap;
+}
+
+/**
+ * @description Updates the stored GeoJSON properties with the newly fetched shade metrics
+ * and pushes the updated data to the maplibregl source.
+ * @param {Object} map - The maplibregl Map instance.
+ * @param {Object} shadeMetricsMap - Dictionary containing shade percentages keyed by park name.
+ * @returns {void}
+ */
+function updateMapShadeFeatures(map, shadeMetricsMap) {
+  if (storedParksGeoJSON && map.getSource("parks-data")) {
+    const updatedFeatures = storedParksGeoJSON.features.map((feature) => {
+      const parkName = (feature.properties.park_name || "").toLowerCase();
+      const liveMetrics = shadeMetricsMap[parkName];
+      const displayString = liveMetrics
+        ? `${Math.round(liveMetrics.effective_shading_percent)}%`
+        : "0%";
+
+      return {
+        ...feature,
+        properties: {
+          ...feature.properties,
+          effective_shading_string: displayString,
+        },
+      };
+    });
+
+    map.getSource("parks-data").setData({
+      type: "FeatureCollection",
+      features: updatedFeatures,
+    });
+  }
+}
+
+/**
+ * @description Fetches trail path data from the database and adds it as a line layer to the map.
+ * Configures paint properties to color-code trails based on their surface material.
+ * @param {Object} map - The maplibregl Map instance.
+ * @returns {Promise<void>}
+ */
 async function addPathsToMap(map) {
+  // Read: Fetch paths geospatial data from MongoDB
   const mongoData = await getMongoMapData("paths");
+
   const geojsonSource = {
     type: "FeatureCollection",
-    features: mongoData.map((doc) => ({
+    features: mongoData.map((document) => ({
       type: "Feature",
-      geometry: doc.geometry,
+      geometry: document.geometry,
       properties: {
-        id: doc._id.toString(),
-        ...doc.properties,
+        id: document._id.toString(),
+        ...document.properties,
       },
     })),
   };
@@ -210,19 +254,25 @@ async function addPathsToMap(map) {
   });
 }
 
+/**
+ * @description Fetches park boundary data from the database and adds it as a fill layer.
+ * Initializes the 'effective_shading_string' property with a loading state.
+ * @param {Object} map - The maplibregl Map instance.
+ * @returns {Promise<void>}
+ */
 async function addParksToMap(map) {
+  // Read: Fetch parks geospatial polygon data from MongoDB
   const mongoData = await getMongoMapData("parks");
 
-  // Construct baseline properties with initial safe fallback string label structures
   storedParksGeoJSON = {
     type: "FeatureCollection",
-    features: mongoData.map((doc) => ({
+    features: mongoData.map((document) => ({
       type: "Feature",
-      geometry: doc.geometry,
+      geometry: document.geometry,
       properties: {
-        id: doc._id.toString(),
-        ...doc.properties,
-        effective_shading_string: "Calculating...", // Baseline loading string
+        id: document._id.toString(),
+        ...document.properties,
+        effective_shading_string: "Calculating...",
       },
     })),
   };
@@ -238,19 +288,23 @@ async function addParksToMap(map) {
     source: "parks-data",
     paint: {
       "fill-color": "#008000",
-      "fill-opacity": 0.35, // Dropped slightly for visual enhancement
+      "fill-opacity": 0.35,
     },
   });
 }
 
-// Separated function to load symbols on top explicitly
+/**
+ * @description Appends a symbol layer to the map to display park names and live shade metrics.
+ * Uses data-driven styling to format and display the text strings.
+ * @param {Object} map - The maplibregl Map instance.
+ * @returns {void}
+ */
 function addParkLabelsLayer(map) {
   map.addLayer({
     id: "park-labels",
     type: "symbol",
     source: "parks-data",
     layout: {
-      // Use standard interpolation text binding parameters mapping to live data tracking variables
       "text-field": [
         "concat",
         ["to-string", ["get", "park_name"]],
@@ -259,7 +313,7 @@ function addParkLabelsLayer(map) {
       ],
       "text-size": ["interpolate", ["linear"], ["zoom"], 10, 11, 15, 16],
       "text-justify": "center",
-      "text-allow-overlap": false, // Set to true if labels should force render over intersecting entities
+      "text-allow-overlap": false,
       "text-ignore-placement": false,
     },
     paint: {
@@ -270,8 +324,14 @@ function addParkLabelsLayer(map) {
   });
 }
 
+/**
+ * @description Generic fetch helper to retrieve collection data from the internal API.
+ * @param {string} collectionName - The MongoDB collection endpoint to target.
+ * @returns {Promise<Array>} Array of retrieved database records.
+ */
 async function getMongoMapData(collectionName) {
   try {
+    // Read: General API GET request for collection records
     const response = await fetch("/api/" + collectionName);
     const data = await response.json();
     console.log("Here are the " + collectionName + ": ", data);
